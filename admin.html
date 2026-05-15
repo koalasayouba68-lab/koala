@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+
+<style>
+body{
+font-family:Arial;
+background:#f4f4f4;
+padding:20px;
+}
+
+.box{
+max-width:900px;
+margin:auto;
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+button{
+padding:10px;
+margin:5px;
+cursor:pointer;
+border:none;
+border-radius:5px;
+}
+
+.refresh{background:#28a745;color:white;width:100%;}
+
+.item{
+background:#f1f1f1;
+padding:12px;
+margin-top:10px;
+border-radius:8px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.ok{background:green;color:white;}
+.danger{background:red;color:white;}
+
+small{color:#555;}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>🟣 Admin Dashboard</h2>
+
+<button class="refresh" onclick="chargerPaiements()">🔄 Charger paiements</button>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
+
+
+// 🔵 CHARGER PAIEMENTS
+async function chargerPaiements(){
+
+const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?select=*`,{
+headers:{
+apikey:SUPABASE_KEY,
+Authorization:`Bearer ${SUPABASE_KEY}`
+}
+});
+
+const data = await res.json();
+
+let html = "<h3>💰 Paiements</h3>";
+
+if(data.length === 0){
+html += "<p>Aucun paiement</p>";
+}
+
+data.forEach(p => {
+
+html += `
+<div class="item">
+
+<div>
+<b>📞 ${p.phone}</b><br>
+<small>${p.status}</small><br>
+<small>Code: ${p.code || "—"}</small>
+</div>
+
+<div>
+<button class="ok" onclick="confirmer('${p.id}')">✔ Confirmer</button>
+<button class="danger" onclick="supprimer('${p.id}')">🗑 Supprimer</button>
+</div>
+
+</div>
+`;
+});
+
+document.getElementById("list").innerHTML = html;
+}
+
+
+// 🟢 CONFIRMER + GENERER CODE + EXPIRATION 2H
+async function confirmer(id){
+
+const code = Math.random().toString(36).substring(2,8).toUpperCase();
+
+const expires = new Date(Date.now() + 2*60*60*1000);
+
+await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`,{
+method:"PATCH",
+headers:{
+apikey:SUPABASE_KEY,
+Authorization:`Bearer ${SUPABASE_KEY}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+status:"confirmé",
+code:code,
+expires_at:expires.toISOString()
+})
+});
+
+alert("Code généré : " + code);
+
+chargerPaiements();
+}
+
+
+// 🔴 SUPPRIMER
+async function supprimer(id){
+
+await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`,{
+method:"DELETE",
+headers:{
+apikey:SUPABASE_KEY,
+Authorization:`Bearer ${SUPABASE_KEY}`
+}
+});
+
+chargerPaiements();
+}
+
+chargerPaiements();
+
+</script>
+
+</body>
+</html>

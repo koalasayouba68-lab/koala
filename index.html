@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Accès PDF</title>
+
+<style>
+body{
+font-family:Arial;
+background:#f4f4f4;
+padding:20px;
+}
+
+.box{
+max-width:600px;
+margin:auto;
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+button{
+padding:10px;
+width:100%;
+margin-top:10px;
+}
+
+#topcode{
+position:fixed;
+top:10px;
+right:10px;
+background:black;
+color:white;
+padding:10px;
+border-radius:10px;
+display:none;
+}
+
+h3{color:#333;}
+</style>
+</head>
+
+<body>
+
+<div id="topcode"></div>
+
+<div class="box">
+
+<h2>📘 Accès PDF</h2>
+
+<h3>💰 Paiement Orange Money</h3>
+
+<p><b>*144*10*44295613*300#</b></p>
+
+<button onclick="payer()">✔ J’ai payé</button>
+
+<hr>
+
+<h3>🔑 Entrer code</h3>
+
+<input id="code" placeholder="Code reçu" style="width:100%;padding:10px;">
+<button onclick="verifier()">Accéder PDF</button>
+
+</div>
+
+<script>
+
+const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
+
+let userPhone = "";
+
+// 💰 PAYER
+async function payer(){
+
+const phone = prompt("Ton numéro Orange Money");
+
+if(!phone){
+alert("Numéro obligatoire");
+return;
+}
+
+userPhone = phone;
+localStorage.setItem("phone", phone);
+
+await fetch(`${SUPABASE_URL}/rest/v1/payments`,{
+method:"POST",
+headers:{
+apikey:SUPABASE_KEY,
+Authorization:`Bearer ${SUPABASE_KEY}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+phone:phone,
+status:"en attente",
+created_at:new Date().toISOString()
+})
+});
+
+alert("Paiement envoyé ✔");
+}
+
+
+// 🔑 VERIFIER CODE PDF (CORRIGÉ)
+async function verifier(){
+
+const code = document.getElementById("code").value;
+const phone = localStorage.getItem("phone");
+
+if(!phone){
+alert("Fais d'abord un paiement");
+return;
+}
+
+const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&code=eq.${code}`,{
+headers:{
+apikey:SUPABASE_KEY,
+Authorization:`Bearer ${SUPABASE_KEY}`
+}
+});
+
+const data = await res.json();
+
+if(data.length === 0){
+alert("Code invalide ❌");
+return;
+}
+
+const p = data[0];
+
+const now = new Date();
+const exp = new Date(p.expires_at);
+
+if(p.status === "confirmé" && exp > now){
+
+alert("Accès autorisé ✔");
+window.location.href = "cours.pdf";
+
+}else{
+alert("Code expiré ou non confirmé ❌");
+}
+}
+
+
+// 🔥 CODE LIVE EN HAUT DROITE (CORRIGÉ)
+async function checkLive(){
+
+const phone = localStorage.getItem("phone");
+
+if(!phone) return;
+
+const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé`,{
+headers:{
+apikey:SUPABASE_KEY,
+Authorization:`Bearer ${SUPABASE_KEY}`
+}
+});
+
+const data = await res.json();
+
+if(data.length === 0){
+document.getElementById("topcode").style.display="none";
+return;
+}
+
+const p = data[data.length - 1]; // dernier paiement confirmé
+
+const now = new Date();
+const exp = new Date(p.expires_at);
+
+if(exp > now){
+
+document.getElementById("topcode").style.display="block";
+document.getElementById("topcode").innerHTML =
+"🔑 Code actif : " + p.code;
+
+}else{
+document.getElementById("topcode").style.display="none";
+}
+
+}
+
+setInterval(checkLive,5000);
+
+</script>
+
+</body>
+</html>
