@@ -73,7 +73,7 @@ z-index:999;
 <div id="topcode"></div>
 <div id="timer"></div>
 
-<!-- 🔐 CONNEXION -->
+<!-- 🔐 LOGIN AJOUTÉ (NE TOUCHE PAS TON DESIGN) -->
 <div id="loginBox" class="box">
 
 <h2>🔐 Connexion</h2>
@@ -88,8 +88,8 @@ Entre ton numéro Orange Money pour continuer.
 
 </div>
 
-<!-- 📘 SITE -->
-<div class="box" id="siteBox">
+<!-- 📘 TON SITE ORIGINAL -->
+<div class="box" id="siteBox" style="display:none;">
 
 <h2>📘 Accès PDF</h2>
 
@@ -130,7 +130,10 @@ const SUPABASE_KEY =
 
 let countdown;
 
-// 🔐 CONNEXION
+////////////////////////////////////////////////////
+// 🔐 LOGIN (AJOUTÉ SANS CASSER TON SYSTÈME)
+////////////////////////////////////////////////////
+
 function connexion(){
 
 const phone =
@@ -147,7 +150,10 @@ document.getElementById("loginBox").style.display="none";
 document.getElementById("siteBox").style.display="block";
 }
 
+////////////////////////////////////////////////////
 // 🔄 RESTAURER SESSION
+////////////////////////////////////////////////////
+
 window.onload = function(){
 
 const phone = localStorage.getItem("phone");
@@ -162,7 +168,10 @@ document.getElementById("siteBox").style.display="none";
 
 }
 
-// 💰 PAYER
+////////////////////////////////////////////////////
+// 💰 PAYER (INCHANGÉ)
+////////////////////////////////////////////////////
+
 async function payer(){
 
 const phone = localStorage.getItem("phone");
@@ -192,7 +201,10 @@ created_at:new Date().toISOString()
 alert("Paiement envoyé ✔");
 }
 
-// 🔑 VERIFIER
+////////////////////////////////////////////////////
+// 🔑 VERIFIER (INCHANGÉ)
+////////////////////////////////////////////////////
+
 async function verifier(){
 
 const code = document.getElementById("code").value;
@@ -261,7 +273,10 @@ document.body.appendChild(btn);
 
 }
 
-// ⏳ TIMER
+////////////////////////////////////////////////////
+// ⏳ TIMER (INCHANGÉ)
+////////////////////////////////////////////////////
+
 function startTimer(expireDate){
 
 clearInterval(countdown);
