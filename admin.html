@@ -2,7 +2,18 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Admin Dashboard</title>
+
+<title>KOALA privé</title>
+
+<script>
+const ADMIN_PASSWORD = "2005KOALA";
+
+const pass = prompt("Mot de passe admin ?");
+if(pass !== ADMIN_PASSWORD){
+document.body.innerHTML = "Accès refusé ❌";
+throw new Error("Not allowed");
+}
+</script>
 
 <style>
 body{font-family:Arial;background:#f4f4f4;padding:20px;}
