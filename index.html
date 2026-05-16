@@ -74,7 +74,6 @@ z-index:999;
 <div id="timer"></div>
 
 <!-- 🔐 CONNEXION -->
-
 <div id="loginBox" class="box">
 
 <h2>🔐 Connexion</h2>
@@ -83,18 +82,13 @@ z-index:999;
 Entre ton numéro Orange Money pour continuer.
 </p>
 
-<input
-id="loginPhone"
-placeholder="Numéro Orange Money">
+<input id="loginPhone" placeholder="Numéro Orange Money">
 
-<button onclick="connexion()">
-Continuer
-</button>
+<button onclick="connexion()">Continuer</button>
 
 </div>
 
 <!-- 📘 SITE -->
-
 <div class="box" id="siteBox">
 
 <h2>📘 Accès PDF</h2>
@@ -114,21 +108,15 @@ pour recevoir votre code.
 
 </p>
 
-<button onclick="payer()">
-✔ J’ai payé
-</button>
+<button onclick="payer()">✔ J’ai payé</button>
 
 <hr>
 
 <h3>🔑 Entrer code</h3>
 
-<input
-id="code"
-placeholder="Code reçu">
+<input id="code" placeholder="Code reçu">
 
-<button onclick="verifier()">
-Accéder PDF
-</button>
+<button onclick="verifier()">Accéder PDF</button>
 
 </div>
 
@@ -143,72 +131,50 @@ const SUPABASE_KEY =
 let countdown;
 
 // 🔐 CONNEXION
-
 function connexion(){
 
 const phone =
 document.getElementById("loginPhone").value;
 
 if(!phone){
-
 alert("Entre ton numéro");
-
 return;
 }
 
 localStorage.setItem("phone", phone);
 
-document.getElementById("loginBox").style.display =
-"none";
-
-document.getElementById("siteBox").style.display =
-"block";
-
+document.getElementById("loginBox").style.display="none";
+document.getElementById("siteBox").style.display="block";
 }
 
 // 🔄 RESTAURER SESSION
-
 window.onload = function(){
 
 const phone = localStorage.getItem("phone");
 
 if(phone){
-
-document.getElementById("loginBox").style.display =
-"none";
-
-document.getElementById("siteBox").style.display =
-"block";
-
+document.getElementById("loginBox").style.display="none";
+document.getElementById("siteBox").style.display="block";
 }else{
-
-document.getElementById("loginBox").style.display =
-"block";
-
-document.getElementById("siteBox").style.display =
-"none";
-
+document.getElementById("loginBox").style.display="block";
+document.getElementById("siteBox").style.display="none";
 }
 
 }
 
 // 💰 PAYER
-
 async function payer(){
 
 const phone = localStorage.getItem("phone");
 
 if(!phone){
-
 alert("Reconnecte-toi");
-
 return;
 }
 
 await fetch(`${SUPABASE_URL}/rest/v1/payments`,{
 
 method:"POST",
-
 headers:{
 apikey:SUPABASE_KEY,
 Authorization:`Bearer ${SUPABASE_KEY}`,
@@ -216,163 +182,109 @@ Authorization:`Bearer ${SUPABASE_KEY}`,
 },
 
 body:JSON.stringify({
-
 phone:phone,
 status:"en attente",
 created_at:new Date().toISOString()
-
 })
 
 });
 
 alert("Paiement envoyé ✔");
-
 }
 
 // 🔑 VERIFIER
-
 async function verifier(){
 
-const code =
-document.getElementById("code").value;
-
-const phone =
-localStorage.getItem("phone");
+const code = document.getElementById("code").value;
+const phone = localStorage.getItem("phone");
 
 const res = await fetch(
-
 `${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&code=eq.${code}`,
-
 {
 headers:{
 apikey:SUPABASE_KEY,
 Authorization:`Bearer ${SUPABASE_KEY}`
 }
 }
-
 );
 
 const data = await res.json();
 
 if(!data || data.length === 0){
-
 alert("Code invalide ❌");
-
 return;
-
 }
 
 const p = data[0];
 
 if(p.status !== "confirmé"){
-
 alert("Code non confirmé ❌");
-
 return;
-
 }
 
-// ⏳ DEMARRER TIMER APRÈS VALIDATION
-
-if(!p.started_at){
-
-const started =
-new Date().toISOString();
-
-const expires =
-new Date(
-
-Date.now() + 2*60*60*1000
-
-).toISOString();
-
-await fetch(
-
-`${SUPABASE_URL}/rest/v1/payments?id=eq.${p.id}`,
-
-{
-
-method:"PATCH",
-
-headers:{
-apikey:SUPABASE_KEY,
-Authorization:`Bearer ${SUPABASE_KEY}`,
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-started_at:started,
-expires_at:expires
-
-})
-
-}
-
-);
-
-p.started_at = started;
-p.expires_at = expires;
-
-}
-
-// ✔ ACCÈS
-
-alert("Accès autorisé ✔");
-
-// 🔑 CODE
-
-document.getElementById("topcode").style.display =
-"block";
-
-document.getElementById("topcode").innerHTML =
-"🔑 Code actif : " + p.code;
-
-// ⏳ TIMER
-
+// ⏳ TIMER START
 startTimer(p.expires_at);
 
-// 📘 OUVRIR PDF
+// ✔ ACCÈS
+alert("Accès autorisé ✔");
 
-window.location.href = "monpdf.pdf";
+// 📘 OUVERTURE PDF EN LECTURE
+const pdf = window.open("monpdf.pdf", "_blank");
+
+// Bouton download manuel
+setTimeout(()=>{
+
+const btn = document.createElement("button");
+btn.innerText = "⬇ Télécharger PDF";
+
+btn.style.position = "fixed";
+btn.style.bottom = "20px";
+btn.style.left = "50%";
+btn.style.transform = "translateX(-50%)";
+btn.style.padding = "15px";
+btn.style.background = "green";
+btn.style.color = "white";
+btn.style.border = "none";
+btn.style.borderRadius = "10px";
+btn.style.zIndex = "9999";
+
+btn.onclick = () => {
+const a = document.createElement("a");
+a.href = "monpdf.pdf";
+a.download = "monpdf.pdf";
+a.click();
+};
+
+document.body.appendChild(btn);
+
+},1000);
 
 }
 
 // ⏳ TIMER
-
 function startTimer(expireDate){
 
 clearInterval(countdown);
 
 const exp = new Date(expireDate);
 
-document.getElementById("timer").style.display =
-"block";
+document.getElementById("timer").style.display="block";
 
 countdown = setInterval(()=>{
 
 const diff = exp - new Date();
 
 if(diff <= 0){
-
-document.getElementById("timer").innerHTML =
-"❌ Code expiré";
-
-document.getElementById("topcode").style.display =
-"none";
-
+document.getElementById("timer").innerHTML="❌ Code expiré";
+document.getElementById("topcode").style.display="none";
 clearInterval(countdown);
-
 return;
-
 }
 
-const m = Math.floor(diff / 60000);
-
-const s = Math.floor((diff % 60000) / 1000);
+const m = Math.floor(diff/60000);
+const s = Math.floor((diff%60000)/1000);
 
 document.getElementById("timer").innerHTML =
-
 "⏳ Expire dans " + m + "m " + s + "s";
 
 },1000);
