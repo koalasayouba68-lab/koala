@@ -6,7 +6,6 @@
 
 <title>Accès PDF</title>
 
-<!-- GOOGLE SEARCH CONSOLE -->
 <meta name="google-site-verification" content="v1n-U1ZbQ_z94Hxt0NyvesUKsW1mK5yBPT3q6O8in4c" />
 
 <style>
@@ -71,8 +70,7 @@ display:none;
 <h3>💰 Paiement Orange Money</h3>
 
 <p style="background:#fff3cd;padding:10px;border-radius:8px;">
-📌 Composez : <b>*144*10*44295613*300#</b><br><br>
-Puis revenez cliquer sur <b>✔ J’ai payé</b> pour recevoir votre code.
+📌 Composez : <b>*144*10*44295613*300#</b>
 </p>
 
 <button onclick="payer()">✔ J’ai payé</button>
@@ -118,7 +116,7 @@ created_at:new Date().toISOString()
 alert("Paiement envoyé ✔");
 }
 
-// 🔑 VERIFIER + DOWNLOAD
+// 🔑 VERIFIER + START TIMER ICI
 async function verifier(){
 
 const code = document.getElementById("code").value;
@@ -139,11 +137,13 @@ return;
 }
 
 const p = data[0];
-const now = new Date();
-const exp = new Date(p.expires_at);
 
-if(p.status === "confirmé" && exp > now){
+if(p.status !== "confirmé"){
+alert("Code non confirmé ❌");
+return;
+}
 
+// ✔ ACCÈS OK
 alert("Accès autorisé ✔ Téléchargement...");
 
 const a = document.createElement("a");
@@ -151,48 +151,18 @@ a.href = "monpdf.pdf";
 a.download = "monpdf.pdf";
 a.click();
 
-}else{
-alert("Code expiré ou non confirmé ❌");
-}
-}
-
-// 🔥 LIVE CODE + TIMER
-async function checkLive(){
-
-const phone = localStorage.getItem("phone");
-if(!phone) return;
-
-const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}`,{
-headers:{
-apikey:SUPABASE_KEY,
-Authorization:`Bearer ${SUPABASE_KEY}`
-}
-});
-
-const data = await res.json();
-
-const confirmed = data.filter(p => p.status === "confirmé");
-
-if(confirmed.length === 0){
-document.getElementById("topcode").style.display="none";
-document.getElementById("timer").style.display="none";
-return;
+// 🟢 START TIMER ICI (IMPORTANT)
+startTimer(p.expires_at);
 }
 
-const p = confirmed[confirmed.length - 1];
-
-const now = new Date();
-const exp = new Date(p.expires_at);
-
-if(exp > now){
-
-document.getElementById("topcode").style.display="block";
-document.getElementById("topcode").innerHTML =
-"🔑 Code actif : " + p.code;
-
-document.getElementById("timer").style.display="block";
+// 🟢 TIMER DÉMARRE SEULEMENT APRÈS CODE VALIDE
+function startTimer(expireDate){
 
 clearInterval(countdown);
+
+const exp = new Date(expireDate);
+
+document.getElementById("timer").style.display = "block";
 
 countdown = setInterval(()=>{
 
@@ -211,14 +181,7 @@ document.getElementById("timer").innerHTML =
 "⏳ Expire dans " + m + "m " + s + "s";
 
 },1000);
-
-}else{
-document.getElementById("topcode").style.display="none";
-document.getElementById("timer").style.display="none";
 }
-}
-
-setInterval(checkLive,5000);
 
 </script>
 
