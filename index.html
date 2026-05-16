@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -33,6 +34,13 @@ width:100%;
 margin-top:10px;
 }
 
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+box-sizing:border-box;
+}
+
 #topcode{
 position:fixed;
 top:10px;
@@ -62,59 +70,138 @@ z-index:999;
 
 <body>
 
-<script>
-
-// 🔐 VERIFIER SI CONNECTÉ
-const savedPhone = localStorage.getItem("phone");
-
-if(!savedPhone){
-window.location.href = "login.html";
-}
-
-</script>
-
 <div id="topcode"></div>
 <div id="timer"></div>
 
-<div class="box">
+<!-- 🔐 CONNEXION -->
+
+<div id="loginBox" class="box">
+
+<h2>🔐 Connexion</h2>
+
+<p>
+Entre ton numéro Orange Money pour continuer.
+</p>
+
+<input
+id="loginPhone"
+placeholder="Numéro Orange Money">
+
+<button onclick="connexion()">
+Continuer
+</button>
+
+</div>
+
+<!-- 📘 SITE -->
+
+<div class="box" id="siteBox">
 
 <h2>📘 Accès PDF</h2>
 
 <h3>💰 Paiement Orange Money</h3>
 
 <p style="background:#fff3cd;padding:10px;border-radius:8px;">
-📌 Composez : <b>*144*10*44295613*300#</b><br><br>
-Puis revenez cliquer sur <b>✔ J’ai payé</b> pour recevoir votre code.
+
+📌 Composez :
+<b>*144*10*44295613*300#</b>
+
+<br><br>
+
+Puis revenez cliquer sur
+<b>✔ J’ai payé</b>
+pour recevoir votre code.
+
 </p>
 
-<button onclick="payer()">✔ J’ai payé</button>
+<button onclick="payer()">
+✔ J’ai payé
+</button>
 
 <hr>
 
 <h3>🔑 Entrer code</h3>
 
-<input id="code" placeholder="Code reçu" style="width:100%;padding:10px;">
+<input
+id="code"
+placeholder="Code reçu">
 
-<button onclick="verifier()">Accéder PDF</button>
+<button onclick="verifier()">
+Accéder PDF
+</button>
 
 </div>
 
 <script>
 
-const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
+const SUPABASE_URL =
+"https://gkqlmpkmzfvurkzgrjlm.supabase.co";
 
-const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
+const SUPABASE_KEY =
+"sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
 
 let countdown;
 
+// 🔐 CONNEXION
+
+function connexion(){
+
+const phone =
+document.getElementById("loginPhone").value;
+
+if(!phone){
+
+alert("Entre ton numéro");
+
+return;
+}
+
+localStorage.setItem("phone", phone);
+
+document.getElementById("loginBox").style.display =
+"none";
+
+document.getElementById("siteBox").style.display =
+"block";
+
+}
+
+// 🔄 RESTAURER SESSION
+
+window.onload = function(){
+
+const phone = localStorage.getItem("phone");
+
+if(phone){
+
+document.getElementById("loginBox").style.display =
+"none";
+
+document.getElementById("siteBox").style.display =
+"block";
+
+}else{
+
+document.getElementById("loginBox").style.display =
+"block";
+
+document.getElementById("siteBox").style.display =
+"none";
+
+}
+
+}
+
 // 💰 PAYER
+
 async function payer(){
 
 const phone = localStorage.getItem("phone");
 
 if(!phone){
+
 alert("Reconnecte-toi");
-window.location.href = "login.html";
+
 return;
 }
 
@@ -129,37 +216,41 @@ Authorization:`Bearer ${SUPABASE_KEY}`,
 },
 
 body:JSON.stringify({
+
 phone:phone,
 status:"en attente",
 created_at:new Date().toISOString()
+
 })
 
 });
 
 alert("Paiement envoyé ✔");
+
 }
 
-// 🔑 VERIFIER + PDF
+// 🔑 VERIFIER
+
 async function verifier(){
 
-const code = document.getElementById("code").value;
+const code =
+document.getElementById("code").value;
 
-const phone = localStorage.getItem("phone");
+const phone =
+localStorage.getItem("phone");
 
-if(!phone){
-alert("Reconnecte-toi");
-window.location.href = "login.html";
-return;
-}
+const res = await fetch(
 
-const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&code=eq.${code}`,{
+`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&code=eq.${code}`,
 
+{
 headers:{
 apikey:SUPABASE_KEY,
 Authorization:`Bearer ${SUPABASE_KEY}`
 }
+}
 
-});
+);
 
 const data = await res.json();
 
@@ -168,6 +259,7 @@ if(!data || data.length === 0){
 alert("Code invalide ❌");
 
 return;
+
 }
 
 const p = data[0];
@@ -177,19 +269,28 @@ if(p.status !== "confirmé"){
 alert("Code non confirmé ❌");
 
 return;
+
 }
 
-// 🟢 DEMARRER TIMER SEULEMENT APRÈS VALIDATION
+// ⏳ DEMARRER TIMER APRÈS VALIDATION
 
 if(!p.started_at){
 
-const started = new Date().toISOString();
+const started =
+new Date().toISOString();
 
-const expires = new Date(
+const expires =
+new Date(
+
 Date.now() + 2*60*60*1000
+
 ).toISOString();
 
-await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${p.id}`,{
+await fetch(
+
+`${SUPABASE_URL}/rest/v1/payments?id=eq.${p.id}`,
+
+{
 
 method:"PATCH",
 
@@ -200,41 +301,53 @@ Authorization:`Bearer ${SUPABASE_KEY}`,
 },
 
 body:JSON.stringify({
+
 started_at:started,
 expires_at:expires
+
 })
 
-});
+}
+
+);
 
 p.started_at = started;
 p.expires_at = expires;
+
 }
 
-// ✔ ACCÈS OK
+// ✔ ACCÈS
+
 alert("Accès autorisé ✔");
 
-// OUVRIR PDF
-window.location.href = "monpdf.pdf";
+// 🔑 CODE
 
-// AFFICHER CODE
-document.getElementById("topcode").style.display="block";
+document.getElementById("topcode").style.display =
+"block";
 
 document.getElementById("topcode").innerHTML =
 "🔑 Code actif : " + p.code;
 
-// TIMER
+// ⏳ TIMER
+
 startTimer(p.expires_at);
+
+// 📘 OUVRIR PDF
+
+window.location.href = "monpdf.pdf";
 
 }
 
 // ⏳ TIMER
+
 function startTimer(expireDate){
 
 clearInterval(countdown);
 
 const exp = new Date(expireDate);
 
-document.getElementById("timer").style.display = "block";
+document.getElementById("timer").style.display =
+"block";
 
 countdown = setInterval(()=>{
 
@@ -251,6 +364,7 @@ document.getElementById("topcode").style.display =
 clearInterval(countdown);
 
 return;
+
 }
 
 const m = Math.floor(diff / 60000);
@@ -258,55 +372,10 @@ const m = Math.floor(diff / 60000);
 const s = Math.floor((diff % 60000) / 1000);
 
 document.getElementById("timer").innerHTML =
+
 "⏳ Expire dans " + m + "m " + s + "s";
 
 },1000);
-
-}
-
-// 🔄 RESTAURER SESSION
-window.onload = async function(){
-
-const phone = localStorage.getItem("phone");
-
-if(!phone) return;
-
-const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}`,{
-
-headers:{
-apikey:SUPABASE_KEY,
-Authorization:`Bearer ${SUPABASE_KEY}`
-}
-
-});
-
-const data = await res.json();
-
-const confirmed = data.filter(p =>
-p.status === "confirmé" &&
-p.started_at &&
-p.expires_at
-);
-
-if(confirmed.length === 0) return;
-
-const p = confirmed[confirmed.length - 1];
-
-const now = new Date();
-
-const exp = new Date(p.expires_at);
-
-if(exp > now){
-
-document.getElementById("topcode").style.display =
-"block";
-
-document.getElementById("topcode").innerHTML =
-"🔑 Code actif : " + p.code;
-
-startTimer(p.expires_at);
-
-}
 
 }
 
