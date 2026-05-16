@@ -33,6 +33,13 @@ width:100%;
 margin-top:10px;
 }
 
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+box-sizing:border-box;
+}
+
 #topcode{
 position:fixed;
 top:10px;
@@ -42,6 +49,7 @@ color:white;
 padding:10px;
 border-radius:10px;
 display:none;
+z-index:999;
 }
 
 #timer{
@@ -53,6 +61,7 @@ color:white;
 padding:10px;
 border-radius:10px;
 display:none;
+z-index:999;
 }
 
 </style>
@@ -73,13 +82,17 @@ display:none;
 📌 Composez : <b>*144*10*44295613*300#</b>
 </p>
 
+<input id="phone"
+placeholder="Ton numéro Orange Money">
+
 <button onclick="payer()">✔ J’ai payé</button>
 
 <hr>
 
 <h3>🔑 Entrer code</h3>
 
-<input id="code" placeholder="Code reçu" style="width:100%;padding:10px;">
+<input id="code" placeholder="Code reçu">
+
 <button onclick="verifier()">Accéder PDF</button>
 
 </div>
@@ -94,8 +107,12 @@ let countdown;
 // 💰 PAYER
 async function payer(){
 
-const phone = prompt("Ton numéro Orange Money");
-if(!phone) return;
+const phone = document.getElementById("phone").value;
+
+if(!phone){
+alert("Entre ton numéro");
+return;
+}
 
 localStorage.setItem("phone", phone);
 
@@ -116,11 +133,16 @@ created_at:new Date().toISOString()
 alert("Paiement envoyé ✔");
 }
 
-// 🔑 VERIFIER + OUVRIR PDF + TIMER
+// 🔑 VERIFIER CODE
 async function verifier(){
 
 const code = document.getElementById("code").value;
 const phone = localStorage.getItem("phone");
+
+if(!phone){
+alert("Aucun numéro enregistré");
+return;
+}
 
 const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&code=eq.${code}`,{
 headers:{
@@ -143,14 +165,42 @@ alert("Code non confirmé ❌");
 return;
 }
 
-// ✔ ACCÈS OK
+// 🟢 SI TIMER PAS ENCORE DÉMARRÉ
+if(!p.started_at){
+
+const started = new Date().toISOString();
+
+const expires = new Date(Date.now() + 2*60*60*1000).toISOString();
+
+await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${p.id}`,{
+method:"PATCH",
+headers:{
+apikey:SUPABASE_KEY,
+Authorization:`Bearer ${SUPABASE_KEY}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+started_at:started,
+expires_at:expires
+})
+});
+
+p.started_at = started;
+p.expires_at = expires;
+}
+
 alert("Accès autorisé ✔");
 
-// OUVRIR PDF (PAS DE DOWNLOAD)
+// OUVRIR PDF
 window.location.href = "monpdf.pdf";
 
 // START TIMER
 startTimer(p.expires_at);
+
+// AFFICHER CODE
+document.getElementById("topcode").style.display="block";
+document.getElementById("topcode").innerHTML =
+"🔑 Code actif : " + p.code;
 }
 
 // 🟢 TIMER
@@ -167,8 +217,13 @@ countdown = setInterval(()=>{
 const diff = exp - new Date();
 
 if(diff <= 0){
+
 document.getElementById("timer").innerHTML = "❌ Code expiré";
+
+document.getElementById("topcode").style.display = "none";
+
 clearInterval(countdown);
+
 return;
 }
 
@@ -179,6 +234,54 @@ document.getElementById("timer").innerHTML =
 "⏳ Expire dans " + m + "m " + s + "s";
 
 },1000);
+}
+
+// 🔄 RESTAURER SESSION
+window.onload = async function(){
+
+const savedPhone = localStorage.getItem("phone");
+
+if(savedPhone){
+
+document.getElementById("phone").value = savedPhone;
+
+const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${savedPhone}`,{
+headers:{
+apikey:SUPABASE_KEY,
+Authorization:`Bearer ${SUPABASE_KEY}`
+}
+});
+
+const data = await res.json();
+
+const confirmed = data.filter(p =>
+p.status === "confirmé" &&
+p.started_at &&
+p.expires_at
+);
+
+if(confirmed.length > 0){
+
+const p = confirmed[confirmed.length - 1];
+
+const now = new Date();
+const exp = new Date(p.expires_at);
+
+if(exp > now){
+
+document.getElementById("topcode").style.display="block";
+
+document.getElementById("topcode").innerHTML =
+"🔑 Code actif : " + p.code;
+
+startTimer(p.expires_at);
+
+}
+
+}
+
+}
+
 }
 
 </script>
