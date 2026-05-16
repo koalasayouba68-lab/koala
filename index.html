@@ -2,21 +2,26 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Accès PDF</title>
 
 <!-- GOOGLE SEARCH CONSOLE -->
 <meta name="google-site-verification" content="v1n-U1ZbQ_z94Hxt0NyvesUKsW1mK5yBPT3q6O8in4c" />
 
 <style>
+
 body{
 font-family:Arial;
 background:#f4f4f4;
-padding:20px;
+padding:10px;
+margin:0;
 }
 
 .box{
+width:95%;
 max-width:600px;
-margin:auto;
+margin:20px auto;
 background:white;
 padding:20px;
 border-radius:10px;
@@ -50,6 +55,7 @@ padding:10px;
 border-radius:10px;
 display:none;
 }
+
 </style>
 </head>
 
@@ -140,7 +146,6 @@ if(p.status === "confirmé" && exp > now){
 
 alert("Accès autorisé ✔ Téléchargement...");
 
-// DOWNLOAD PDF
 const a = document.createElement("a");
 a.href = "monpdf.pdf";
 a.download = "monpdf.pdf";
@@ -181,12 +186,10 @@ const exp = new Date(p.expires_at);
 
 if(exp > now){
 
-// CODE
 document.getElementById("topcode").style.display="block";
 document.getElementById("topcode").innerHTML =
 "🔑 Code actif : " + p.code;
 
-// TIMER
 document.getElementById("timer").style.display="block";
 
 clearInterval(countdown);
