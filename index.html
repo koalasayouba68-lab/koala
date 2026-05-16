@@ -116,7 +116,7 @@ created_at:new Date().toISOString()
 alert("Paiement envoyé ✔");
 }
 
-// 🔑 VERIFIER + START TIMER ICI
+// 🔑 VERIFIER + OUVRIR PDF + TIMER
 async function verifier(){
 
 const code = document.getElementById("code").value;
@@ -144,18 +144,16 @@ return;
 }
 
 // ✔ ACCÈS OK
-alert("Accès autorisé ✔ Téléchargement...");
+alert("Accès autorisé ✔");
 
-const a = document.createElement("a");
-a.href = "monpdf.pdf";
-a.download = "monpdf.pdf";
-a.click();
+// OUVRIR PDF (PAS DE DOWNLOAD)
+window.open("monpdf.pdf", "_blank");
 
-// 🟢 START TIMER ICI (IMPORTANT)
+// START TIMER
 startTimer(p.expires_at);
 }
 
-// 🟢 TIMER DÉMARRE SEULEMENT APRÈS CODE VALIDE
+// 🟢 TIMER
 function startTimer(expireDate){
 
 clearInterval(countdown);
