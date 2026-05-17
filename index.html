@@ -73,22 +73,22 @@ z-index:999;
 <div id="topcode"></div>
 <div id="timer"></div>
 
-<!-- 🔐 LOGIN AJOUTÉ (NE TOUCHE PAS TON DESIGN) -->
+<!-- 🔐 LOGIN -->
 <div id="loginBox" class="box">
 
 <h2>🔐 Connexion</h2>
 
 <p>
-Entre ton numéro Orange Money pour continuer.
+Entre ton numéro pour continuer.
 </p>
 
-<input id="loginPhone" placeholder="Numéro Orange Money">
+<input id="loginPhone" placeholder="Entrer votre numéro">
 
 <button onclick="connexion()">Continuer</button>
 
 </div>
 
-<!-- 📘 TON SITE ORIGINAL -->
+<!-- 📘 TON SITE -->
 <div class="box" id="siteBox" style="display:none;">
 
 <h2>📘 Accès PDF</h2>
@@ -120,6 +120,24 @@ pour recevoir votre code.
 
 </div>
 
+<!-- 🚪 DECONNEXION -->
+<button onclick="deconnexion()"
+style="
+width:95%;
+max-width:600px;
+margin:20px auto;
+display:block;
+background:red;
+color:white;
+border:none;
+padding:15px;
+border-radius:10px;
+">
+
+🚪 Déconnexion
+
+</button>
+
 <script>
 
 const SUPABASE_URL =
@@ -129,9 +147,10 @@ const SUPABASE_KEY =
 "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
 
 let countdown;
+let autoCheck;
 
 ////////////////////////////////////////////////////
-// 🔐 LOGIN (AJOUTÉ SANS CASSER TON SYSTÈME)
+// 🔐 LOGIN
 ////////////////////////////////////////////////////
 
 function connexion(){
@@ -148,6 +167,19 @@ localStorage.setItem("phone", phone);
 
 document.getElementById("loginBox").style.display="none";
 document.getElementById("siteBox").style.display="block";
+
+}
+
+////////////////////////////////////////////////////
+// 🚪 DECONNEXION
+////////////////////////////////////////////////////
+
+function deconnexion(){
+
+localStorage.removeItem("phone");
+
+location.reload();
+
 }
 
 ////////////////////////////////////////////////////
@@ -159,17 +191,21 @@ window.onload = function(){
 const phone = localStorage.getItem("phone");
 
 if(phone){
+
 document.getElementById("loginBox").style.display="none";
 document.getElementById("siteBox").style.display="block";
+
 }else{
+
 document.getElementById("loginBox").style.display="block";
 document.getElementById("siteBox").style.display="none";
+
 }
 
 }
 
 ////////////////////////////////////////////////////
-// 💰 PAYER (INCHANGÉ)
+// 💰 PAYER
 ////////////////////////////////////////////////////
 
 async function payer(){
@@ -184,6 +220,7 @@ return;
 await fetch(`${SUPABASE_URL}/rest/v1/payments`,{
 
 method:"POST",
+
 headers:{
 apikey:SUPABASE_KEY,
 Authorization:`Bearer ${SUPABASE_KEY}`,
@@ -199,10 +236,58 @@ created_at:new Date().toISOString()
 });
 
 alert("Paiement envoyé ✔");
+
+surveillerCode();
+
 }
 
 ////////////////////////////////////////////////////
-// 🔑 VERIFIER (INCHANGÉ)
+// 🔄 SURVEILLER CODE AUTO
+////////////////////////////////////////////////////
+
+async function surveillerCode(){
+
+clearInterval(autoCheck);
+
+autoCheck = setInterval(async ()=>{
+
+const phone = localStorage.getItem("phone");
+
+if(!phone) return;
+
+const res = await fetch(
+
+`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&order=created_at.desc&limit=1`,
+
+{
+headers:{
+apikey:SUPABASE_KEY,
+Authorization:`Bearer ${SUPABASE_KEY}`
+}
+}
+
+);
+
+const data = await res.json();
+
+if(data.length > 0){
+
+const p = data[0];
+
+document.getElementById("code").value = p.code;
+
+alert("🔑 Nouveau code reçu");
+
+clearInterval(autoCheck);
+
+}
+
+},3000);
+
+}
+
+////////////////////////////////////////////////////
+// 🔑 VERIFIER
 ////////////////////////////////////////////////////
 
 async function verifier(){
@@ -240,13 +325,20 @@ startTimer(p.expires_at);
 // ✔ ACCÈS
 alert("Accès autorisé ✔");
 
+// 🔑 AFFICHER CODE
+document.getElementById("topcode").style.display="block";
+
+document.getElementById("topcode").innerHTML =
+"🔑 Code actif : " + p.code;
+
 // 📘 OUVERTURE PDF EN LECTURE
-const pdf = window.open("monpdf.pdf", "_blank");
+window.open("monpdf.pdf", "_blank");
 
 // Bouton download manuel
 setTimeout(()=>{
 
 const btn = document.createElement("button");
+
 btn.innerText = "⬇ Télécharger PDF";
 
 btn.style.position = "fixed";
@@ -261,10 +353,15 @@ btn.style.borderRadius = "10px";
 btn.style.zIndex = "9999";
 
 btn.onclick = () => {
+
 const a = document.createElement("a");
+
 a.href = "monpdf.pdf";
+
 a.download = "monpdf.pdf";
+
 a.click();
+
 };
 
 document.body.appendChild(btn);
@@ -274,7 +371,7 @@ document.body.appendChild(btn);
 }
 
 ////////////////////////////////////////////////////
-// ⏳ TIMER (INCHANGÉ)
+// ⏳ TIMER
 ////////////////////////////////////////////////////
 
 function startTimer(expireDate){
@@ -290,16 +387,25 @@ countdown = setInterval(()=>{
 const diff = exp - new Date();
 
 if(diff <= 0){
-document.getElementById("timer").innerHTML="❌ Code expiré";
-document.getElementById("topcode").style.display="none";
+
+document.getElementById("timer").innerHTML =
+"❌ Code expiré";
+
+document.getElementById("topcode").style.display =
+"none";
+
 clearInterval(countdown);
+
 return;
+
 }
 
 const m = Math.floor(diff/60000);
+
 const s = Math.floor((diff%60000)/1000);
 
 document.getElementById("timer").innerHTML =
+
 "⏳ Expire dans " + m + "m " + s + "s";
 
 },1000);
