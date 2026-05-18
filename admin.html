@@ -2,18 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-
-<title>KOALA privé</title>
-
-<script>
-const ADMIN_PASSWORD = "2005KOALA";
-
-const pass = prompt("Mot de passe admin ?");
-if(pass !== ADMIN_PASSWORD){
-document.body.innerHTML = "Accès refusé ❌";
-throw new Error("Not allowed");
-}
-</script>
+<title>Admin Dashboard</title>
 
 <style>
 body{font-family:Arial;background:#f4f4f4;padding:20px;}
@@ -146,7 +135,7 @@ return;
 
 // CODE + EXPIRATION
 const code = Math.random().toString(36).substring(2,8).toUpperCase();
-const expires = new Date(Date.now() + 24*60*60*1000);
+const expires = new Date(Date.now() + 2*60*60*1000);
 
 // UPDATE Supabase
 const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`,{
