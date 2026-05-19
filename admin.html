@@ -5,7 +5,8 @@
 <title>Admin Dashboard</title>
 
 <style>
-body{font-family:Arial;background:#f4f4f4;padding:20px;}
+/* 🔒 Sécurité : Caché par défaut tant que le bon mot de passe n'est pas saisi */
+body{font-family:Arial;background:#f4f4f4;padding:20px;display:none;}
 .box{max-width:900px;margin:auto;background:white;padding:20px;border-radius:10px;}
 
 .actions-bar {
@@ -70,6 +71,15 @@ margin-top:5px;
 </div>
 
 <script>
+// 🔒 SYSTÈME DE VÉRIFICATION DU MOT DE PASSE SECRET
+const codeAdmin = prompt("Entrez le code d'accès Admin :");
+
+if (codeAdmin !== "2005koala") {
+    alert("Mot de passe incorrect !");
+    window.location.href = "about:blank"; // Redirection vers une page blanche
+} else {
+    document.body.style.display = "block"; // Affiche l'application si le code est valide
+}
 
 const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
@@ -106,7 +116,6 @@ const isConfirmed = p.status === "confirmé";
 // ⏳ 2. FILTRE 72 HEURES : Si le paiement est confirmé depuis plus de 72h, on l'ignore (il disparaît)
 if (isConfirmed && p.expires_at) {
 const dateExpiration = new Date(p.expires_at);
-// Le paiement a été validé il y a (Heure expiration - 2h de validité). On regarde si 72h se sont écoulées depuis.
 const dateConfirmation = new Date(dateExpiration.getTime() - (2 * 60 * 60 * 1000));
 const tempsEcouleDepuisConfirmation = maintenant - dateConfirmation;
 const limite72h = 72 * 60 * 60 * 1000;
@@ -163,11 +172,8 @@ document.getElementById("list").innerHTML = html;
 // 🔲 COCHER UNIQUEMENT CEUX EN ATTENTE
 function cocherTout(){
 const checkboxes = document.querySelectorAll(".checkbox-pay");
-let ontEteCoches = false;
-
 checkboxes.forEach(cb => {
 cb.checked = true;
-ontEteCoches = true;
 });
 
 gererVisibiliteBoutonGroupe();
@@ -200,7 +206,6 @@ if(!confirm(`Voulez-vous confirmer ces ${checkboxes.length} paiements d'un coup 
 document.getElementById("batchConfirmBtn").disabled = true;
 document.getElementById("batchConfirmBtn").innerText = "⏳ Traitement...";
 
-// Boucle sur chaque case cochée pour exécuter la confirmation
 for(let cb of checkboxes) {
 const id = cb.value;
 await executerConfirmation(id);
@@ -210,10 +215,10 @@ alert("Tous les paiements sélectionnés ont été confirmés ! 🎉");
 load();
 }
 
-// 🔧 LOGIQUE TECHNIQUE DE CONFIRMATION (REFACTORISÉE POUR LE MODE GROUPÉ)
+// 🔧 LOGIQUE TECHNIQUE DE CONFIRMATION
 async function executerConfirmation(id) {
 const code = Math.random().toString(36).substring(2,8).toUpperCase();
-const expires = new Date(Date.now() + 2*60*60*1000); // 2 heures d'accès
+const expires = new Date(Date.now() + 2*60*60*1000); 
 
 await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`,{
 method:"PATCH",
@@ -230,7 +235,7 @@ expires_at:expires.toISOString()
 });
 }
 
-// ✔ CONFIRMER UN SEUL PAIEMENT (BOUTON INDIVIDUEL)
+// ✔ CONFIRMER UN SEUL PAIEMENT
 async function confirmPay(id){
 const check = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`,{
 headers:{
@@ -256,8 +261,10 @@ alert("Paiement confirmé avec succès !");
 load();
 }
 
-// Premier chargement automatique au démarrage
-load();
+// Chargement initial uniquement si le code d'authentification a réussi
+if (codeAdmin === "2005koala") {
+    load();
+}
 
 </script>
 
