@@ -8,6 +8,16 @@
 body{font-family:Arial;background:#f4f4f4;padding:20px;}
 .box{max-width:900px;margin:auto;background:white;padding:20px;border-radius:10px;}
 
+.actions-bar {
+display: flex;
+gap: 10px;
+margin-bottom: 15px;
+align-items: center;
+background: #f9f9f9;
+padding: 10px;
+border-radius: 8px;
+}
+
 .item{
 background:#eee;
 padding:10px;
@@ -18,9 +28,23 @@ justify-content:space-between;
 align-items:center;
 }
 
-button{padding:8px;margin:5px;cursor:pointer;}
-.ok{background:green;color:white;border:none;}
-.ok:disabled{background:gray;cursor:not-allowed;}
+.item-left {
+display: flex;
+align-items: center;
+gap: 15px;
+}
+
+.checkbox-pay {
+width: 20px;
+height: 20px;
+cursor: pointer;
+}
+
+button{padding:8px;margin:5px;cursor:pointer;border-radius:5px;}
+.btn-primary {background:#2196F3; color:white; border:none;}
+.btn-success {background:green; color:white; border:none;}
+.btn-success:disabled{background:gray;cursor:not-allowed;}
+.btn-batch {background:#9c27b0; color:white; border:none; display:none; font-weight:bold;}
 
 .timer{
 font-weight:bold;
@@ -34,7 +58,14 @@ margin-top:5px;
 
 <div class="box">
 <h2>🟣 Admin Dashboard</h2>
-<button onclick="load()">🔄 Charger paiements</button>
+
+<!-- 🛠 BARRE D'ACTIONS -->
+<div class="actions-bar">
+<button class="btn-primary" onclick="load()">🔄 Charger paiements</button>
+<button class="btn-primary" onclick="cocherTout()">🔲 Sélectionner tout (en attente)</button>
+<button id="batchConfirmBtn" class="btn-batch" onclick="confirmerSelection()">✔ Confirmer la sélection</button>
+</div>
+
 <div id="list"></div>
 </div>
 
@@ -45,6 +76,8 @@ const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
 
 // 🔄 LOAD
 async function load(){
+// On masque le bouton de groupe par défaut au rechargement
+document.getElementById("batchConfirmBtn").style.display = "none";
 
 const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?select=*`,{
 headers:{
@@ -53,51 +86,68 @@ Authorization:`Bearer ${SUPABASE_KEY}`
 }
 });
 
-const data = await res.json();
+let data = await res.json();
 
 console.log("DATA:", data);
 
+// ⚡ 1. TRI AUTOMATIQUE : "En attente" en haut, puis tri par date du plus récent au plus ancien
+data.sort((a, b) => {
+if (a.status === "en attente" && b.status !== "en attente") return -1;
+if (a.status !== "en attente" && b.status === "en attente") return 1;
+return new Date(b.created_at || b.id) - new Date(a.created_at || a.id);
+});
+
 let html = "";
+const maintenant = new Date();
 
 data.forEach(p=>{
-
 const isConfirmed = p.status === "confirmé";
 
-// ⏳ CALCUL TIMER
+// ⏳ 2. FILTRE 72 HEURES : Si le paiement est confirmé depuis plus de 72h, on l'ignore (il disparaît)
+if (isConfirmed && p.expires_at) {
+const dateExpiration = new Date(p.expires_at);
+// Le paiement a été validé il y a (Heure expiration - 2h de validité). On regarde si 72h se sont écoulées depuis.
+const dateConfirmation = new Date(dateExpiration.getTime() - (2 * 60 * 60 * 1000));
+const tempsEcouleDepuisConfirmation = maintenant - dateConfirmation;
+const limite72h = 72 * 60 * 60 * 1000;
+
+if (tempsEcouleDepuisConfirmation > limite72h) {
+return; // Passe au paiement suivant sans l'ajouter à l'affichage
+}
+}
+
+// ⏳ CALCUL TIMER RESTANT (FORFAIT CLIENT DE 2H)
 let timerText = "";
-
 if(p.expires_at){
-
-const now = new Date();
 const exp = new Date(p.expires_at);
-const diff = exp - now;
+const diff = exp - maintenant;
 
 if(diff > 0){
-
-const m = Math.floor(diff / 60000);
-const s = Math.floor((diff % 60000) / 1000);
-
-timerText = `⏳ ${m}m ${s}s restant`;
-
+const h = Math.floor(diff / 3600000);
+const m = Math.floor((diff % 3600000) / 60000);
+timerText = `⏳ ${h}h ${m}m restant`;
 }else{
 timerText = "❌ expiré";
 }
-
 }else{
 timerText = "—";
 }
 
 html += `
 <div class="item">
+<div class="item-left">
+<!-- La case à cocher apparaît uniquement si le paiement est 'en attente' -->
+${!isConfirmed ? `<input type="checkbox" class="checkbox-pay" value="${p.id}" onchange="gererVisibiliteBoutonGroupe()">` : `<span style="width:20px;"></span>`}
 <div>
 📞 ${p.phone}<br>
 Status: ${isConfirmed ? "✔ confirmé" : "⏳ en attente"}<br>
 Code: ${p.code ? p.code : "—"}<br>
 <div class="timer">${timerText}</div>
 </div>
+</div>
 
 <div>
-<button class="ok"
+<button class="btn-success"
 onclick="confirmPay('${p.id}')"
 ${isConfirmed ? "disabled" : ""}>
 ✔ Confirmer
@@ -105,15 +155,83 @@ ${isConfirmed ? "disabled" : ""}>
 </div>
 </div>
 `;
-
 });
 
 document.getElementById("list").innerHTML = html;
 }
 
-// ✔ CONFIRMER
-async function confirmPay(id){
+// 🔲 COCHER UNIQUEMENT CEUX EN ATTENTE
+function cocherTout(){
+const checkboxes = document.querySelectorAll(".checkbox-pay");
+let ontEteCoches = false;
 
+checkboxes.forEach(cb => {
+cb.checked = true;
+ontEteCoches = true;
+});
+
+gererVisibiliteBoutonGroupe();
+}
+
+// 👀 AFFICHER/MASQUER LE BOUTON DE CONFIRMATION GROUPÉE
+function gererVisibiliteBoutonGroupe() {
+const checkboxes = document.querySelectorAll(".checkbox-pay");
+let auMoinsUnCoche = false;
+
+checkboxes.forEach(cb => {
+if(cb.checked) auMoinsUnCoche = true;
+});
+
+const batchBtn = document.getElementById("batchConfirmBtn");
+if(auMoinsUnCoche) {
+batchBtn.style.display = "inline-block";
+} else {
+batchBtn.style.display = "none";
+}
+}
+
+// ⚡ CONFIRMER PLUSIEURS PAIEMENTS SÉLECTIONNÉS D'UN COUP
+async function confirmerSelection() {
+const checkboxes = document.querySelectorAll(".checkbox-pay:checked");
+if(checkboxes.length === 0) return;
+
+if(!confirm(`Voulez-vous confirmer ces ${checkboxes.length} paiements d'un coup ?`)) return;
+
+document.getElementById("batchConfirmBtn").disabled = true;
+document.getElementById("batchConfirmBtn").innerText = "⏳ Traitement...";
+
+// Boucle sur chaque case cochée pour exécuter la confirmation
+for(let cb of checkboxes) {
+const id = cb.value;
+await executerConfirmation(id);
+}
+
+alert("Tous les paiements sélectionnés ont été confirmés ! 🎉");
+load();
+}
+
+// 🔧 LOGIQUE TECHNIQUE DE CONFIRMATION (REFACTORISÉE POUR LE MODE GROUPÉ)
+async function executerConfirmation(id) {
+const code = Math.random().toString(36).substring(2,8).toUpperCase();
+const expires = new Date(Date.now() + 2*60*60*1000); // 2 heures d'accès
+
+await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`,{
+method:"PATCH",
+headers:{
+apikey:SUPABASE_KEY,
+Authorization:`Bearer ${SUPABASE_KEY}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+status:"confirmé",
+code:code,
+expires_at:expires.toISOString()
+})
+});
+}
+
+// ✔ CONFIRMER UN SEUL PAIEMENT (BOUTON INDIVIDUEL)
+async function confirmPay(id){
 const check = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`,{
 headers:{
 apikey:SUPABASE_KEY,
@@ -133,32 +251,12 @@ alert("Déjà confirmé ✔");
 return;
 }
 
-// CODE + EXPIRATION
-const code = Math.random().toString(36).substring(2,8).toUpperCase();
-const expires = new Date(Date.now() + 2*60*60*1000);
-
-// UPDATE Supabase
-const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`,{
-method:"PATCH",
-headers:{
-apikey:SUPABASE_KEY,
-Authorization:`Bearer ${SUPABASE_KEY}`,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-status:"confirmé",
-code:code,
-expires_at:expires.toISOString()
-})
-});
-
-console.log(await res.text());
-
-alert("Code généré : " + code);
-
+await executerConfirmation(id);
+alert("Paiement confirmé avec succès !");
 load();
 }
 
+// Premier chargement automatique au démarrage
 load();
 
 </script>
