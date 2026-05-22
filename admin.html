@@ -58,7 +58,7 @@ margin-top:5px;
 <body>
 
 <div class="box">
-<h2>🟣 Admin Dashboard</h2>
+<h2>🟣 Admin Dashboard - KOALA</h2>
 
 <!-- 🛠 BARRE D'ACTIONS -->
 <div class="actions-bar">
@@ -86,7 +86,6 @@ const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
 
 // 🔄 LOAD
 async function load(){
-// On masque le bouton de groupe par défaut au rechargement
 document.getElementById("batchConfirmBtn").style.display = "none";
 
 const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?select=*`,{
@@ -113,7 +112,7 @@ const maintenant = new Date();
 data.forEach(p=>{
 const isConfirmed = p.status === "confirmé";
 
-// ⏳ 2. FILTRE 72 HEURES : Si le paiement est confirmé depuis plus de 72h, on l'ignore (il disparaît)
+// ⏳ 2. FILTRE DE NETTOYAGE : Supprime l'affichage des vieux codes de formations après 72h (Laisse toujours visibles les espaces loués)
 if (isConfirmed && p.expires_at) {
 const dateExpiration = new Date(p.expires_at);
 const dateConfirmation = new Date(dateExpiration.getTime() - (2 * 60 * 60 * 1000));
@@ -121,13 +120,16 @@ const tempsEcouleDepuisConfirmation = maintenant - dateConfirmation;
 const limite72h = 72 * 60 * 60 * 1000;
 
 if (tempsEcouleDepuisConfirmation > limite72h) {
-return; // Passe au paiement suivant sans l'ajouter à l'affichage
+return; 
 }
 }
 
-// ⏳ CALCUL TIMER RESTANT (FORFAIT CLIENT DE 2H)
+// ⏳ CALCUL DU TEMPS RESTANT OU TYPE D'ACCÈS
 let timerText = "";
-if(p.expires_at){
+let typeAchat = "📚 Formation";
+
+// Détection intelligente du type de produit basé sur le montant (ou sur l'absence de date limite d'expiration)
+if (p.expires_at) {
 const exp = new Date(p.expires_at);
 const diff = exp - maintenant;
 
@@ -138,20 +140,23 @@ timerText = `⏳ ${h}h ${m}m restant`;
 }else{
 timerText = "❌ expiré";
 }
-}else{
-timerText = "—";
+} else if (isConfirmed && !p.expires_at) {
+typeAchat = "🔒 Permanent (Espace Vente)";
+timerText = "✅ Accès illimité (Loueur)";
+} else {
+timerText = "En attente de traitement...";
 }
 
 html += `
-<div class="item">
+<div class="item" style="${!p.expires_at && isConfirmed ? 'border-left: 5px solid #2196F3;' : ''}">
 <div class="item-left">
-<!-- La case à cocher apparaît uniquement si le paiement est 'en attente' -->
 ${!isConfirmed ? `<input type="checkbox" class="checkbox-pay" value="${p.id}" onchange="gererVisibiliteBoutonGroupe()">` : `<span style="width:20px;"></span>`}
 <div>
-📞 ${p.phone}<br>
-Status: ${isConfirmed ? "✔ confirmé" : "⏳ en attente"}<br>
-Code: ${p.code ? p.code : "—"}<br>
-<div class="timer">${timerText}</div>
+📞 <b>${p.phone}</b><br>
+Type : <span style="color:${p.expires_at ? 'green' : '#2196F3'}; font-weight:bold;">${p.expires_at || !isConfirmed ? typeAchat : '🔒 Permanent (Espace Vente)'}</span><br>
+Status: ${isConfirmed ? "<span style='color:green;'>✔ confirmé</span>" : "<span style='color:orange;'>⏳ en attente</span>"}<br>
+Code: ${p.code ? `<b style="background:#fff3cd; padding:2px 5px; border-radius:4px;">${p.code}</b>` : "—"}<br>
+<div class="timer" style="color:${p.expires_at ? '#d10000' : 'green'};">${timerText}</div>
 </div>
 </div>
 
@@ -215,11 +220,36 @@ alert("Tous les paiements sélectionnés ont été confirmés ! 🎉");
 load();
 }
 
-// 🔧 LOGIQUE TECHNIQUE DE CONFIRMATION
+// 🔧 LOGIQUE TECHNIQUE DE CONFIRMATION AVEC GESTION INTELLIGENTE DU PRIX
 async function executerConfirmation(id) {
 const code = Math.random().toString(36).substring(2,8).toUpperCase();
-const expires = new Date(Date.now() + 2*60*60*1000); 
 
+// 1. Récupérer d'abord les détails de la ligne pour vérifier si c'est une location à 1000 Fr
+const resCheck = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
+headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}` }
+});
+const clientData = await resCheck.json();
+
+let updateBody = {
+status: "confirmé",
+code: code
+};
+
+if (clientData && clientData.length > 0) {
+const client = clientData[0];
+// Si le montant n'est pas trouvé ou s'il est différent de 1000, on applique les 2 heures par défaut.
+// Si c'est égal à 1000 (Espace libre), on n'ajoute PAS de "expires_at", ce qui le rend permanent.
+if (client.amount !== 1000 && client.amount !== "1000") {
+const expires = new Date(Date.now() + 2*60*60*1000); 
+updateBody.expires_at = expires.toISOString();
+}
+} else {
+// Sécurité : si problème de lecture, on applique la règle des 2h par défaut
+const expires = new Date(Date.now() + 2*60*60*1000); 
+updateBody.expires_at = expires.toISOString();
+}
+
+// 2. Mise à jour de la ligne sur Supabase
 await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`,{
 method:"PATCH",
 headers:{
@@ -227,11 +257,7 @@ apikey:SUPABASE_KEY,
 Authorization:`Bearer ${SUPABASE_KEY}`,
 "Content-Type":"application/json"
 },
-body:JSON.stringify({
-status:"confirmé",
-code:code,
-expires_at:expires.toISOString()
-})
+body:JSON.stringify(updateBody)
 });
 }
 
@@ -263,9 +289,8 @@ load();
 
 // Chargement initial uniquement si le code d'authentification a réussi
 if (codeAdmin === "2005koala") {
-    load();
+load();
 }
-
 </script>
 
 </body>
