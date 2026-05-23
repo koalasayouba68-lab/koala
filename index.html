@@ -73,7 +73,7 @@ Ici, nous vous proposons deux opportunités uniques :<br><br>
 <div id="catalogBox" class="box" style="display:none; max-width: 850px;">
 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
 <h3 style="margin: 0; color: green;">👈 Cliquez sur la formation</h3>
-<h3 style="margin: 0; color: #2196F3; text-align: right;">Ou louez un espace libre 👉</h3>
+<h3 id="compteurEspaces" style="margin: 0; color: #2196F3; text-align: right;">Chargement des espaces...</h3>
 </div>
 
 <div class="grid-container">
@@ -85,9 +85,9 @@ Ici, nous vous proposons deux opportunités uniques :<br><br>
 </div>
 </div>
 
-<!-- Colonne de droite : Les 50 Espaces Libres -->
+<!-- Colonne de droite : Les 50 Espaces Dynamiques -->
 <div class="column-right">
-<h4 style="margin-top: 0; color: #555; text-align: center;">50 Espaces Libres Disponibles (1000 Fr / mois)</h4>
+<h4 style="margin-top: 0; color: #555; text-align: center;">50 Espaces de Vente Disponibles (1000 Fr / mois)</h4>
 <div class="spaces-grid" id="spacesContainer"></div>
 </div>
 </div>
@@ -146,7 +146,7 @@ Puis revenez cliquer sur <b>✔ J’ai payé</b> pour que l'administrateur gén�
 </div>
 
 <button onclick="retourAuCatalogue()" style="background:#666; color:white; margin-top:20px;">🏠 Retour au catalogue</button>
-<button onclick="deconnexion()" style="background:red; color:white;">Déconnexion du compte</button>
+<button onclick="deconnexion()" style="background:red; color:white; margin-top:10px;">Déconnexion du compte</button>
 </div>
 
 <script>
@@ -156,24 +156,13 @@ const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
 let countdown, checkInterval, essais = 0, timerStarted = false, derniereVerification = "";
 let appareilID = obtenirAppareilID();
 let articleSelectionne = "", montantSelectionne = 300, expirationDateGlobale = null, currentRole = "sous_client"; 
-let currentPaymentId = null; // Stocke l'ID de la ligne pour mettre à jour la publication
+let currentPaymentId = null;
 
 function genererIdentifiantSecours() { return 'dev-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36); }
 function obtenirAppareilID() {
 let id = localStorage.getItem("appareilID");
 if (!id) { id = genererIdentifiantSecours(); localStorage.setItem("appareilID", id); }
 return id;
-}
-
-// Génération des 50 boutons
-const spacesContainer = document.getElementById("spacesContainer");
-for (let i = 1; i <= 50; i++) {
-const formattedNum = i < 10 ? '0' + i : i;
-const btn = document.createElement("button");
-btn.className = "btn-space";
-btn.innerText = `Espace ${formattedNum}\nLibre`;
-btn.onclick = () => selectionnerAchat(`Location Espace ${formattedNum}`, 1000);
-spacesContainer.appendChild(btn);
 }
 
 function connexion(){
@@ -186,7 +175,12 @@ restaurerCode();
 surveillerConfirmation();
 }
 
-function ouvrirCatalogue() { document.getElementById("welcomeBox").style.display = "none"; document.getElementById("catalogBox").style.display = "block"; }
+function ouvrirCatalogue() { 
+document.getElementById("welcomeBox").style.display = "none"; 
+document.getElementById("catalogBox").style.display = "block"; 
+genererCatalogueEspaces(); // Charge l'état réel des 50 espaces depuis Supabase
+}
+
 function retourVersBienvenu() { document.getElementById("catalogBox").style.display = "none"; document.getElementById("welcomeBox").style.display = "block"; }
 function retourAuCatalogue() { document.getElementById("siteBox").style.display = "none"; document.getElementById("catalogBox").style.display = "block"; }
 
@@ -200,9 +194,70 @@ document.getElementById("catalogBox").style.display = "none";
 document.getElementById("siteBox").style.display = "block";
 }
 
+// CORRECTION DÉCONNEXION : Supprime tout sans résidu pour pouvoir changer de numéro
 function deconnexion(){
-localStorage.clear();
-location.reload();
+clearInterval(checkInterval);
+clearInterval(countdown);
+localStorage.removeItem("phone");
+document.getElementById("loginPhone").value = "";
+document.getElementById("code").value = "";
+document.getElementById("loginBox").style.display="block";
+document.getElementById("welcomeBox").style.display="none";
+document.getElementById("catalogBox").style.display="none";
+document.getElementById("siteBox").style.display="none";
+document.getElementById("topcode").style.display="none";
+document.getElementById("timer").style.display="none";
+document.getElementById("uploadZone").style.display = "none";
+document.getElementById("formationAccessZone").style.display = "none";
+timerStarted = false;
+currentPaymentId = null;
+}
+
+// VRAI CATALOGUE DYNAMIQUE : Analyse la base pour basculer les espaces occupés
+async function genererCatalogueEspaces() {
+const spacesContainer = document.getElementById("spacesContainer");
+spacesContainer.innerHTML = ""; // Vide l'ancien affichage
+
+try {
+    // Récupération de tous les paiements confirmés qui correspondent à des espaces
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?status=eq.confirmé&select=name_file`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    
+    // Extrait la liste des numéros d'espace qui ont une publication active
+    let espacesOccupes = [];
+    data.forEach(item => {
+        if(item.name_file && item.name_file.includes("Location Espace")) {
+            const num = item.name_file.replace("Location Espace ", "").trim();
+            espacesOccupes.push(parseInt(num));
+        }
+    });
+
+    let compteLibre = 50 - espacesOccupes.length;
+    document.getElementById("compteurEspaces").innerText = `Ou louez un espace (${compteLibre} Libres) 👉`;
+
+    for (let i = 1; i <= 50; i++) {
+        const formattedNum = i < 10 ? '0' + i : i;
+        const btn = document.createElement("button");
+        btn.className = "btn-space";
+        
+        if(espacesOccupes.includes(i)) {
+            // L'espace est réellement occupé
+            btn.innerText = `Espace ${formattedNum}\nOccupé 🔴`;
+            btn.style.background = "red";
+            btn.onclick = () => alert(`Cet espace ${formattedNum} est déjà loué et configuré par un créateur. 🔒`);
+        } else {
+            // L'espace est libre
+            btn.innerText = `Espace ${formattedNum}\nLibre`;
+            btn.style.background = "#2196F3";
+            btn.onclick = () => selectionnerAchat(`Location Espace ${formattedNum}`, 1000);
+        }
+        spacesContainer.appendChild(btn);
+    }
+} catch (e) {
+    console.error("Erreur chargement catalogue", e);
+}
 }
 
 window.onload = function(){
@@ -212,9 +267,12 @@ document.getElementById("loginBox").style.display="none";
 document.getElementById("welcomeBox").style.display="block";
 restaurerCode();
 surveillerConfirmation();
+} else {
+document.getElementById("loginBox").style.display="block";
 }
 }
 
+// PERSISTANCE : Recherche et réaffiche les anciennes données sauvegardées du locataire
 async function restaurerCode(){
 const phone = localStorage.getItem("phone");
 if(!phone) return;
@@ -243,11 +301,11 @@ if(p.amount === 1000 || p.role === "vendeur") {
         document.getElementById("topcode").innerHTML = "🔒 Mon Espace Loué : " + p.code;
         document.getElementById("code").value = p.code;
         document.getElementById("uploadZone").style.display = "block";
-        if(p.description) {
-            document.getElementById("descFichier").value = p.description;
-            document.getElementById("numDepot").value = p.num_depot || "";
-            document.getElementById("prixEspace").value = p.prix_vente || "";
-        }
+        
+        // VRAI REMPLISSAGE AUTOMATIQUE DES CADRES : On réaffiche ce qu'il avait déjà publié
+        if(p.description) { document.getElementById("descFichier").value = p.description; }
+        if(p.num_depot) { document.getElementById("numDepot").value = p.num_depot; }
+        if(p.prix_vente) { document.getElementById("prixEspace").value = p.prix_vente; }
     }
 } else {
     if(!estExpire) {
@@ -289,9 +347,7 @@ if(!data || data.length===0) return;
 const p = data[data.length - 1];
 currentPaymentId = p.id;
 
-if(p.status === "confirmé") {
-    restaurerCode();
-}
+if(p.status === "confirmé") { restaurerCode(); }
 },10000);
 }
 
@@ -305,12 +361,12 @@ const data = await res.json();
 if(data.length > 0) { alert("Accès Validé ✔"); restaurerCode(); } else { alert("Code incorrect ❌"); }
 }
 
-// PUBLICATION RÉELLE DANS SUPABASE
 async function validerConfigurationEspace() {
 const description = document.getElementById("descFichier").value.trim();
 const numero = document.getElementById("numDepot").value.trim();
 const prix = document.getElementById("prixEspace").value.trim();
 const fileInput = document.getElementById("fileInput");
+const phone = localStorage.getItem("phone");
 
 if (!description || !numero || !prix || fileInput.files.length === 0) {
     alert("Veuillez remplir tous les champs obligatoires ! ❌");
@@ -321,15 +377,14 @@ if (fichier.size > 10 * 1024 * 1024) { alert("Fichier trop lourd (Max 10 Mo) ❌
 
 if(!currentPaymentId) { alert("Aucune location active trouvée pour publier ❌"); return; }
 
-// Envoi des infos de l'espace dans la ligne correspondante de Supabase
+// Sauvegarde définitive dans Supabase
 const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPaymentId}`, {
     method: "PATCH",
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
         description: description,
         num_depot: numero,
-        prix_vente: parseInt(prix),
-        name_file: fichier.name
+        prix_vente: parseInt(prix)
     })
 });
 
@@ -340,10 +395,7 @@ if(res.ok) {
 }
 }
 
-async function reabonnerVendeur() {
-    payer();
-}
-
+async function reabonnerVendeur() { payer(); }
 function ouvrirPDF() { window.open("formation2026.pdf", "_blank"); }
 function telechargerPDF() { const a = document.createElement("a"); a.href = "formation2026.pdf"; a.download = "formation2026.pdf"; a.click(); }
 
