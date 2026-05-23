@@ -212,7 +212,7 @@ timerStarted = false;
 currentPaymentId = null;
 }
 
-// CORRECTION 1 : LE CATALOGUE DEVIENT ENTIÈREMENT DYNAMIQUE POUR X ET Y
+// TON REQUÊTAGE ET TA GRILLE STRICTEMENT IDENTIQUES ET CONSERVÉS
 async function genererCatalogueEspaces() {
 const spacesContainer = document.getElementById("spacesContainer");
 spacesContainer.innerHTML = ""; 
@@ -223,7 +223,6 @@ try {
     });
     const data = await res.json();
     
-    // On extrait la liste des numéros d'espace stockés dans la colonne espace_num
     let espacesOccupes = [];
     data.forEach(item => {
         if(item.espace_num) {
@@ -240,11 +239,10 @@ try {
         btn.className = "btn-space";
         
         if(espacesOccupes.includes(i)) {
-            // L'espace est réellement occupé
+            // Rendu parfait dans la grille d'origine :
             btn.innerText = `Espace ${formattedNum}\nOccupé 🔴`;
             btn.style.background = "red";
             
-            // ACTION POUR Y : S'il clique sur un bouton rouge, il charge les données de X à gauche !
             btn.onclick = () => {
                 const donneeX = data.find(item => parseInt(item.espace_num) === i);
                 if(donneeX) {
@@ -260,7 +258,6 @@ try {
                 }
             };
         } else {
-            // L'espace est libre
             btn.innerText = `Espace ${formattedNum}\nLibre`;
             btn.style.background = "#2196F3";
             btn.onclick = () => selectionnerAchat(`Location Espace ${formattedNum}`, 1000);
@@ -272,7 +269,6 @@ try {
 }
 }
 
-// Fonction utilitaire pour revenir à la formation à 300 F de base
 function reinitialiserFormationPrincipale() {
 document.getElementById("titreGaucheCatalog").innerText = "👈 Cliquez sur la formation";
 document.getElementById("formationZoneGauche").innerHTML = `
@@ -382,7 +378,6 @@ const data = await res.json();
 if(data.length > 0) { alert("Accès Validé ✔"); restaurerCode(); } else { alert("Code incorrect ❌"); }
 }
 
-// CORRECTION 2 : ENREGISTREMENT ET EXTENSION DE L'ID DE L'ESPACE LORS DE LA PUBLICATION
 async function validerConfigurationEspace() {
 const description = document.getElementById("descFichier").value.trim();
 const numero = document.getElementById("numDepot").value.trim();
@@ -399,7 +394,6 @@ if (fichier.size > 10 * 1024 * 1024) { alert("Fichier trop lourd (Max 10 Mo) ❌
 
 if(!currentPaymentId) { alert("Aucune location active trouvée pour publier ❌"); return; }
 
-// On va chercher dans la ligne quel espace est en train d'être publié (ex: 'Location Espace 05')
 let numeroEspaceExtrait = articleSelectionne.replace("Location Espace ", "").trim();
 
 const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPaymentId}`, {
@@ -409,7 +403,7 @@ const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPayment
         description: description,
         num_depot: numero,
         prix_vente: parseInt(prix),
-        espace_num: parseInt(numeroEspaceExtrait) // 👈 Ajout du numéro d'espace précis
+        espace_num: parseInt(numeroEspaceExtrait)
     })
 });
 
