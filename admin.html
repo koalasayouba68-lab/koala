@@ -2,22 +2,29 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>KOALA - Master Admin Panel</title>
+<title>KOALA - Panel Administration Officiel</title>
 <style>
-body{font-family:Arial, sans-serif;background:#f4f4f4;padding:20px;}
-.box{max-width:850px;margin:auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.1);}
-.item{background:#eee;padding:15px;margin:10px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
+body{font-family:Arial, sans-serif;background:#f4f4f4;padding:20px;color:#333;}
+.box{max-width:850px;margin:auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
+.item{background:#eee;padding:15px;margin:10px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;border-left:5px solid gold;}
 button{padding:10px 15px;cursor:pointer;border-radius:5px;font-weight:bold;border:none;}
+.btn-primary {background:#2196F3; color:white; margin-right: 10px;}
 .btn-success {background:green; color:white;}
-.badge-vendeur { background:#7B1FA2; color:white; padding:4px 8px; border-radius:4px; font-size:11px; }
-.badge-client { background:#0288D1; color:white; padding:4px 8px; border-radius:4px; font-size:11px; }
+.btn-danger {background:red; color:white; margin-left:5px;}
+.badge{padding:4px 8px;border-radius:4px;color:white;font-size:12px;font-weight:bold;}
+.badge-vendeur{background:#9c27b0;}
+.badge-client{background:#009688;}
 </style>
 </head>
 <body>
 
 <div class="box">
-<h2>🟣 KOALA DRIVE — Contrôle Général Administrateur</h2>
-<div id="list" style="margin-top:20px;">Chargement du réseau...</div>
+<h2>🟣 KOALA - Gestion des Validations (30j / 72h)</h2>
+<div style="margin-bottom: 20px;">
+<button class="btn-primary" onclick="load()">🔄 Actualiser la liste</button>
+<button class="btn-primary" style="background:#555;" onclick="selectionnerTout()">📋 Sélectionner Tout</button>
+</div>
+<div id="list">Chargement des demandes en cours...</div>
 </div>
 
 <script>
@@ -31,66 +38,126 @@ async function load(){
             headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}` }
         });
         let data = await res.json();
-        if(!data || data.length === 0) { listDiv.innerHTML = "<p>Aucune activité.</p>"; return; }
 
+        if(!data || data.length === 0) {
+            listDiv.innerHTML = "<p>Aucune demande trouvée. 📭</p>";
+            return;
+        }
+
+        // Tri du plus récent au plus ancien
         data.sort((a, b) => b.id - a.id);
 
         let html = "";
         data.forEach(p => {
             const isConfirmed = p.status === "confirmé";
             const isExpired = p.expires_at ? new Date(p.expires_at) < new Date() : false;
-            const badge = p.role === "vendeur" ? `<span class="badge-vendeur">VENDEUR (30j)</span>` : `<span class="badge-client">SOUS-CLIENT (72h)</span>`;
             
-            let statutText = p.status === "en attente" ? "<span style='color:orange;'>⏳ En attente validation</span>" : "<span style='color:green;'>✔ Activé</span>";
-            if(isConfirmed && isExpired) statutText = "<span style='color:red;'>❌ Expired</span>";
+            // Détection automatique du type d'utilisateur selon le montant ou le rôle
+            const estVendeur = (p.amount === 1000 || p.role === "vendeur");
+            const badgeType = estVendeur ? 
+                `<span class="badge badge-vendeur">🏠 VENDEUR (Espace)</span>` : 
+                `<span class="badge badge-client">📖 CLIENT (Formation/Fichier)</span>`;
+
+            let statutTexte = "<span style='color:orange;'>⏳ En attente de code</span>";
+            let couleurBord = "gold";
+
+            if (isConfirmed) {
+                if (isExpired) {
+                    statutTexte = estVendeur ? 
+                        "<span style='color:red;'>❌ Facture Expirée (Fin des 30j)</span>" : 
+                        "<span style='color:red;'>❌ Temps Écoulé (Fin des 72h)</span>";
+                    couleurBord = "red";
+                } else {
+                    statutTexte = "<span style='color:green;'>✔ Accès Autorisé et Actif</span>";
+                    couleurBord = "green";
+                }
+            } else if (p.status === "bloqué") {
+                statutTexte = "<span style='color:red;'>🔒 Compte Bloqué</span>";
+                couleurBord = "black";
+            }
 
             html += `
-            <div class="item" style="border-left: 6px solid ${p.role === 'vendeur' ? '#7B1FA2' : '#0288D1'};">
+            <div class="item" style="border-left: 6px solid ${couleurBord};" data-id="${p.id}">
                 <div>
-                    ${badge} <b>N° : ${p.phone}</b><br>
-                    Statut : ${statutText}<br>
-                    Code généré : <b>${p.code || "Aucun"}</b><br>
-                    Fin d'accès : <b>${p.expires_at ? new Date(p.expires_at).toLocaleString('fr-FR') : "Pas de date"}</b>
+                    ${badgeType} 📞 <b>Numéro : ${p.phone}</b><br>
+                    Service : <b>${p.amount === 1000 ? "Location Espace (1000 F)" : "Achat Service (" + p.amount + " F)"}</b><br>
+                    Statut actuel : ${statutTexte}<br>
+                    Code Unique : <b style="color:#2196F3;">${p.code || "Aucun code"}</b><br>
+                    Échéance : <b>${p.expires_at ? new Date(p.expires_at).toLocaleString('fr-FR') : "Permanent (En attente)"}</b>
                 </div>
-                <div>
-                    <button class="btn-success" onclick="validerCompte('${p.id}', '${p.role}')">
-                        ✔ Valider le Paiement
+                <div style="text-align:right;">
+                    <button class="btn-success" onclick="validerPaiement('${p.id}', ${estVendeur})">
+                        ✔ ${isExpired ? "Réactiver / Prolonger" : "Générer & Valider"}
                     </button>
+                    <button class="btn-danger" onclick="bloquerCompte('${p.id}')">🔒 Bloquer</button>
                 </div>
             </div>
             `;
         });
+
         listDiv.innerHTML = html;
-    } catch (e) { listDiv.innerHTML = "Erreur de connexion."; }
-}
-
-async function validerCompte(id, role) {
-    const codeUnique = Math.random().toString(36).substring(2,8).toUpperCase();
-    const dateButoir = new Date();
-
-    if(role === "vendeur") {
-        // Le vendeur obtient 30 jours complets
-        dateButoir.setDate(dateButoir.getDate() + 30);
-    } else {
-        // Le sous-client obtient exactement 72 heures chrono
-        dateButoir.setHours(dateButoir.getHours() + 72);
+    } catch (error) {
+        listDiv.innerHTML = "<p style='color:red;'>Erreur de chargement des données de la base Supabase ❌</p>";
     }
-
-    await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
-        method: "PATCH",
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-            status: "confirmé",
-            code: codeUnique,
-            expires_at: dateButoir.toISOString()
-        })
-    });
-    alert(`Compte activé avec succès pour ce ${role} !`);
-    load();
 }
 
+// VALIDATION INTELLIGENTE : Applique +30j ou +72h automatiquement
+async function validerPaiement(id, estVendeur){
+    // Génération du code d'accès unique de 6 caractères
+    const codeUnique = Math.random().toString(36).substring(2,8).toUpperCase();
+    
+    const dateCalcul = new Date();
+    if (estVendeur) {
+        // Règle 30 jours pour les espaces locataires
+        dateCalcul.setDate(dateCalcul.getDate() + 30);
+    } else {
+        // Règle 72 heures chrono pour les sous-clients / formations
+        dateCalcul.setHours(dateCalcul.getHours() + 72);
+    }
+    const expirationISO = dateCalcul.toISOString();
+
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
+            method: "PATCH",
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+                status: "confirmé",
+                code: codeUnique,
+                expires_at: expirationISO
+            })
+        });
+
+        if(response.ok) {
+            alert(`Succès ! Accès configuré pour ${estVendeur ? "30 jours (Vendeur)" : "72 heures (Client)"} avec le code : ${codeUnique} 🎉`);
+            load();
+        }
+    } catch (e) { alert("Erreur lors de la modification de la ligne."); }
+}
+
+async function bloquerCompte(id){
+    if(!confirm("Voulez-vous suspendre l'accès de ce numéro immédiatement ?")) return;
+    try {
+        await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
+            method: "PATCH",
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "bloqué" })
+        });
+        load();
+    } catch (e) { alert("Erreur."); }
+}
+
+// Fonction de sélection globale visuelle demandée
+function selectionnerTout() {
+    const items = document.querySelectorAll('.item');
+    items.forEach(item => {
+        item.style.background = "#d0e8ff"; // Change la couleur de fond pour simuler la sélection
+    });
+    alert(`${items.length} éléments sélectionnés dans l'interface.`);
+}
+
+// Chargement et rafraîchissement automatique
 load();
-setInterval(load, 4000);
+setInterval(load, 10000); // Actualisation toutes les 10 secondes pour préserver ta base de données
 </script>
 </body>
 </html>
