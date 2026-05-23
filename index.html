@@ -9,29 +9,51 @@
 body{font-family:Arial, sans-serif;background:#f4f4f4;padding:10px;margin:0;}
 .box{width:95%;max-width:700px;margin:20px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
 
-/* Design Catalogue Deux Colonnes */
-.grid-container {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 15px;
-margin-top: 15px;
+/* Conteneur de la liste unique verticale */
+.spaces-list-vertical {
+display: flex;
+flex-direction: column;
+max-height: 480px;
+overflow-y: auto;
+padding: 5px;
 }
+
+/* Style d'une ligne d'espace (Occupé ou Libre) */
+.espace-ligne {
+display: flex;
+align-items: center;
+justify-content: space-between;
+background: #fdfdfd;
+border: 1px solid #ddd;
+padding: 10px;
+border-radius: 8px;
+font-size: 14px;
+margin-bottom: 6px; /* Petite espace entre 01 et 02, etc. */
+}
+
 @media (max-width: 600px) {
-.grid-container { grid-template-columns: 1fr; }
+.espace-ligne { flex-direction: column; align-items: flex-start; gap: 8px; }
+.espace-ligne button { width: 100%; }
 }
-.column-left { border-right: 2px solid #ccc; padding-right: 10px; }
-.column-right { padding-left: 10px; }
 
-/* Éléments de formation */
-.formation-card { background: #fdfdfd; border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 8px; }
-.btn-formation { background: green; color: white; font-weight: bold; }
+.esp-num { font-weight: bold; color: #333; min-width: 35px; }
+.esp-desc { flex-grow: 1; color: #555; padding: 0 15px; text-align: left; }
 
-/* Grille des 50 espaces */
-.spaces-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; max-height: 430px; overflow-y: auto; padding: 5px; border: 1px dashed #bbb; border-radius: 5px; }
-.btn-space { background: #2196F3; color: white; font-size: 11px; padding: 6px; font-weight: bold; }
+/* Titre "Espaces à louer" en bleu inséré entre les occupés et les libres */
+.titre-louer-bleu {
+color: #007bff;
+font-size: 16px;
+font-weight: bold;
+margin: 10px 0;
+padding: 5px 0;
+text-align: left;
+border-bottom: 1px dashed #007bff;
+}
 
 button{padding:10px;width:100%;margin-top:10px;cursor:pointer;border:none;border-radius:8px;font-size:16px;}
 button:hover{opacity:0.9;}
+.espace-ligne button { width: auto; min-width: 110px; margin-top: 0; font-size: 13px; font-weight: bold; }
+
 input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;border-radius:8px;border:1px solid #ccc;font-size:16px;}
 #topcode{position:fixed;top:10px;right:10px;background:black;color:white;padding:10px;border-radius:10px;display:none;z-index:999;font-size:14px;}
 #timer{position:fixed;top:60px;right:10px;background:red;color:white;padding:10px;border-radius:10px;display:none;z-index:999;font-size:14px;}
@@ -69,28 +91,16 @@ Ici, nous vous proposons deux opportunités uniques :<br><br>
 <button onclick="ouvrirCatalogue()" style="background: red; color: white; font-weight: bold; font-size: 18px; margin-top: 15px;">Découvrir le catalogue ➔</button>
 </div>
 
-<!-- 🟩 ÉCRAN 2 : CATALOGUE PRINCIPAL -->
-<div id="catalogBox" class="box" style="display:none; max-width: 850px;">
+<!-- 🟩 ÉCRAN 2 : CATALOGUE PRINCIPAL SÉPARÉ (SANS COLONNES) -->
+<div id="catalogBox" class="box" style="display:none; max-width: 750px;">
 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-<h3 id="titreGaucheCatalog" style="margin: 0; color: green;">👈 Cliquez sur la formation</h3>
+<h3 style="margin: 0; color: green;">Catalogue des formations</h3>
 <h3 id="compteurEspaces" style="margin: 0; color: #2196F3; text-align: right;">Chargement des espaces...</h3>
 </div>
 
-<div class="grid-container">
-<!-- Colonne de gauche : Formation -->
-<div class="column-left" id="formationZoneGauche">
-<div class="formation-card">
-<button class="btn-formation" onclick="selectionnerAchat('Formation Principale KOALA', 300)">01. Acheter la Formation</button>
-<p style="font-size:13px; margin: 5px 0 0 0; color: #333;"><b>Description :</b> Notre formation de base exclusive pour maîtriser les outils numériques et booster vos compétences rapidement.<br><b>Prix : 300 Fr CFA</b></p>
-</div>
-</div>
+<!-- Conteneur de la liste unique défilante -->
+<div class="spaces-list-vertical" id="spacesContainer"></div>
 
-<!-- Colonne de droite : Les 50 Espaces Dynamiques -->
-<div class="column-right">
-<h4 style="margin-top: 0; color: #555; text-align: center;">50 Espaces de Vente Disponibles (1000 Fr / mois)</h4>
-<div class="spaces-grid" id="spacesContainer"></div>
-</div>
-</div>
 <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
 </div>
 
@@ -109,7 +119,7 @@ Puis revenez cliquer sur <b>✔ J’ai payé</b> pour que l'administrateur gén�
 <input id="code" placeholder="Entrez le code d'accès">
 <button onclick="verifier()" style="background:#9c27b0; color:white; font-weight:bold;">Vérifier et Accéder</button>
 
-<!-- ZONE DES BOUTONS DE LECTURE (Caché par défaut) -->
+<!-- ZONE DES BOUTONS DE LECTURE -->
 <div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
 <h3 style="color: green; margin: 0 0 10px 0;">📚 Votre Formation est débloquée :</h3>
 <div class="action-buttons">
@@ -212,7 +222,7 @@ timerStarted = false;
 currentPaymentId = null;
 }
 
-// TON REQUÊTAGE ET TA GRILLE STRICTEMENT IDENTIQUES ET CONSERVÉS
+// LOGIQUE D'AFFICHAGE REORGANISÉE DE 01 À 50 EN REPRENANT TES PARAMÈTRES SUPABASE
 async function genererCatalogueEspaces() {
 const spacesContainer = document.getElementById("spacesContainer");
 spacesContainer.innerHTML = ""; 
@@ -231,52 +241,54 @@ try {
     });
 
     let compteLibre = 50 - espacesOccupes.length;
-    document.getElementById("compteurEspaces").innerText = `Ou louez un espace (${compteLibre} Libres) 👉`;
+    document.getElementById("compteurEspaces").innerText = `(${compteLibre} Libres)`;
 
+    // 1. AFFICHAGE DES ESPACES OCCUPÉS (Bouton Suivre)
     for (let i = 1; i <= 50; i++) {
-        const formattedNum = i < 10 ? '0' + i : i;
-        const btn = document.createElement("button");
-        btn.className = "btn-space";
-        
         if(espacesOccupes.includes(i)) {
-            // Rendu parfait dans la grille d'origine :
-            btn.innerText = `Espace ${formattedNum}\nOccupé 🔴`;
-            btn.style.background = "red";
+            const formattedNum = i < 10 ? '0' + i : i;
+            const donneeX = data.find(item => parseInt(item.espace_num) === i);
             
-            btn.onclick = () => {
-                const donneeX = data.find(item => parseInt(item.espace_num) === i);
-                if(donneeX) {
-                    document.getElementById("titreGaucheCatalog").innerText = `Espace ${formattedNum} sélectionné`;
-                    const zoneGauche = document.getElementById("formationZoneGauche");
-                    zoneGauche.innerHTML = `
-                        <div class="formation-card">
-                            <button class="btn-formation" onclick="selectionnerAchat('${donneeX.description.replace(/'/g, "\\'")}', ${donneeX.prix_vente})">01. Acheter la formation</button>
-                            <p style="font-size:13px; margin: 5px 0 0 0; color: #333;"><b>Description :</b> ${donneeX.description}<br><b>Prix : ${donneeX.prix_vente} Fr CFA</b></p>
-                            <button onclick="reinitialiserFormationPrincipale()" style="background:#666; color:white; font-size:12px; margin-top:10px; padding:5px;">🔤 Retour formation principale</button>
-                        </div>
-                    `;
-                }
-            };
-        } else {
-            btn.innerText = `Espace ${formattedNum}\nLibre`;
-            btn.style.background = "#2196F3";
-            btn.onclick = () => selectionnerAchat(`Location Espace ${formattedNum}`, 1000);
+            const row = document.createElement("div");
+            row.className = "espace-ligne";
+            row.innerHTML = `
+                <div class="esp-num">${formattedNum}</div>
+                <div class="esp-desc"><b>${donneeX ? donneeX.description : 'Contenu partagé'}</b></div>
+                <button style="background:green; color:white;" onclick="selectionnerAchat('${donneeX ? donneeX.description.replace(/'/g, "\\'") : 'Formation ' + formattedNum}', ${donneeX ? donneeX.prix_vente : 500})">
+                    Suivre
+                </button>
+            `;
+            spacesContainer.appendChild(row);
         }
-        spacesContainer.appendChild(btn);
     }
+
+    // 2. INSERTION DU TITRE EN BLEU "Espaces à louer"
+    const titreDiv = document.createElement("div");
+    titreDiv.className = "titre-louer-bleu";
+    titreDiv.innerText = "Espaces à louer";
+    spacesContainer.appendChild(titreDiv);
+
+    // 3. AFFICHAGE DES ESPACES LIBRES RESTANTS (Bouton Louer)
+    for (let i = 1; i <= 50; i++) {
+        if(!espacesOccupes.includes(i)) {
+            const formattedNum = i < 10 ? '0' + i : i;
+            
+            const row = document.createElement("div");
+            row.className = "espace-ligne";
+            row.innerHTML = `
+                <div class="esp-num">${formattedNum}</div>
+                <div class="esp-desc" style="color: #2196F3; font-style: italic;">Espace Libre</div>
+                <button style="background:#2196F3; color:white;" onclick="selectionnerAchat('Location Espace ${formattedNum}', 1000)">
+                    Louer (1000 F)
+                </button>
+            `;
+            spacesContainer.appendChild(row);
+        }
+    }
+
 } catch (e) {
     console.error("Erreur chargement catalogue", e);
 }
-}
-
-function reinitialiserFormationPrincipale() {
-document.getElementById("titreGaucheCatalog").innerText = "👈 Cliquez sur la formation";
-document.getElementById("formationZoneGauche").innerHTML = `
-    <div class="formation-card">
-        <button class="btn-formation" onclick="selectionnerAchat('Formation Principale KOALA', 300)">01. Acheter la Formation</button>
-        <p style="font-size:13px; margin: 5px 0 0 0; color: #333;"><b>Description :</b> Notre formation de base exclusive pour maîtriser les outils numériques et booster vos compétences rapidement.<br><b>Prix : 300 Fr CFA</b></p>
-    </div>
-`;
 }
 
 window.onload = function(){
@@ -383,7 +395,6 @@ const description = document.getElementById("descFichier").value.trim();
 const numero = document.getElementById("numDepot").value.trim();
 const prix = document.getElementById("prixEspace").value.trim();
 const fileInput = document.getElementById("fileInput");
-const phone = localStorage.getItem("phone");
 
 if (!description || !numero || !prix || fileInput.files.length === 0) {
     alert("Veuillez remplir tous les champs obligatoires ! ❌");
