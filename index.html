@@ -168,7 +168,7 @@ let appareilID = obtenirAppareilID();
 let articleSelectionne = "", montantSelectionne = 300, expirationDateGlobale = null, currentRole = "sous_client"; 
 let currentPaymentId = null;
 
-// Variable globale pour mémoriser dynamiquement le nom du fichier débloqué par le code actif
+// Variable globale contenant l'URL internet absolue du fichier débloqué
 let urlFichierAchete = "formation2026.pdf";
 
 function genererIdentifiantSecours() { return 'dev-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36); }
@@ -201,7 +201,7 @@ function selectionnerAchat(nom, montant) {
 articleSelectionne = nom;
 montantSelectionne = montant;
 currentRole = montant === 1000 ? "vendeur" : "sous_client";
-document.getElementById("titreAchat").innerText = `📘 Validation : ${nom}`;
+document.getElementById("titreAchat").innerText = `📘 Validation : ${nom.includes("http") ? "Fichier partagé" : nom}`;
 document.getElementById("syntaxeOrange").innerText = `*144*10*44295613*${montant}#`;
 document.getElementById("catalogBox").style.display = "none";
 document.getElementById("siteBox").style.display = "block";
@@ -226,7 +226,6 @@ currentPaymentId = null;
 urlFichierAchete = "formation2026.pdf";
 }
 
-// LOGIQUE D'AFFICHAGE REORGANISÉE DE 01 À 50 EN REPRENANT TES PARAMÈTRES SUPABASE
 async function genererCatalogueEspaces() {
 const spacesContainer = document.getElementById("spacesContainer");
 spacesContainer.innerHTML = ""; 
@@ -253,7 +252,6 @@ try {
             const formattedNum = i < 10 ? '0' + i : i;
             const donneeX = data.find(item => parseInt(item.espace_num) === i);
             
-            // Sécurité pour passer le bon nom de fichier de l'espace lors du clic sur Suivre
             const fichierLie = donneeX && donneeX.name_file ? donneeX.name_file : ('Formation ' + formattedNum);
 
             const row = document.createElement("div");
@@ -350,11 +348,11 @@ if(p.amount === 1000 || p.role === "vendeur") {
         document.getElementById("code").value = p.code;
         expirationDateGlobale = p.expires_at;
 
-        // 🚨 ICI : On change l'URL ciblée par le fichier réellement acheté
         urlFichierAchete = p.name_file ? p.name_file : "formation2026.pdf";
         
-        // Optionnel : adapter l'affichage du bouton si c'est une vidéo ou un PDF
-        if (urlFichierAchete.endsWith('.mp4') || urlFichierAchete.endsWith('.mov') || urlFichierAchete.endsWith('.avi')) {
+        // Détecte intelligemment l'affichage Vidéo ou PDF selon l'URL stockée
+        const urlMinuscule = urlFichierAchete.toLowerCase();
+        if (urlMinuscule.includes('.mp4') || urlMinuscule.includes('.mov') || urlMinuscule.includes('.avi') || urlMinuscule.includes('.mkv')) {
             document.getElementById("btnVoirFichier").innerText = "👁️ Voir la Vidéo";
             document.getElementById("btnTelechargerFichier").innerText = "⬇️ Télécharger la Vidéo";
         } else {
@@ -425,33 +423,68 @@ if (fichier.size > 10 * 1024 * 1024) { alert("Fichier trop lourd (Max 10 Mo) ❌
 
 if(!currentPaymentId) { alert("Aucune location active trouvée pour publier ❌"); return; }
 
-let numeroEspaceExtrait = articleSelectionne.replace("Location Espace ", "").trim();
-const nomDuFichierCharge = fichier.name; // On intercepte le nom du fichier
+const btnValidation = document.getElementById("btnValiderEspace");
+btnValidation.disabled = true;
+btnValidation.innerText = "Téléversement du fichier en cours... ⏳";
 
-const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPaymentId}`, {
-    method: "PATCH",
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-        description: description,
-        num_depot: numero,
-        prix_vente: parseInt(prix),
-        espace_num: parseInt(numeroEspaceExtrait),
-        name_file: nomDuFichierCharge // 🚨 ICI : On sauvegarde le vrai nom du fichier du locataire sur Supabase
-    })
-});
+// 1. SÉCURISATION DU NOM DU FICHIEUR (Nom unique pour éviter les collisions)
+const extension = fichier.name.split('.').pop();
+const nomFichierUnique = "koala_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7) + "." + extension;
 
-if(res.ok) {
-    alert("🚀 Félicitations ! Votre espace a été configuré et publié en ligne avec succès !");
-} else {
-    alert("Erreur lors de la publication sur Supabase ❌");
+try {
+    // 2. ENVOI PHYSIQUE DU FICHIER BINAIRE DANS TON BUCKET SUPABASE STORAGE
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/fichiers-locataires/${nomFichierUnique}`, {
+        method: "POST",
+        headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            "Content-Type": fichier.type
+        },
+        body: fichier
+    });
+
+    if(!uploadRes.ok) {
+        throw new Error("Échec du téléversement vers le stockage Supabase.");
+    }
+
+    // 3. CRÉATION DE L'URL INTERNET PUBLIQUE ABSOLUE
+    const urlPubliqueFichier = `${SUPABASE_URL}/storage/v1/object/public/fichiers-locataires/${nomFichierUnique}`;
+
+    let numeroEspaceExtrait = articleSelectionne.replace("Location Espace ", "").trim();
+
+    // 4. SAUVEGARDE DES LIENS ET DONNÉES DANS LA TABLE PAYMENTS
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPaymentId}`, {
+        method: "PATCH",
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+            description: description,
+            num_depot: numero,
+            prix_vente: parseInt(prix),
+            espace_num: parseInt(numeroEspaceExtrait),
+            name_file: urlPubliqueFichier // On stocke l'URL directe complète
+        })
+    });
+
+    if(res.ok) {
+        alert("🚀 Félicitations ! Votre fichier a été hébergé et votre espace est publié avec succès !");
+        retourAuCatalogue();
+    } else {
+        alert("Erreur lors de l'enregistrement des informations de l'espace ❌");
+    }
+
+} catch(erreur) {
+    console.error(erreur);
+    alert("Erreur réseau ou problème de droits avec le Bucket Supabase. Vérifie tes RLS Policies. ❌");
+} finally {
+    btnValidation.disabled = false;
+    btnValidation.innerText = "🚀 Valider et publié mon espace";
 }
 }
 
 async function reabonnerVendeur() { payer(); }
 
-// 🚨 LES DEUX FONCTIONS UTILISENT MAINTENANT LA VARIABLE DYNAMIQUE
 function ouvrirPDF() { window.open(urlFichierAchete, "_blank"); }
-function telechargerPDF() { const a = document.createElement("a"); a.href = urlFichierAchete; a.download = urlFichierAchete; a.click(); }
+function telechargerPDF() { const a = document.createElement("a"); a.href = urlFichierAchete; a.download = "fichier_koala"; a.click(); }
 
 function startTimer(expireDate){
 clearInterval(countdown);
