@@ -70,6 +70,7 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 <div id="topcode"></div>
 <div id="timer"></div>
 
+<!-- 🔐 ÉCRAN 0 : LOGIN -->
 <div id="loginBox" class="box">
 <h2>🔐 Connexion</h2>
 <p>Entre ton numéro pour continuer.</p>
@@ -77,15 +78,7 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 <button onclick="connexion()" style="background:#2196F3; color:white;">Continuer</button>
 </div>
 
-<div id="adminBox" class="box" style="display:none; background:#fff3e0; border:2px solid #ff9800;">
-<h2 style="color:#e65100; margin-top:0;">👑 Tableau de bord Administrateur</h2>
-<p>Gestion des validations de paiement.</p>
-<div id="adminList" style="max-height:300px; overflow-y:auto; border:1px solid #ccc; background:#fff; padding:10px; border-radius:8px;">
-Chargement des demandes...
-</div>
-<button onclick="deconnexion()" style="background:red; color:white; margin-top:15px;">Déconnexion Admin</button>
-</div>
-
+<!-- 🟥 ÉCRAN 1 : INTRO / BIENVENUE -->
 <div id="welcomeBox" class="box" style="display:none;">
 <h1 style="color: red; text-align: center; font-size: 24px; font-weight: bold;">Bienvenue sur le site KOALA</h1>
 <p style="line-height: 1.6; text-align: justify;">
@@ -98,17 +91,20 @@ Ici, nous vous proposons deux opportunités uniques :<br><br>
 <button onclick="ouvrirCatalogue()" style="background: red; color: white; font-weight: bold; font-size: 18px; margin-top: 15px;">Découvrir le catalogue ➔</button>
 </div>
 
+<!-- 🟩 ÉCRAN 2 : CATALOGUE PRINCIPAL SÉPARÉ (SANS COLONNES) -->
 <div id="catalogBox" class="box" style="display:none; max-width: 750px;">
 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
 <h3 style="margin: 0; color: green;">Catalogue des formations</h3>
 <h3 id="compteurEspaces" style="margin: 0; color: #2196F3; text-align: right;">Chargement des espaces...</h3>
 </div>
 
+<!-- Conteneur de la liste unique défilante -->
 <div class="spaces-list-vertical" id="spacesContainer"></div>
 
 <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
 </div>
 
+<!-- 📘 ÉCRAN 3 : INTERFACE DE PAIEMENT & ACCÈS -->
 <div class="box" id="siteBox" style="display:none;">
 <h2 id="titreAchat">📘 Accès Service</h2>
 <h3>💰 Paiement Orange Money</h3>
@@ -123,14 +119,16 @@ Puis revenez cliquer sur <b>✔ J’ai payé</b> pour que l'administrateur gén�
 <input id="code" placeholder="Entrez le code d'accès">
 <button onclick="verifier()" style="background:#9c27b0; color:white; font-weight:bold;">Vérifier et Accéder</button>
 
+<!-- ZONE DES BOUTONS DE LECTURE -->
 <div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
-<h3 style="color: green; margin: 0 0 10px 0;">📚 Votre Fichier est débloqué :</h3>
+<h3 style="color: green; margin: 0 0 10px 0;">📚 Votre Formation est débloquée :</h3>
 <div class="action-buttons">
-<button onclick="ouvrirFichierDynamique()" style="background: #ff5722; color: white; font-weight: bold;">👁️ Voir le Fichier</button>
-<button onclick="telechargerFichierDynamique()" style="background: green; color: white; font-weight: bold;">⬇️ Télécharger le Fichier</button>
+<button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white; font-weight: bold;">👁️ Voir le PDF</button>
+<button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white; font-weight: bold;">⬇️ Télécharger le PDF</button>
 </div>
 </div>
 
+<!-- 📤 FORMULAIRE DE PUBLICATION RÉELLE DU LOCATAIRE -->
 <div id="uploadZone">
 <h3 style="margin:0 0 15px 0; color:#1565c0; border-bottom: 2px solid #2196F3; padding-bottom: 5px;">🏗️ Configuration de votre Espace</h3>
 
@@ -165,13 +163,13 @@ Puis revenez cliquer sur <b>✔ J’ai payé</b> pour que l'administrateur gén�
 const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
 
-let countdown, checkInterval, adminInterval, essais = 0, timerStarted = false, derniereVerification = "";
+let countdown, checkInterval, essais = 0, timerStarted = false, derniereVerification = "";
 let appareilID = obtenirAppareilID();
-let articleSelectionne = "", montantSelectionne = 300, expirationDateGlobale = null, currentRole = "sous_client";
+let articleSelectionne = "", montantSelectionne = 300, expirationDateGlobale = null, currentRole = "sous_client"; 
 let currentPaymentId = null;
 
-// Variable globale essentielle pour gérer dynamiquement le fichier ciblé
-let fichierAcheteDynamique = "formation2026.pdf";
+// Variable globale pour mémoriser dynamiquement le nom du fichier débloqué par le code actif
+let urlFichierAchete = "formation2026.pdf";
 
 function genererIdentifiantSecours() { return 'dev-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36); }
 function obtenirAppareilID() {
@@ -185,21 +183,15 @@ const phone = document.getElementById("loginPhone").value.trim();
 if(!phone || phone.length < 8){ alert("Numéro invalide ❌"); return; }
 localStorage.setItem("phone", phone);
 document.getElementById("loginBox").style.display="none";
-
-if(phone === "76442956") {
-    document.getElementById("adminBox").style.display="block";
-    ouvrirAdmin();
-} else {
-    document.getElementById("welcomeBox").style.display="block";
-    restaurerCode();
-    surveillerConfirmation();
-}
+document.getElementById("welcomeBox").style.display="block";
+restaurerCode();
+surveillerConfirmation();
 }
 
-function ouvrirCatalogue() {
-document.getElementById("welcomeBox").style.display = "none";
-document.getElementById("catalogBox").style.display = "block";
-genererCatalogueEspaces();
+function ouvrirCatalogue() { 
+document.getElementById("welcomeBox").style.display = "none"; 
+document.getElementById("catalogBox").style.display = "block"; 
+genererCatalogueEspaces(); 
 }
 
 function retourVersBienvenu() { document.getElementById("catalogBox").style.display = "none"; document.getElementById("welcomeBox").style.display = "block"; }
@@ -218,7 +210,6 @@ document.getElementById("siteBox").style.display = "block";
 function deconnexion(){
 clearInterval(checkInterval);
 clearInterval(countdown);
-clearInterval(adminInterval);
 localStorage.removeItem("phone");
 document.getElementById("loginPhone").value = "";
 document.getElementById("code").value = "";
@@ -226,27 +217,26 @@ document.getElementById("loginBox").style.display="block";
 document.getElementById("welcomeBox").style.display="none";
 document.getElementById("catalogBox").style.display="none";
 document.getElementById("siteBox").style.display="none";
-document.getElementById("adminBox").style.display="none";
 document.getElementById("topcode").style.display="none";
 document.getElementById("timer").style.display="none";
 document.getElementById("uploadZone").style.display = "none";
 document.getElementById("formationAccessZone").style.display = "none";
 timerStarted = false;
 currentPaymentId = null;
-fichierAcheteDynamique = "formation2026.pdf";
+urlFichierAchete = "formation2026.pdf";
 }
 
 // LOGIQUE D'AFFICHAGE REORGANISÉE DE 01 À 50 EN REPRENANT TES PARAMÈTRES SUPABASE
 async function genererCatalogueEspaces() {
 const spacesContainer = document.getElementById("spacesContainer");
-spacesContainer.innerHTML = "";
+spacesContainer.innerHTML = ""; 
 
 try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?status=eq.confirmé&select=*`, {
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
     });
     const data = await res.json();
-   
+    
     let espacesOccupes = [];
     data.forEach(item => {
         if(item.espace_num) {
@@ -262,17 +252,16 @@ try {
         if(espacesOccupes.includes(i)) {
             const formattedNum = i < 10 ? '0' + i : i;
             const donneeX = data.find(item => parseInt(item.espace_num) === i);
-           
-            const descriptionEspace = donneeX && donneeX.description ? donneeX.description : 'Contenu partagé';
-            const cibleFichier = donneeX && donneeX.name_file ? donneeX.name_file : 'formation2026.pdf';
-            const prixVenteEspace = donneeX && donneeX.prix_vente ? donneeX.prix_vente : 500;
+            
+            // Sécurité pour passer le bon nom de fichier de l'espace lors du clic sur Suivre
+            const fichierLie = donneeX && donneeX.name_file ? donneeX.name_file : ('Formation ' + formattedNum);
 
             const row = document.createElement("div");
             row.className = "espace-ligne";
             row.innerHTML = `
                 <div class="esp-num">${formattedNum}</div>
-                <div class="esp-desc"><b>${descriptionEspace}</b></div>
-                <button style="background:green; color:white;" onclick="selectionnerAchat('${cibleFichier.replace(/'/g, "\\'")}', ${prixVenteEspace})">
+                <div class="esp-desc"><b>${donneeX ? donneeX.description : 'Contenu partagé'}</b></div>
+                <button style="background:green; color:white;" onclick="selectionnerAchat('${fichierLie.replace(/'/g, "\\'")}', ${donneeX ? donneeX.prix_vente : 500})">
                     Suivre
                 </button>
             `;
@@ -290,7 +279,7 @@ try {
     for (let i = 1; i <= 50; i++) {
         if(!espacesOccupes.includes(i)) {
             const formattedNum = i < 10 ? '0' + i : i;
-           
+            
             const row = document.createElement("div");
             row.className = "espace-ligne";
             row.innerHTML = `
@@ -309,65 +298,13 @@ try {
 }
 }
 
-// COORDONNÉES ET ACTIONS DE L'ADMINISTRATEUR
-function ouvrirAdmin() {
-chargerDemandesAdmin();
-clearInterval(adminInterval);
-adminInterval = setInterval(chargerDemandesAdmin, 10000);
-}
-
-async function chargerDemandesAdmin() {
-const adminList = document.getElementById("adminList");
-try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?status=eq.en attente&order=created_at.desc`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-    const data = await res.json();
-    if(data.length === 0) { adminList.innerHTML = "<p>Aucune demande de paiement en attente. ☕</p>"; return; }
-    
-    adminList.innerHTML = "";
-    data.forEach(item => {
-        const div = document.createElement("div");
-        div.style = "padding:10px; border-bottom:1px solid #eee; display:flex; flex-direction:column; gap:5px;";
-        div.innerHTML = `
-            <div>📱 <b>Numéro :</b> ${item.phone}</div>
-            <div>💰 <b>Montant attendu :</b> ${item.amount} Fr CFA (${item.role})</div>
-            <div>📂 <b>Service / Fichier :</b> ${item.name_file}</div>
-            <button style="background:green; color:white; padding:5px; font-size:13px; width:auto; align-self:flex-start;" onclick="validerPaiementAdmin(${item.id}, '${item.phone}', '${item.role}')">
-                ✔ Confirmer et générer un code
-            </button>
-        `;
-        adminList.appendChild(div);
-    });
-} catch(e) { adminList.innerHTML = "<p style='color:red;'>Erreur de chargement...</p>"; }
-}
-
-async function validerPaiementAdmin(id, phone, role) {
-const codeGenere = Math.floor(100000 + Math.random() * 900000).toString();
-const exp = new Date();
-if(role === "vendeur") { exp.setDate(exp.getDate() + 30); } else { exp.setHours(exp.getHours() + 72); }
-
-const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
-    method: "PATCH",
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ status: "confirmé", code: codeGenere, expires_at: exp.toISOString() })
-});
-
-if(res.ok) { alert(`Succès ! Code ${codeGenere} créé pour le ${phone}`); chargerDemandesAdmin(); }
-}
-
 window.onload = function(){
 const phone = localStorage.getItem("phone");
 if(phone){
 document.getElementById("loginBox").style.display="none";
-if(phone === "76442956") {
-    document.getElementById("adminBox").style.display="block";
-    ouvrirAdmin();
-} else {
-    document.getElementById("welcomeBox").style.display="block";
-    restaurerCode();
-    surveillerConfirmation();
-}
+document.getElementById("welcomeBox").style.display="block";
+restaurerCode();
+surveillerConfirmation();
 } else {
 document.getElementById("loginBox").style.display="block";
 }
@@ -375,7 +312,7 @@ document.getElementById("loginBox").style.display="block";
 
 async function restaurerCode(){
 const phone = localStorage.getItem("phone");
-if(!phone || phone === "76442956") return;
+if(!phone) return;
 
 const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&select=*`, {
 headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
@@ -401,7 +338,7 @@ if(p.amount === 1000 || p.role === "vendeur") {
         document.getElementById("topcode").innerHTML = "🔒 Mon Espace Loué : " + p.code;
         document.getElementById("code").value = p.code;
         document.getElementById("uploadZone").style.display = "block";
-       
+        
         if(p.description) { document.getElementById("descFichier").value = p.description; }
         if(p.num_depot) { document.getElementById("numDepot").value = p.num_depot; }
         if(p.prix_vente) { document.getElementById("prixEspace").value = p.prix_vente; }
@@ -411,11 +348,20 @@ if(p.amount === 1000 || p.role === "vendeur") {
         document.getElementById("topcode").style.display="block";
         document.getElementById("topcode").innerHTML = "🔑 Code actif : " + p.code;
         document.getElementById("code").value = p.code;
-        
-        // CORRECTION MAJEURE : On récupère dynamiquement le vrai fichier acheté et validé par l'admin
-        fichierAcheteDynamique = p.name_file ? p.name_file : "formation2026.pdf";
-
         expirationDateGlobale = p.expires_at;
+
+        // 🚨 ICI : On change l'URL ciblée par le fichier réellement acheté
+        urlFichierAchete = p.name_file ? p.name_file : "formation2026.pdf";
+        
+        // Optionnel : adapter l'affichage du bouton si c'est une vidéo ou un PDF
+        if (urlFichierAchete.endsWith('.mp4') || urlFichierAchete.endsWith('.mov') || urlFichierAchete.endsWith('.avi')) {
+            document.getElementById("btnVoirFichier").innerText = "👁️ Voir la Vidéo";
+            document.getElementById("btnTelechargerFichier").innerText = "⬇️ Télécharger la Vidéo";
+        } else {
+            document.getElementById("btnVoirFichier").innerText = "👁️ Voir le PDF";
+            document.getElementById("btnTelechargerFichier").innerText = "⬇️ Télécharger le PDF";
+        }
+
         document.getElementById("formationAccessZone").style.display = "block";
         if(!timerStarted){ startTimer(p.expires_at); timerStarted = true; }
     }
@@ -440,7 +386,7 @@ function surveillerConfirmation(){
 clearInterval(checkInterval);
 checkInterval = setInterval(async ()=>{
 const phone = localStorage.getItem("phone");
-if(!phone || phone === "76442956") return;
+if(!phone) return;
 
 const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&select=*`, {
 headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
@@ -480,7 +426,7 @@ if (fichier.size > 10 * 1024 * 1024) { alert("Fichier trop lourd (Max 10 Mo) ❌
 if(!currentPaymentId) { alert("Aucune location active trouvée pour publier ❌"); return; }
 
 let numeroEspaceExtrait = articleSelectionne.replace("Location Espace ", "").trim();
-const nomFichierSelectionne = fichier.name; // Récupère le vrai nom (ex: "strategie_business.mp4")
+const nomDuFichierCharge = fichier.name; // On intercepte le nom du fichier
 
 const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPaymentId}`, {
     method: "PATCH",
@@ -490,7 +436,7 @@ const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPayment
         num_depot: numero,
         prix_vente: parseInt(prix),
         espace_num: parseInt(numeroEspaceExtrait),
-        name_file: nomFichierSelectionne // CORRECTION CRUCIALE : Enregistre le vrai nom du fichier de l'espace sur Supabase
+        name_file: nomDuFichierCharge // 🚨 ICI : On sauvegarde le vrai nom du fichier du locataire sur Supabase
     })
 });
 
@@ -503,17 +449,9 @@ if(res.ok) {
 
 async function reabonnerVendeur() { payer(); }
 
-// LES DEUX FONCTIONS SUIVANTES PRENNENT EN COMPTE LE VRAI CONTENU ENREGISTRÉ
-function ouvrirFichierDynamique() { 
-    window.open(fichierAcheteDynamique, "_blank"); 
-}
-
-function telechargerFichierDynamique() { 
-    const a = document.createElement("a"); 
-    a.href = fichierAcheteDynamique; 
-    a.download = fichierAcheteDynamique; 
-    a.click(); 
-}
+// 🚨 LES DEUX FONCTIONS UTILISENT MAINTENANT LA VARIABLE DYNAMIQUE
+function ouvrirPDF() { window.open(urlFichierAchete, "_blank"); }
+function telechargerPDF() { const a = document.createElement("a"); a.href = urlFichierAchete; a.download = urlFichierAchete; a.click(); }
 
 function startTimer(expireDate){
 clearInterval(countdown);
