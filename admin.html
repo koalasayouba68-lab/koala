@@ -117,7 +117,7 @@ async function load(){
                 <div style="display:flex; align-items:center;">
                     <button class="btn-success" onclick="executerValidationUnique('${p.id}', '${estVendeur ? 'vendeur' : 'client'}')">✔ Valider</button>
                     <button class="btn-danger" onclick="executerBloquerUnique('${p.id}')">🔒 Bloquer</button>
-                    <!-- Nouveau Bouton de suppression totale -->
+                    <!-- Bouton de suppression totale (Individuel uniquement) -->
                     <button class="btn-delete" onclick="executerSuppressionTotale('${p.id}', '${p.phone}')">🗑️ Supprimer</button>
                 </div>
             </div>
@@ -159,7 +159,7 @@ async function executerBloquerUnique(id) {
     load();
 }
 
-// SUPPRESSION TOTALE ET LIBÉRATION DE L'ESPACE
+// SUPPRESSION TOTALE ET LIBÉRATION DE L'ESPACE (Individuel seulement)
 async function executerSuppressionTotale(id, telephone) {
     const confirmation = confirm(`⚠ ATTENTION : Voulez-vous supprimer entièrement le compte lié au numéro ${telephone} ?\n\nCette action effacera ses données et libérera immédiatement son espace sur le catalogue.`);
     
