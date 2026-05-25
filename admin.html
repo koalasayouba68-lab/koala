@@ -24,7 +24,6 @@ button{padding:10px 15px;cursor:pointer;border-radius:5px;font-weight:bold;borde
 </head>
 <body>
 
-<!-- 🔐 ÉCRAN SÉCURITÉ ADMIN -->
 <div id="authBox">
     <h2>🔑 Accès Administrateur</h2>
     <p>Veuillez entrer le code secret pour déverrouiller le panel.</p>
@@ -32,17 +31,16 @@ button{padding:10px 15px;cursor:pointer;border-radius:5px;font-weight:bold;borde
     <button onclick="verifierCodeAdmin()" style="background:#9c27b0; color:white; width:100%; margin-top:15px; font-size:16px;">Connexion</button>
 </div>
 
-<!-- 🟣 PANEL PRINCIPAL (Masqué par défaut) -->
 <div class="box" id="panelAdminPrincipal" style="display:none;">
 <h2>🟣 KOALA - Gestion des Validations Réelles</h2>
 
-<!-- VRAIE BARRE D'ACTIONS GROUPÉES -->
 <div class="action-bar">
     <button class="btn-primary" onclick="load()">🔄 Actualiser</button>
     <button class="btn-primary" style="background:#555;" onclick="selectionnerTout()">📋 Sélectionner Tout</button>
     <span style="margin-left:auto; font-weight:bold;">Actions groupées :</span>
     <button class="btn-success" onclick="validerSelectionnes()">✔ Valider Sélection</button>
     <button class="btn-danger" onclick="bloquerSelectionnes()">🔒 Bloquer Sélection</button>
+    <button class="btn-delete" onclick="supprimerSelectionnes()">🗑️ Supprimer Sélection</button>
 </div>
 
 <div id="list">Chargement des demandes...</div>
@@ -117,7 +115,6 @@ async function load(){
                 <div style="display:flex; align-items:center;">
                     <button class="btn-success" onclick="executerValidationUnique('${p.id}', '${estVendeur ? 'vendeur' : 'client'}')">✔ Valider</button>
                     <button class="btn-danger" onclick="executerBloquerUnique('${p.id}')">🔒 Bloquer</button>
-                    <!-- Bouton de suppression totale (Individuel uniquement) -->
                     <button class="btn-delete" onclick="executerSuppressionTotale('${p.id}', '${p.phone}')">🗑️ Supprimer</button>
                 </div>
             </div>
@@ -159,7 +156,7 @@ async function executerBloquerUnique(id) {
     load();
 }
 
-// SUPPRESSION TOTALE ET LIBÉRATION DE L'ESPACE (Individuel seulement)
+// SUPPRESSION TOTALE INDIVIDUELLE
 async function executerSuppressionTotale(id, telephone) {
     const confirmation = confirm(`⚠ ATTENTION : Voulez-vous supprimer entièrement le compte lié au numéro ${telephone} ?\n\nCette action effacera ses données et libérera immédiatement son espace sur le catalogue.`);
     
@@ -223,6 +220,29 @@ async function bloquerSelectionnes() {
     }
     alert("Toute la sélection a été bloquée ! 🔒");
     load();
+}
+
+// NOUVELLE FONCTION : SUPPRESSION GROUPÉE DE TOUTE LA SÉLECTION COCHÉE
+async function supprimerSelectionnes() {
+    const checkboxes = document.querySelectorAll('.checkbox-select:checked');
+    if(checkboxes.length === 0) { alert("Aucune ligne cochée ! ❌"); return; }
+
+    const confirmation = confirm(`⚠ ATTENTION CRITIQUE : Vous allez supprimer ENTIÈREMENT les ${checkboxes.length} comptes sélectionnés.\n\nCette action est irréversible et libérera leurs espaces. Continuer ?`);
+    
+    if(confirmation) {
+        for(let cb of checkboxes) {
+            const id = cb.getAttribute('data-id');
+            await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
+                method: "DELETE",
+                headers: { 
+                    apikey: SUPABASE_KEY, 
+                    Authorization: `Bearer ${SUPABASE_KEY}` 
+                }
+            });
+        }
+        alert("Tous les éléments sélectionnés ont été définitivement supprimés ! 🍃");
+        load();
+    }
 }
 </script>
 </body>
