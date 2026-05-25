@@ -257,44 +257,56 @@ async function ouvrirEspaceLocatairePrive() {
 
 // INTERCEPTION DE LA SÉLECTION D'ACHAT (S'exécute quand un client veut suivre ou louer sans barrière de mot de passe)
 async function selectionnerAchat(nom, montant, espaceNum = null) {
-    // NETTOYAGE ABSOLU ET SÉCURISATION CONTRE LES FUITES DE CODES
+    const phone = localStorage.getItem("phone");
+    const formattedNum = espaceNum ? (espaceNum < 10 ? '0' + espaceNum : espaceNum) : '01';
+
+    // 🔒 SÉCURITÉ ANTI-DOUBLON
+    if (montant === 1000 || nom.startsWith("Location Espace")) {
+        if (phone) {
+            try {
+                const resCheck = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&amount=eq.1000&status=eq.confirmé`, {
+                    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+                });
+                const dataCheck = await resCheck.json();
+                
+                if (dataCheck && dataCheck.length > 0) {
+                    alert("impossible pour un numero de louer 2espace");
+                    return; 
+                }
+            } catch (err) {
+                console.error("Erreur de vérification", err);
+            }
+        }
+    }
+
     articleSelectionne = nom;
     montantSelectionne = montant;
     numEspaceEnCoursGestion = espaceNum;
     
-    // Remise à zéro complète du champ de code et des affichages résiduels
     document.getElementById("code").value = "";
     document.getElementById("topcode").style.display = "none";
     document.getElementById("topcode").innerText = "";
     document.getElementById("formationAccessZone").style.display = "none";
-    
-    const formattedNum = espaceNum ? (espaceNum < 10 ? '0' + espaceNum : espaceNum) : '01';
 
-    // Si c'est une location d'un espace libre (1000 F)
     if (montant === 1000 || nom.startsWith("Location Espace")) {
         currentRole = "vendeur";
         document.getElementById("titreAchat").innerText = `📘 Réservation : Espace ${formattedNum}`;
         document.getElementById("syntaxeOrange").innerText = `*144*10*44295613*1000#`;
         
-        // SÉCURITÉ MAJEURE : Bloquer totalement l'accès au formulaire d'édition pour les simples clics sur espaces libres
         document.getElementById("uploadZone").style.display = "none";
         document.getElementById("vendeurCounterBox").style.display = "none";
         document.getElementById("zonePaiementStandard").style.display = "block";
-        document.getElementById("zoneVerificationCode").style.display = "none"; // Pas de code d'accès requis pour louer
+        document.getElementById("zoneVerificationCode").style.display = "none";
     } else {
-        // C'est un client normal venu acheter un PDF/Formation mis en vente (300 F, 500 F, etc.)
         currentRole = "sous_client";
-        
-        // CORRECTION ÉCRITURE TITRE : Plus d'URL HTTP brute affichée
         document.getElementById("titreAchat").innerText = `📘 Achat Fichier - Espace ${formattedNum}`;
         document.getElementById("syntaxeOrange").innerText = `*144*10*44295613*${montant}#`;
         
         document.getElementById("vendeurCounterBox").style.display = "none";
-        document.getElementById("uploadZone").style.display = "none"; // Strictement interdit d'éditer
+        document.getElementById("uploadZone").style.display = "none";
         document.getElementById("zonePaiementStandard").style.display = "block";
         document.getElementById("zoneVerificationCode").style.display = "block";
         
-        // On va chercher si CE numéro a un code valide spécifiquement acquis pour CE fichier
         restaurerCode();
     }
     
@@ -302,248 +314,139 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
     document.getElementById("siteBox").style.display = "block";
 }
 
-function deconnexion(){
-clearInterval(checkInterval);
-clearInterval(countdown);
-localStorage.removeItem("phone");
-document.getElementById("loginPhone").value = "";
-document.getElementById("code").value = "";
-document.getElementById("loginBox").style.display="block";
-document.getElementById("welcomeBox").style.display="none";
-document.getElementById("catalogBox").style.display="none";
-document.getElementById("siteBox").style.display="none";
-document.getElementById("topcode").style.display="none";
-document.getElementById("timer").style.display="none";
-document.getElementById("uploadZone").style.display = "none";
-document.getElementById("formationAccessZone").style.display = "none";
-document.getElementById("vendeurCounterBox").style.display = "none";
-document.getElementById("retraitInterfaceBox").style.display = "none";
-document.getElementById("zonePaiementStandard").style.display = "block";
-document.getElementById("zoneVerificationCode").style.display = "block";
-timerStarted = false;
-currentPaymentId = null;
-vendeurCodeSecretMasque = "";
-soldeVendeurActuel = 0;
-numEspaceEnCoursGestion = null;
-urlFichierAchete = "formation2026.pdf";
-}
-
-async function genererCatalogueEspaces() {
-const spacesContainer = document.getElementById("spacesContainer");
-spacesContainer.innerHTML = ""; 
-
-try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?status=eq.confirmé&select=*`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-    const data = await res.json();
-    
-    let espacesOccupes = [];
-    data.forEach(item => {
-        if(item.espace_num && (item.amount === 1000 || item.role === "vendeur")) {
-            espacesOccupes.push(parseInt(item.espace_num));
-        }
-    });
-
-    let compteLibre = 50 - espacesOccupes.length;
-    document.getElementById("compteurEspaces").innerText = `(${compteLibre} Libres)`;
-
-    // 1. AFFICHAGE DES ESPACES OCCUPÉS (Bouton Suivre -> Traité comme Client direct)
-    for (let i = 1; i <= 50; i++) {
-        if(espacesOccupes.includes(i)) {
-            const formattedNum = i < 10 ? '0' + i : i;
-            const donneeX = data.find(item => parseInt(item.espace_num) === i && (item.amount === 1000 || item.role === "vendeur"));
-            
-            const fichierLie = donneeX && donneeX.name_file ? donneeX.name_file : ('Formation ' + formattedNum);
-            const prixVente = donneeX && donneeX.prix_vente ? donneeX.prix_vente : 500;
-
-            const row = document.createElement("div");
-            row.className = "espace-ligne";
-            row.innerHTML = `
-                <div class="esp-num">${formattedNum}</div>
-                <div class="esp-desc"><b>${donneeX ? donneeX.description : 'Contenu partagé'}</b></div>
-                <button style="background:green; color:white;" onclick="selectionnerAchat('${fichierLie.replace(/'/g, "\\'")}', ${prixVente}, ${i})">
-                    Suivre (${prixVente} F)
-                </button>
-            `;
-            spacesContainer.appendChild(row);
-        }
-    }
-
-    // 2. INSERTION DU TITRE EN BLEU "Espaces à louer"
-    const titreDiv = document.createElement("div");
-    titreDiv.className = "titre-louer-bleu";
-    titreDiv.innerText = "Espaces à louer";
-    spacesContainer.appendChild(titreDiv);
-
-    // 3. AFFICHAGE DES ESPACES LIBRES RESTANTS (Bouton Louer -> Libre sans mot de passe)
-    for (let i = 1; i <= 50; i++) {
-        if(!espacesOccupes.includes(i)) {
-            const formattedNum = i < 10 ? '0' + i : i;
-            
-            const row = document.createElement("div");
-            row.className = "espace-ligne";
-            row.innerHTML = `
-                <div class="esp-num">${formattedNum}</div>
-                <div class="esp-desc" style="color: #2196F3; font-style: italic;">Espace Libre</div>
-                <button style="background:#2196F3; color:white;" onclick="selectionnerAchat('Location Espace ${formattedNum}', 1000, ${i})">
-                    Louer (1000 F)
-                </button>
-            `;
-            spacesContainer.appendChild(row);
-        }
-    }
-
-} catch (e) {
-    console.error("Erreur chargement catalogue", e);
-}
-}
-
-window.onload = function(){
-const phone = localStorage.getItem("phone");
-if(phone){
-document.getElementById("loginBox").style.display="none";
-document.getElementById("welcomeBox").style.display="block";
-restaurerCode();
-surveillerConfirmation();
-} else {
-document.getElementById("loginBox").style.display="block";
-}
-}
-
 async function restaurerCode(){
-const phone = localStorage.getItem("phone");
-if(!phone) return;
+    const phone = localStorage.getItem("phone");
+    if(!phone) return;
 
-// Si nous sommes en mode vendeur (gestion de son espace propre)
-if(currentRole === "vendeur") {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&amount=eq.1000&select=*`, {
-        headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-    const data = await res.json();
-    if(!data || data.length===0) return;
-    const p = data[data.length - 1];
-    currentPaymentId = p.id;
-    numEspaceEnCoursGestion = p.espace_num;
+    // Si nous sommes en mode vendeur (gestion de son espace propre)
+    if(currentRole === "vendeur") {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&amount=eq.1000&select=*`, {
+            headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        const data = await res.json();
+        if(!data || data.length===0) return;
+        const p = data[data.length - 1];
+        currentPaymentId = p.id;
+        numEspaceEnCoursGestion = p.espace_num;
 
-    const maintenant = new Date();
-    const dateExp = p.expires_at ? new Date(p.expires_at) : null;
-    const estExpire = dateExp ? dateExp < maintenant : false;
+        const maintenant = new Date();
+        const dateExp = p.expires_at ? new Date(p.expires_at) : null;
+        const estExpire = dateExp ? dateExp < maintenant : false;
 
-    vendeurCodeSecretMasque = p.code || "";
-    
-    // ACCUMULATION DES GAINS ET DÉDUCTION DES RETRAITS FILTRÉS CORRECTEMENT
-    try {
-        const urlFichierAChasser = p.name_file;
-        let totalGains = 0;
+        vendeurCodeSecretMasque = p.code || "";
         
-        if(urlFichierAChasser && urlFichierAChasser !== "") {
-            const resAchats = await fetch(`${SUPABASE_URL}/rest/v1/payments?name_file=eq.${encodeURIComponent(urlFichierAChasser)}&status=eq.confirmé&select=amount`, {
+        // ACCUMULATION DES GAINS ET DÉDUCTION DES RETRAITS FILTRÉS CORRECTEMENT
+        try {
+            const urlFichierAChasser = p.name_file;
+            let totalGains = 0;
+            
+            if(urlFichierAChasser && urlFichierAChasser !== "") {
+                const resAchats = await fetch(`${SUPABASE_URL}/rest/v1/payments?name_file=eq.${encodeURIComponent(urlFichierAChasser)}&status=eq.confirmé&select=amount`, {
+                    headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+                });
+                const dataAchats = await resAchats.json();
+                if(dataAchats && dataAchats.length > 0) {
+                    dataAchats.forEach(achat => {
+                        if(achat.amount !== 1000) { 
+                            totalGains += parseInt(achat.amount || 0);
+                        }
+                    });
+                }
+            }
+            
+            // CORRECTION DU SOLDE : Récupération de tous les paiements avec un statut commençant par "retrait_"
+            const resRetraits = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&select=amount,status`, {
                 headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
             });
-            const dataAchats = await resAchats.json();
-            if(dataAchats && dataAchats.length > 0) {
-                dataAchats.forEach(achat => {
-                    if(achat.amount !== 1000) { 
-                        totalGains += parseInt(achat.amount || 0);
+            const dataRetraits = await resRetraits.json();
+            let totalRetire = 0;
+            if(dataRetraits && dataRetraits.length > 0) {
+                dataRetraits.forEach(r => { 
+                    if (r.status && r.status.indexOf("retrait_") === 0) {
+                        totalRetire += parseInt(r.amount || 0); 
                     }
                 });
             }
+            
+            soldeVendeurActuel = totalGains - totalRetire;
+            if(soldeVendeurActuel < 0) soldeVendeurActuel = 0;
+            
+        } catch(errGains) {
+            console.error("Erreur calcul automatique des gains:", errGains);
+            soldeVendeurActuel = 0;
         }
-        
-        // CORRECTION DU SOLDE : Récupération de tous les paiements avec un statut commençant par "retrait_"
-        const resRetraits = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&select=amount,status`, {
+
+        document.getElementById("soldeCompteur").innerText = soldeVendeurActuel;
+        document.getElementById("vendeurCounterBox").style.display = "block";
+        document.getElementById("zonePaiementStandard").style.display = "none";
+        document.getElementById("zoneVerificationCode").style.display = "none";
+
+        if(estExpire) {
+            document.getElementById("topcode").style.display="block";
+            document.getElementById("topcode").innerHTML = "🟥 Espace Expiré (30 jours)";
+            document.getElementById("uploadZone").style.display = "block";
+            document.getElementById("btnValiderEspace").innerText = "⚠ Réactiver mon Espace (1000 Fr)";
+            document.getElementById("btnValiderEspace").onclick = reabonnerVendeur;
+        } else {
+            document.getElementById("topcode").style.display="block";
+            document.getElementById("topcode").innerHTML = "🔒 Mon Espace Loué (Actif)";
+            document.getElementById("code").value = "";
+            document.getElementById("uploadZone").style.display = "block";
+            
+            if(p.description) { document.getElementById("descFichier").value = p.description; }
+            if(p.num_depot) { document.getElementById("numDepot").value = p.num_depot; }
+            if(p.prix_vente) { document.getElementById("prixEspace").value = p.prix_vente; }
+        }
+    } else {
+        // CLOISONNEMENT INDIVIDUEL : Recherche stricte du code lié à CET article précis choisi par le client
+        if (!articleSelectionne || articleSelectionne.startsWith("Location Espace")) return;
+
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&name_file=eq.${encodeURIComponent(articleSelectionne)}&status=eq.confirmé&select=*`, {
             headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
         });
-        const dataRetraits = await resRetraits.json();
-        let totalRetire = 0;
-        if(dataRetraits && dataRetraits.length > 0) {
-            dataRetraits.forEach(r => { 
-                if (r.status && r.status.indexOf("retrait_") === 0) {
-                    totalRetire += parseInt(r.amount || 0); 
-                }
-            });
+        const data = await res.json();
+        
+        if(!data || data.length === 0) {
+            // Nettoyer l'interface si l'utilisateur n'a aucun code acheté pour l'espace sélectionné
+            document.getElementById("topcode").style.display = "none";
+            document.getElementById("code").value = "";
+            document.getElementById("formationAccessZone").style.display = "none";
+            return;
         }
         
-        soldeVendeurActuel = totalGains - totalRetire;
-        if(soldeVendeurActuel < 0) soldeVendeurActuel = 0;
+        const p = data[data.length - 1];
+        currentPaymentId = p.id;
+
+        const maintenant = new Date();
+        const dateExp = p.expires_at ? new Date(p.expires_at) : null;
+        const estExpire = dateExp ? dateExp < maintenant : false;
+
+        document.getElementById("vendeurCounterBox").style.display = "none";
+        document.getElementById("zonePaiementStandard").style.display = "block";
+        document.getElementById("zoneVerificationCode").style.display = "block";
         
-    } catch(errGains) {
-        console.error("Erreur calcul automatique des gains:", errGains);
-        soldeVendeurActuel = 0;
-    }
+        if(!estExpire) {
+            document.getElementById("topcode").style.display="block";
+            document.getElementById("topcode").innerHTML = "🔑 Code actif : " + p.code;
+            document.getElementById("code").value = p.code;
+            expirationDateGlobale = p.expires_at;
 
-    document.getElementById("soldeCompteur").innerText = soldeVendeurActuel;
-    document.getElementById("vendeurCounterBox").style.display = "block";
-    document.getElementById("zonePaiementStandard").style.display = "none";
-    document.getElementById("zoneVerificationCode").style.display = "none";
+            urlFichierAchete = p.name_file ? p.name_file : "formation2026.pdf";
+            
+            const urlMinuscule = urlFichierAchete.toLowerCase();
+            if (urlMinuscule.includes('.mp4') || urlMinuscule.includes('.mov') || urlMinuscule.includes('.avi') || urlMinuscule.includes('.mkv')) {
+                document.getElementById("btnVoirFichier").innerText = "👁️ Voir la Vidéo";
+                document.getElementById("btnTelechargerFichier").innerText = "⬇️ Télécharger la Vidéo";
+            } else {
+                document.getElementById("btnVoirFichier").innerText = "👁️ Voir le PDF";
+                document.getElementById("btnTelechargerFichier").innerText = "⬇️ Télécharger le PDF";
+            }
 
-    if(estExpire) {
-        document.getElementById("topcode").style.display="block";
-        document.getElementById("topcode").innerHTML = "🟥 Espace Expiré (30 jours)";
-        document.getElementById("uploadZone").style.display = "block";
-        document.getElementById("btnValiderEspace").innerText = "⚠ Réactiver mon Espace (1000 Fr)";
-        document.getElementById("btnValiderEspace").onclick = reabonnerVendeur;
-    } else {
-        document.getElementById("topcode").style.display="block";
-        document.getElementById("topcode").innerHTML = "🔒 Mon Espace Loué (Actif)";
-        document.getElementById("code").value = "";
-        document.getElementById("uploadZone").style.display = "block";
-        
-        if(p.description) { document.getElementById("descFichier").value = p.description; }
-        if(p.num_depot) { document.getElementById("numDepot").value = p.num_depot; }
-        if(p.prix_vente) { document.getElementById("prixEspace").value = p.prix_vente; }
-    }
-} else {
-    // CLOISONNEMENT INDIVIDUEL : Recherche stricte du code lié à CET article précis choisi par le client
-    if (!articleSelectionne || articleSelectionne.startsWith("Location Espace")) return;
-
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&name_file=eq.${encodeURIComponent(articleSelectionne)}&status=eq.confirmé&select=*`, {
-        headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-    const data = await res.json();
-    
-    if(!data || data.length === 0) {
-        // Nettoyer l'interface si l'utilisateur n'a aucun code acheté pour l'espace sélectionné
-        document.getElementById("topcode").style.display = "none";
-        document.getElementById("code").value = "";
-        document.getElementById("formationAccessZone").style.display = "none";
-        return;
-    }
-    
-    const p = data[data.length - 1];
-    currentPaymentId = p.id;
-
-    const maintenant = new Date();
-    const dateExp = p.expires_at ? new Date(p.expires_at) : null;
-    const estExpire = dateExp ? dateExp < maintenant : false;
-
-    document.getElementById("vendeurCounterBox").style.display = "none";
-    document.getElementById("zonePaiementStandard").style.display = "block";
-    document.getElementById("zoneVerificationCode").style.display = "block";
-    
-    if(!estExpire) {
-        document.getElementById("topcode").style.display="block";
-        document.getElementById("topcode").innerHTML = "🔑 Code actif : " + p.code;
-        document.getElementById("code").value = p.code;
-        expirationDateGlobale = p.expires_at;
-
-        urlFichierAchete = p.name_file ? p.name_file : "formation2026.pdf";
-        
-        const urlMinuscule = urlFichierAchete.toLowerCase();
-        if (urlMinuscule.includes('.mp4') || urlMinuscule.includes('.mov') || urlMinuscule.includes('.avi') || urlMinuscule.includes('.mkv')) {
-            document.getElementById("btnVoirFichier").innerText = "👁️ Voir la Vidéo";
-            document.getElementById("btnTelechargerFichier").innerText = "⬇️ Télécharger la Vidéo";
-        } else {
-            document.getElementById("btnVoirFichier").innerText = "👁️ Voir le PDF";
-            document.getElementById("btnTelechargerFichier").innerText = "⬇️ Télécharger le PDF";
+            document.getElementById("formationAccessZone").style.display = "block";
+            if(!timerStarted){ startTimer(p.expires_at); timerStarted = true; }
         }
-
-        document.getElementById("formationAccessZone").style.display = "block";
-        if(!timerStarted){ startTimer(p.expires_at); timerStarted = true; }
     }
-}
-}
+} // <-- L'accolade fermante manquante a été rajoutée ici !
 
 async function payer(){
 const phone = localStorage.getItem("phone");
