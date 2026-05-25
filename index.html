@@ -257,35 +257,49 @@ async function ouvrirEspaceLocatairePrive() {
 
 // INTERCEPTION DE LA SÉLECTION D'ACHAT (S'exécute quand un client veut suivre ou louer sans barrière de mot de passe)
 async function selectionnerAchat(nom, montant, espaceNum = null) {
+    // NETTOYAGE ABSOLU ET SÉCURISATION CONTRE LES FUITES DE CODES
     articleSelectionne = nom;
     montantSelectionne = montant;
+    numEspaceEnCoursGestion = espaceNum;
     
-    // Si c'est une location d'un espace libre (1000 F), c'est un futur vendeur : accès direct sans mot de passe
+    // Remise à zéro complète du champ de code et des affichages résiduels
+    document.getElementById("code").value = "";
+    document.getElementById("topcode").style.display = "none";
+    document.getElementById("topcode").innerText = "";
+    document.getElementById("formationAccessZone").style.display = "none";
+    
+    const formattedNum = espaceNum ? (espaceNum < 10 ? '0' + espaceNum : espaceNum) : '01';
+
+    // Si c'est une location d'un espace libre (1000 F)
     if (montant === 1000 || nom.startsWith("Location Espace")) {
         currentRole = "vendeur";
-        numEspaceEnCoursGestion = espaceNum;
-        document.getElementById("titreAchat").innerText = `📘 Réservation : ${nom}`;
+        document.getElementById("titreAchat").innerText = `📘 Réservation : Espace ${formattedNum}`;
         document.getElementById("syntaxeOrange").innerText = `*144*10*44295613*1000#`;
+        
+        // SÉCURITÉ MAJEURE : Bloquer totalement l'accès au formulaire d'édition pour les simples clics sur espaces libres
+        document.getElementById("uploadZone").style.display = "none";
+        document.getElementById("vendeurCounterBox").style.display = "none";
+        document.getElementById("zonePaiementStandard").style.display = "block";
+        document.getElementById("zoneVerificationCode").style.display = "none"; // Pas de code d'accès requis pour louer
     } else {
         // C'est un client normal venu acheter un PDF/Formation mis en vente (300 F, 500 F, etc.)
         currentRole = "sous_client";
-        document.getElementById("titreAchat").innerText = `📘 Achat Fichier : ${nom}`;
+        
+        // CORRECTION ÉCRITURE TITRE : Plus d'URL HTTP brute affichée
+        document.getElementById("titreAchat").innerText = `📘 Achat Fichier - Espace ${formattedNum}`;
         document.getElementById("syntaxeOrange").innerText = `*144*10*44295613*${montant}#`;
+        
+        document.getElementById("vendeurCounterBox").style.display = "none";
+        document.getElementById("uploadZone").style.display = "none"; // Strictement interdit d'éditer
+        document.getElementById("zonePaiementStandard").style.display = "block";
+        document.getElementById("zoneVerificationCode").style.display = "block";
+        
+        // On va chercher si CE numéro a un code valide spécifiquement acquis pour CE fichier
+        restaurerCode();
     }
     
     document.getElementById("catalogBox").style.display = "none";
     document.getElementById("siteBox").style.display = "block";
-
-    // Forcer la remise à zéro des affichages pour l'acheteur/nouveau locataire
-    document.getElementById("vendeurCounterBox").style.display = "none";
-    document.getElementById("uploadZone").style.display = "none";
-    document.getElementById("zonePaiementStandard").style.display = "block";
-    document.getElementById("zoneVerificationCode").style.display = "block";
-    document.getElementById("formationAccessZone").style.display = "none";
-    document.getElementById("topcode").style.display = "none";
-    
-    // Si l'utilisateur connecté possède déjà un code client valide pour cet article précis, on le restaure
-    restaurerCode();
 }
 
 function deconnexion(){
@@ -348,7 +362,7 @@ try {
             row.innerHTML = `
                 <div class="esp-num">${formattedNum}</div>
                 <div class="esp-desc"><b>${donneeX ? donneeX.description : 'Contenu partagé'}</b></div>
-                <button style="background:green; color:white;" onclick="selectionnerAchat('${fichierLie.replace(/'/g, "\\'")}', ${prixVente})">
+                <button style="background:green; color:white;" onclick="selectionnerAchat('${fichierLie.replace(/'/g, "\\'")}', ${prixVente}, ${i})">
                     Suivre (${prixVente} F)
                 </button>
             `;
@@ -418,7 +432,7 @@ if(currentRole === "vendeur") {
 
     vendeurCodeSecretMasque = p.code || "";
     
-    // ACCUMULATION DES GAINS AUTOMATIQUE : Somme de tous les achats confirmés sur son fichier/URL spécifique
+    // ACCUMULATION DES GAINS ET DÉDUCTION DES RETRAITS FILTRÉS CORRECTEMENT
     try {
         const urlFichierAChasser = p.name_file;
         let totalGains = 0;
@@ -430,21 +444,25 @@ if(currentRole === "vendeur") {
             const dataAchats = await resAchats.json();
             if(dataAchats && dataAchats.length > 0) {
                 dataAchats.forEach(achat => {
-                    if(achat.amount !== 1000) { // On exclut le coût de sa propre location
+                    if(achat.amount !== 1000) { 
                         totalGains += parseInt(achat.amount || 0);
                     }
                 });
             }
         }
         
-        // Déduction des retraits déjà validés ou en attente effectués par ce numéro
-        const resRetraits = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=cs.retrait_&select=amount`, {
+        // CORRECTION DU SOLDE : Récupération de tous les paiements avec un statut commençant par "retrait_"
+        const resRetraits = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&select=amount,status`, {
             headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
         });
         const dataRetraits = await resRetraits.json();
         let totalRetire = 0;
         if(dataRetraits && dataRetraits.length > 0) {
-            dataRetraits.forEach(r => { totalRetire += parseInt(r.amount || 0); });
+            dataRetraits.forEach(r => { 
+                if (r.status && r.status.indexOf("retrait_") === 0) {
+                    totalRetire += parseInt(r.amount || 0); 
+                }
+            });
         }
         
         soldeVendeurActuel = totalGains - totalRetire;
@@ -452,7 +470,7 @@ if(currentRole === "vendeur") {
         
     } catch(errGains) {
         console.error("Erreur calcul automatique des gains:", errGains);
-        soldeVendeurActuel = p.solde || 0;
+        soldeVendeurActuel = 0;
     }
 
     document.getElementById("soldeCompteur").innerText = soldeVendeurActuel;
@@ -477,12 +495,22 @@ if(currentRole === "vendeur") {
         if(p.prix_vente) { document.getElementById("prixEspace").value = p.prix_vente; }
     }
 } else {
-    // Mode Client normal (recherche d'un achat de formation/PDF débloqué pour cet article précis)
+    // CLOISONNEMENT INDIVIDUEL : Recherche stricte du code lié à CET article précis choisi par le client
+    if (!articleSelectionne || articleSelectionne.startsWith("Location Espace")) return;
+
     const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&name_file=eq.${encodeURIComponent(articleSelectionne)}&status=eq.confirmé&select=*`, {
         headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
     });
     const data = await res.json();
-    if(!data || data.length===0) return;
+    
+    if(!data || data.length === 0) {
+        // Nettoyer l'interface si l'utilisateur n'a aucun code acheté pour l'espace sélectionné
+        document.getElementById("topcode").style.display = "none";
+        document.getElementById("code").value = "";
+        document.getElementById("formationAccessZone").style.display = "none";
+        return;
+    }
+    
     const p = data[data.length - 1];
     currentPaymentId = p.id;
 
@@ -710,7 +738,7 @@ async function validerDemandeRetrait() {
             
             alert("Votre demande de retrait a été transmise avec succès ! Elle sera validée après traitement. 🚀");
             fermerInterfaceRetrait();
-            restaurerCode();
+            await restaurerCode();
         } else {
             alert("Une erreur est survenue lors de la soumission de votre retrait. ❌");
         }
