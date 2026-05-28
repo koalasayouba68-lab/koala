@@ -1,3 +1,5 @@
+pk_sandbox_c82e4dlpeghM7RWY2XFYRhjr
+sk_sandbox_FxutRTGo2cmpTKJv0EBtMTGs
 const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
 
@@ -371,22 +373,55 @@ async function restaurerCode(){
 async function payer(){
     const phone = localStorage.getItem("phone");
     if(!phone) return;
-    document.getElementById("payBtn").disabled = true;
+    
+    // Initialisation du pop-up sécurisé FedaPay
+    FedaPay.init('#payBtn', {
+        public_key: 'pk_sandbox_c82e4dlpeghM7RWY2XFYRhjr',
+        transaction: {
+            amount: montantSelectionne,
+            description: 'Achat KOALA Drive - ' + articleSelectionne
+        },
+        customer: {
+            phone_number: {
+                number: phone,
+                country: 'BF'
+            }
+        },
+        onComplete: async function(reason) {
+            if (reason === FedaPay.DIALOG_DISMISSED) {
+                alert("Paiement annulé ou fenêtre fermée ❌");
+            } else {
+                // Paiement approuvé : génération automatique du code unique
+                const codeGenere = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                // Calcul de la date d'expiration (+30 jours)
+                const dateExpiration = new Date();
+                dateExpiration.setDate(dateExpiration.getDate() + 30);
+                
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/payments`, {
+                    method:"POST",
+                    headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type":"application/json" },
+                    body:JSON.stringify({ 
+                        phone: phone, 
+                        status: "confirmé", 
+                        amount: montantSelectionne, 
+                        role: currentRole, 
+                        name_file: articleSelectionne,
+                        code: codeGenere,
+                        expires_at: dateExpiration.toISOString(),
+                        espace_num: numEspaceEnCoursGestion ? parseInt(numEspaceEnCoursGestion) : null
+                    })
+                });
 
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments`, {
-        method:"POST",
-        headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type":"application/json" },
-        body:JSON.stringify({ 
-            phone: phone, 
-            status: "en attente", 
-            amount: montantSelectionne, 
-            role: currentRole, 
-            name_file: articleSelectionne,
-            espace_num: numEspaceEnCoursGestion ? parseInt(numEspaceEnCoursGestion) : null
-        })
+                if(res.ok) { 
+                    alert("🎉 Paiement validé avec succès ! Votre code d'accès est : " + codeGenere); 
+                    await restaurerCode();
+                } else {
+                    alert("Erreur lors de la sauvegarde sur votre base de données. En attente de traitement. ⚠️");
+                }
+            }
+        }
     });
-    if(res.ok) { alert("Demande envoyée avec succès ! ⏳"); }
-    document.getElementById("payBtn").disabled = false;
 }
 
 function surveillerConfirmation(){
