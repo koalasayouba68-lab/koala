@@ -1,91 +1,115 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOALA - Plateforme Officielle</title>
-<meta name="google-site-verification" content="v1n-U1ZbQ_z94Hxt0NyvesUKsW1mK5yBPT3q6O8in4c" />
-<style>
-body{font-family:Arial, sans-serif;background:#f4f4f4;padding:10px;margin:0;}
-.box{width:95%;max-width:700px;margin:20px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
-.spaces-list-vertical {display: flex;flex-direction: column;max-height: 480px;overflow-y: auto;padding: 5px;}
-.espace-ligne {display: flex;align-items: center;justify-content: space-between;background: #fdfdfd;border: 1px solid #ddd;padding: 10px;border-radius: 8px;font-size: 14px;margin-bottom: 6px;}
-@media (max-width: 600px) {.espace-ligne { flex-direction: column; align-items: flex-start; gap: 8px; } .espace-ligne button { width: 100%; }}
-.esp-num { font-weight: bold; color: #333; min-width: 35px; }
-.esp-desc { flex-grow: 1; color: #555; padding: 0 15px; text-align: left; }
-.titre-louer-bleu {color: #007bff;font-size: 16px;font-weight: bold;margin: 10px 0;padding: 5px 0;text-align: left;border-bottom: 1px dashed #007bff;}
-button{padding:10px;width:100%;margin-top:10px;cursor:pointer;border:none;border-radius:8px;font-size:16px;}
-button:hover{opacity:0.9;}
-.espace-ligne button { width: auto; min-width: 110px; margin-top: 0; font-size: 13px; font-weight: bold; }
-input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;border-radius:8px;border:1px solid #ccc;font-size:16px;}
-#topcode{position:fixed;top:10px;right:10px;background:black;color:white;padding:10px;border-radius:10px;display:none;z-index:999;font-size:14px;}
-#timer{position:fixed;top:60px;right:10px;background:red;color:white;padding:10px;border-radius:10px;display:none;z-index:999;font-size:14px;}
-#uploadZone { background: #e3f2fd; border: 2px dashed #2196F3; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; }
-.form-group { margin-bottom: 15px; }
-.form-group label { font-weight: bold; color: #1565c0; font-size: 14px; }
-.action-buttons { display: flex; gap: 10px; margin-top: 15px; }
-.vendeur-counter-box { background: #9c27b0; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; cursor: pointer; font-weight: bold; }
-.retrait-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOALA - Plateforme Officielle</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 10px; margin: 0; }
+        .box { width: 95%; max-width: 700px; margin: 20px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+        h2 { color: #333; text-align: center; }
+        button { padding: 12px; width: 100%; margin-top: 10px; cursor: pointer; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; }
+        input { width: 100%; padding: 12px; margin-top: 10px; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
+        .btn-primary { background: #2196F3; color: white; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        .retrait-box { background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #ffeeba; display: none; }
+    </style>
 </head>
 <body>
 
-<div id="topcode"></div>
-<div id="timer"></div>
-
 <div id="loginBox" class="box">
-<h2>🔐 Connexion</h2>
-<input id="loginPhone" type="tel" placeholder="Entrer votre numéro">
-<button onclick="connexion()" style="background:#2196F3; color:white;">Continuer</button>
+    <h2>🔐 Connexion KOALA</h2>
+    <input id="loginPhone" type="tel" placeholder="Entrez votre numéro">
+    <button class="btn-primary" onclick="connexion()">Continuer</button>
 </div>
 
-<div id="welcomeBox" class="box" style="display:none;">
-<h1 style="color: red; text-align: center; font-size: 24px;">Bienvenue sur KOALA</h1>
-<button onclick="ouvrirCatalogue()" style="background: red; color: white; font-weight: bold; font-size: 18px;">Découvrir le catalogue ➔</button>
+<div id="appBox" class="box" style="display:none;">
+    <h1 style="color: red; text-align: center; font-size: 24px;">Bienvenue sur KOALA</h1>
+    <p style="line-height: 1.6; text-align: justify;">
+        Bienvenue dans l'univers KOALA, votre plateforme tout-en-un de partage et d'apprentissage en ligne !<br><br>
+        <b>• Espaces de Vente :</b> Louez votre espace sécurisé pour 1000 Fr CFA/mois.<br>
+        <b>• Formations en Ligne :</b> Découvrez notre catalogue et accédez instantanément à vos ressources.
+    </p>
+
+    <div id="zonePaiement">
+        <button class="btn-success" onclick="payer()">✔ Payer avec FedaPay</button>
+    </div>
+
+    <div id="btnOuvrirRetrait" style="margin-top:20px;">
+        <button class="btn-primary" onclick="document.getElementById('retraitBox').style.display='block'">💰 Demander un retrait</button>
+    </div>
+
+    <div id="retraitBox" class="retrait-box">
+        <h4>📱 Retrait Orange Money</h4>
+        <input type="tel" id="retraitOrangePhone" placeholder="Numéro de réception">
+        <input type="number" id="retraitMontant" placeholder="Montant à retirer">
+        <button class="btn-success" onclick="validerDemandeRetrait()">Valider le retrait</button>
+        <button class="btn-danger" onclick="document.getElementById('retraitBox').style.display='none'">Annuler</button>
+    </div>
+
+    <button class="btn-danger" style="margin-top:30px;" onclick="deconnexion()">Déconnexion</button>
 </div>
 
-<div id="catalogBox" class="box" style="display:none; max-width: 750px;">
-<h3 id="compteurEspaces" style="color: #2196F3;">Chargement...</h3>
-<button onclick="ouvrirEspaceLocatairePrive()" style="background:#9c27b0; color:white;">🛠 Accès Espace Locataire</button>
-<div class="spaces-list-vertical" id="spacesContainer"></div>
-</div>
+<script>
+    const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
+    let montantSelectionne = 300; 
+    let articleSelectionne = "Accès KOALA";
 
-<div class="box" id="siteBox" style="display:none;">
-<h2 id="titreAchat">📘 Accès Service</h2>
-<div id="vendeurCounterBox" class="vendeur-counter-box" style="display: none;" onclick="afficherBoutonRetrait()">
-   💰 Solde : <span id="soldeCompteur">0</span> F CFA
-</div>
+    // --- Fonctions FedaPay et Edge Functions ---
+    window.payer = function() {
+        const phone = localStorage.getItem("phone");
+        fetch(`${SUPABASE_URL}/functions/v1/hyper-task`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'creer_paiement', amount: montantSelectionne, phone: phone, item_name: articleSelectionne })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.transaction && data.transaction.callback_url) {
+                window.location.href = data.transaction.callback_url;
+            } else {
+                alert("Erreur : Impossible de joindre FedaPay.");
+            }
+        });
+    };
 
-<div id="retraitInterfaceBox" class="retrait-box"></div>
+    window.validerDemandeRetrait = function() {
+        const phoneRetrait = document.getElementById('retraitOrangePhone').value;
+        const montant = document.getElementById('retraitMontant').value;
+        
+        fetch(`${SUPABASE_URL}/functions/v1/hyper-task`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'executer_retrait', amount: parseInt(montant), phone: phoneRetrait })
+        })
+        .then(res => res.json())
+        .then(data => alert("Statut : " + (data.message || "Succès")));
+    };
 
-<div id="zonePaiementStandard"></div>
+    // --- Logique Session ---
+    function connexion() {
+        const phone = document.getElementById("loginPhone").value.trim();
+        if(phone.length >= 8) {
+            localStorage.setItem("phone", phone);
+            location.reload();
+        } else {
+            alert("Numéro invalide");
+        }
+    }
 
-<div id="zoneVerificationCode">
-<h3>🔑 Entrer le code reçu</h3>
-<input id="code" placeholder="Entrez le code d'accès">
-<button onclick="verifier()" style="background:#9c27b0; color:white; font-weight:bold;">Vérifier</button>
-</div>
+    function deconnexion() {
+        localStorage.removeItem("phone");
+        location.reload();
+    }
 
-<div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
-<button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white;">👁️ Voir</button>
-<button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white;">⬇️ Télécharger</button>
-</div>
+    window.onload = () => {
+        if(localStorage.getItem("phone")) {
+            document.getElementById("loginBox").style.display = "none";
+            document.getElementById("appBox").style.display = "block";
+        }
+    };
+</script>
 
-<div id="uploadZone">
-<h3>🏗️ Configuration Espace</h3>
-<input type="text" id="descFichier" placeholder="Description...">
-<input type="tel" id="numDepot" placeholder="Numéro...">
-<input type="number" id="prixEspace" placeholder="Prix...">
-<input type="file" id="fileInput">
-<button id="btnValiderEspace" onclick="validerConfigurationEspace()" style="background:#1565c0; color:white;">🚀 Publier</button>
-</div>
-
-<button onclick="retourAuCatalogue()" style="background:#666; color:white;">🏠 Retour</button>
-<button onclick="deconnexion()" style="background:red; color:white;">Déconnexion</button>
-</div>
-
-<script src="https://cdn.fedapay.com/online/v1/fedapay.js"></script>
-<script src="supabase-logic.js"></script>
-<script src="fedapay-integration.js"></script>
 </body>
 </html>
