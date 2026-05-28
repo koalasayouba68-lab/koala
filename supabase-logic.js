@@ -1,5 +1,5 @@
-pk_sandbox_c82e4dlpeghM7RWY2XFYRhjr
-sk_sandbox_FxutRTGo2cmpTKJv0EBtMTGs
+const FEDAPAY_PUBLIC_KEY = "pk_sandbox_c82e4dlpeghM7RWY2XFYRhjr";
+const FEDAPAY_SECRET_KEY = "sk_sandbox_FxutRTGo2cmpTKJv0EBtMTGs";
 const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
 
@@ -374,9 +374,8 @@ async function payer(){
     const phone = localStorage.getItem("phone");
     if(!phone) return;
     
-    // Initialisation du pop-up sécurisé FedaPay
     FedaPay.init('#payBtn', {
-        public_key: 'pk_sandbox_c82e4dlpeghM7RWY2XFYRhjr',
+        public_key: FEDAPAY_PUBLIC_KEY,
         transaction: {
             amount: montantSelectionne,
             description: 'Achat KOALA Drive - ' + articleSelectionne
@@ -391,10 +390,8 @@ async function payer(){
             if (reason === FedaPay.DIALOG_DISMISSED) {
                 alert("Paiement annulé ou fenêtre fermée ❌");
             } else {
-                // Paiement approuvé : génération automatique du code unique
                 const codeGenere = Math.floor(100000 + Math.random() * 900000).toString();
                 
-                // Calcul de la date d'expiration (+30 jours)
                 const dateExpiration = new Date();
                 dateExpiration.setDate(dateExpiration.getDate() + 30);
                 
