@@ -558,7 +558,7 @@ if(currentRole === "vendeur") {
 async function payer() {
     // 1. Initialiser le Checkout FedaPay
     const handler = FedaPay.init({
-        public_key: 'pk_sandbox_c82e4dlpeghM7RWY2XFYRhjr', // TA CLE PUBLIQUE
+        public_key: 'pk_sandbox_c82e4dlpeghM7RWY2XFYRhjr', // Ta clé publique
         transaction: {
             amount: montantSelectionne,
             description: articleSelectionne
@@ -571,11 +571,12 @@ async function payer() {
     // 2. Ouvrir la fenêtre de paiement automatique
     handler.open().then(async (response) => {
         if (response.reason === 'PAID') {
-            // Le paiement est réussi, on informe ton Edge Function
-            await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/functions/v1/NOM_DE_TA_FONCTION", {
+            // Le paiement est réussi, on informe ton Edge Function "hyper-task"
+            await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/functions/v1/hyper-task", {
                 method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    action: "confirmer_paiement_en_base", // Une nouvelle action dans ton Edge Function
+                    action: "confirmer_paiement_en_base",
                     phone: localStorage.getItem("phone"),
                     amount: montantSelectionne,
                     role: currentRole,
@@ -587,175 +588,6 @@ async function payer() {
         }
     });
 }
-
-function surveillerConfirmation(){
-clearInterval(checkInterval);
-checkInterval = setInterval(async ()=>{
-const phone = localStorage.getItem("phone");
-if(!phone) return;
-
-let urlFiltre = (currentRole === "vendeur") ? `&amount=eq.1000` : `&name_file=eq.${encodeURIComponent(articleSelectionne)}`;
-
-const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}${urlFiltre}&select=*`, {
-headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-});
-const data = await res.json();
-if(!data || data.length===0) return;
-const p = data[data.length - 1];
-currentPaymentId = p.id;
-
-if(p.status === "confirmé") { restaurerCode(); }
-},10000);
-}
-
-async function verifier(){
-const code = document.getElementById("code").value.trim();
-const phone = localStorage.getItem("phone");
-const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&code=eq.${code}&status=eq.confirmé&name_file=eq.${encodeURIComponent(articleSelectionne)}`, {
-headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-});
-const data = await res.json();
-if(data.length > 0) { alert("Accès Validé ✔"); restaurerCode(); } else { alert("Code incorrect ou non lié à ce fichier ❌"); }
-}
-
-async function validerConfigurationEspace() {
-const description = document.getElementById("descFichier").value.trim();
-const numero = document.getElementById("numDepot").value.trim();
-const prix = document.getElementById("prixEspace").value.trim();
-const fileInput = document.getElementById("fileInput");
-
-if (!description || !numero || !prix || fileInput.files.length === 0) {
-    alert("Veuillez remplir tous les champs obligatoires ! ❌");
-    return;
-}
-const fichier = fileInput.files[0];
-if (fichier.size > 10 * 1024 * 1024) { alert("Fichier trop lourd (Max 10 Mo) ❌"); return; }
-
-if(!currentPaymentId) { alert("Aucune location active trouvée pour publier ❌"); return; }
-
-const btnValidation = document.getElementById("btnValiderEspace");
-btnValidation.disabled = true;
-btnValidation.innerText = "Téléversement du fichier en cours... ⏳";
-
-const extension = fichier.name.split('.').pop();
-const nomFichierUnique = "koala_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7) + "." + extension;
-
-try {
-    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/fichiers-locataires/${nomFichierUnique}`, {
-        method: "POST",
-        headers: {
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${SUPABASE_KEY}`,
-            "Content-Type": fichier.type
-        },
-        body: fichier
-    });
-
-    if(!uploadRes.ok) {
-        throw new Error("Échec du téléversement vers le stockage Supabase.");
-    }
-
-    const urlPubliqueFichier = `${SUPABASE_URL}/storage/v1/object/public/fichiers-locataires/${nomFichierUnique}`;
-
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPaymentId}`, {
-        method: "PATCH",
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-            description: description,
-            num_depot: numero,
-            prix_vente: parseInt(prix),
-            espace_num: parseInt(numEspaceEnCoursGestion),
-            name_file: urlPubliqueFichier
-        })
-    });
-
-    if(res.ok) {
-        alert("🚀 Félicitations ! Votre fichier a été hébergé et votre espace est publié avec succès !");
-        retourAuCatalogue();
-    } else {
-        alert("Erreur lors de l'enregistrement des informations de l'espace ❌");
-    }
-
-} catch(erreur) {
-    console.error(erreur);
-    alert("Erreur réseau ou problème de droits avec le Bucket Supabase. Vérifie tes RLS Policies. ❌");
-} finally {
-    btnValidation.disabled = false;
-    btnValidation.innerText = "🚀 Valider et publié mon espace";
-}
-}
-
-async function reabonnerVendeur() { payer(); }
-
-function ouvrirPDF() { window.open(urlFichierAchete, "_blank"); }
-function telechargerPDF() { const a = document.createElement("a"); a.href = urlFichierAchete; a.download = "fichier_koala"; a.click(); }
-
-function startTimer(expireDate){
-clearInterval(countdown);
-const exp = new Date(expireDate);
-document.getElementById("timer").style.display="block";
-const updateTimerText = () => {
-    const diff = exp - new Date();
-    if(diff <= 0){ document.getElementById("timer").innerHTML = "❌ Expiré"; return; }
-    document.getElementById("timer").innerHTML = "⏳ Expire dans " + Math.floor(diff/3600000) + "h " + Math.floor((diff%3600000)/60000) + "m";
-};
-updateTimerText();
-countdown = setInterval(updateTimerText, 60000);
-}
-
-function afficherBoutonRetrait() {
-    const btn = document.getElementById("btnDeclencherRetrait");
-    btn.style.display = btn.style.display === "none" ? "inline-block" : "none";
-}
-
-function ouvrirInterfaceRetrait(event) {
-    event.stopPropagation(); 
-    document.getElementById("retraitInterfaceBox").style.display = "block";
-}
-
-function fermerInterfaceRetrait() {
-    document.getElementById("retraitInterfaceBox").style.display = "none";
-}
-async function validerDemandeRetrait() {
-    const phoneRetrait = document.getElementById("retraitOrangePhone").value.trim();
-    const montantRetrait = document.getElementById("retraitMontant").value.trim();
-    
-    if(!phoneRetrait || !montantRetrait) {
-        alert("Veuillez remplir tous les champs ! ❌");
-        return;
-    }
-
-    const montant = parseInt(montantRetrait);
-    if(montant > soldeVendeurActuel) {
-        alert(`Solde insuffisant ! Votre solde actuel est de ${soldeVendeurActuel} F CFA. ❌`);
-        return;
-    }
-
-    try {
-        // C'est ici que j'ai mis "hyper-task" comme tu l'as vu sur Supabase
-        const res = await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/functions/v1/hyper-task", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                action: "executer_retrait",
-                amount: montant,
-                phone: phoneRetrait,
-                country: "BF",
-                description: "Retrait gain automatique via FedaPay"
-            })
-        });
-
-        const result = await res.json();
-
-        if (res.ok) {
-            alert("✅ Virement initié avec succès par FedaPay !");
-            fermerInterfaceRetrait();
-            soldeVendeurActuel -= montant;
-            document.getElementById("soldeCompteur").innerText = soldeVendeurActuel;
-        } else {
-            alert("❌ Erreur FedaPay : " + (result.message || "Échec du virement"));
-        }
-    } catch(e) {
-        alert("Erreur de connexion avec le serveur ❌");
-    }
-}
+</script>
+</body>
+</html>
