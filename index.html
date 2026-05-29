@@ -556,38 +556,26 @@ if(currentRole === "vendeur") {
 }
 
 async function payer() {
-    // 1. Initialiser le Checkout FedaPay
-    const handler = FedaPay.init({
-        public_key: 'pk_sandbox_c82e4dlpeghM7RWY2XFYRhjr', // Ta clé publique
-        transaction: {
+    // On envoie directement à ton Edge Function sans ouvrir de popup
+    const response = await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/functions/v1/hyper-task", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            action: "initier_paiement_direct",
+            phone: localStorage.getItem("phone"),
             amount: montantSelectionne,
-            description: articleSelectionne
-        },
-        customer: {
-            phone_number: localStorage.getItem("phone")
-        }
+            description: articleSelectionne,
+            role: currentRole,
+            espace_num: numEspaceEnCoursGestion
+        })
     });
 
-    // 2. Ouvrir la fenêtre de paiement automatique
-    handler.open().then(async (response) => {
-        if (response.reason === 'PAID') {
-            // Le paiement est réussi, on informe ton Edge Function "hyper-task"
-            await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/functions/v1/hyper-task", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "confirmer_paiement_en_base",
-                    phone: localStorage.getItem("phone"),
-                    amount: montantSelectionne,
-                    role: currentRole,
-                    espace_num: numEspaceEnCoursGestion
-                })
-            });
-            alert("Paiement réussi !");
-            restaurerCode();
-        }
-    });
+    const data = await response.json();
+
+    if (data.success) {
+        // Le paiement est lancé, le client reçoit le message PIN sur son téléphone
+        alert("Demande de paiement envoyée sur votre téléphone. Veuillez valider avec votre code PIN.");
+    } else {
+        alert("Erreur : " + JSON.stringify(data));
+    }
 }
-</script>
-</body>
-</html>
