@@ -556,10 +556,13 @@ if(currentRole === "vendeur") {
 }
 
 async function payer() {
-    // On envoie directement à ton Edge Function sans ouvrir de popup
+    // On envoie la requête avec ton en-tête d'autorisation utilisant SUPABASE_KEY
     const response = await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/functions/v1/hyper-task", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + SUPABASE_KEY 
+        },
         body: JSON.stringify({
             action: "initier_paiement_direct",
             phone: localStorage.getItem("phone"),
@@ -573,10 +576,11 @@ async function payer() {
     const data = await response.json();
 
     if (data.success) {
-        // Le paiement est lancé, le client reçoit le message PIN sur son téléphone
+        // Succès : le paiement est lancé par FedaPay
         alert("Demande de paiement envoyée sur votre téléphone. Veuillez valider avec votre code PIN.");
     } else {
-        alert("Erreur : " + JSON.stringify(data));
+        // Erreur : on affiche le détail
+        alert("Erreur lors du paiement : " + JSON.stringify(data));
     }
 }
 </script>
