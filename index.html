@@ -556,7 +556,6 @@ if(currentRole === "vendeur") {
 }
 
 async function payer() {
-    // On envoie la requête à ton Edge Function
     const response = await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/functions/v1/hyper-task", {
         method: "POST",
         headers: { 
@@ -575,16 +574,14 @@ async function payer() {
 
     const data = await response.json();
 
-    // Affiche l'erreur complète dans la console du navigateur (F12) pour diagnostic
-    console.log("Détail de la réponse reçue de Supabase :", data);
+    // On affiche tout le contenu de data pour ne rien manquer
+    console.log("RÉPONSE COMPLÈTE DE SUPABASE :", JSON.stringify(data));
 
     if (data.success) {
         alert("Demande de paiement envoyée sur votre téléphone. Veuillez valider avec votre code PIN.");
     } else {
-        // On affiche l'erreur plus clairement pour toi
-        alert("Erreur de paiement : " + (data.data?.message || JSON.stringify(data)));
+        // Cette ligne affichera l'erreur exacte dans le pop-up
+        let messageErreur = data.data ? JSON.stringify(data.data) : "Erreur inconnue";
+        alert("Erreur de paiement : " + messageErreur);
     }
 }
-</script>
-</body>
-</html>
