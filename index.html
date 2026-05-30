@@ -556,7 +556,7 @@ if(currentRole === "vendeur") {
 }
 
 async function payer() {
-    // On envoie la requête avec ton en-tête d'autorisation utilisant SUPABASE_KEY
+    // On envoie la requête à ton Edge Function
     const response = await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/functions/v1/hyper-task", {
         method: "POST",
         headers: { 
@@ -575,12 +575,14 @@ async function payer() {
 
     const data = await response.json();
 
+    // Affiche l'erreur complète dans la console du navigateur (F12) pour diagnostic
+    console.log("Détail de la réponse reçue de Supabase :", data);
+
     if (data.success) {
-        // Succès : le paiement est lancé par FedaPay
         alert("Demande de paiement envoyée sur votre téléphone. Veuillez valider avec votre code PIN.");
     } else {
-        // Erreur : on affiche le détail
-        alert("Erreur lors du paiement : " + JSON.stringify(data));
+        // On affiche l'erreur plus clairement pour toi
+        alert("Erreur de paiement : " + (data.data?.message || JSON.stringify(data)));
     }
 }
 </script>
