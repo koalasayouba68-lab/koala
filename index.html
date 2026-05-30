@@ -574,14 +574,17 @@ async function payer() {
 
     const data = await response.json();
 
-    // On affiche tout le contenu de data pour ne rien manquer
+    // On affiche tout le contenu de data dans la console (F12) pour diagnostic
     console.log("RÉPONSE COMPLÈTE DE SUPABASE :", JSON.stringify(data));
 
     if (data.success) {
         alert("Demande de paiement envoyée sur votre téléphone. Veuillez valider avec votre code PIN.");
     } else {
-        // Cette ligne affichera l'erreur exacte dans le pop-up
+        // Cette ligne affiche l'erreur détaillée dans l'alerte
         let messageErreur = data.data ? JSON.stringify(data.data) : "Erreur inconnue";
         alert("Erreur de paiement : " + messageErreur);
     }
 }
+</script>
+</body>
+</html>
