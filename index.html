@@ -280,21 +280,37 @@ async function ouvrirEspaceLocatairePrive() {
 async function selectionnerAchat(nom, montant, espaceNum = null) {
     const phone = localStorage.getItem("phone");
     
-    if (phone && (montant === 1000 || nom.startsWith("Location Espace"))) {
-        const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&amount=eq.1000`, {
-            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-        });
-        const checkData = await checkRes.json();
-        if (checkData && checkData.length > 0) {
-            alert("Impossible de louer 2 espaces avec le même numéro ❌");
-            return;
+    // 1. On récupère le numéro de l'espace loué par l'utilisateur connecté (s'il en a un)
+    // On suppose que tu as stocké le numéro d'espace dans le localStorage lors de la connexion
+    const monEspaceLoue = localStorage.getItem("mon_espace_num"); 
+
+    // 2. LOGIQUE DE BASCULE :
+    // Si l'espace cliqué est celui que le locateur a loué, il est "vendeur" (gère son espace)
+    // Sinon, il devient un simple client pour cet achat
+    if (espaceNum && monEspaceLoue && espaceNum.toString() === monEspaceLoue.toString()) {
+        currentRole = "vendeur";
+    } else {
+        // Si c'est une location neuve (montant 1000) et qu'il n'a pas encore d'espace
+        currentRole = (montant === 1000 || nom.startsWith("Location Espace")) ? "vendeur" : "sous_client";
+    }
+
+    // 3. Sécurité : Vérifier double location seulement si on tente de louer un nouvel espace
+    if (currentRole === "vendeur" && montant === 1000 && (!monEspaceLoue || monEspaceLoue == 0)) {
+        if (phone) {
+            const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&amount=eq.1000`, {
+                headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+            });
+            const checkData = await checkRes.json();
+            if (checkData && checkData.length > 0) {
+                alert("Vous possédez déjà un espace ! ❌");
+                return;
+            }
         }
     }
 
     articleSelectionne = nom;
     montantSelectionne = montant;
     numEspaceEnCoursGestion = espaceNum;
-    currentRole = (montant === 1000 || nom.startsWith("Location Espace")) ? "vendeur" : "sous_client";
     
     document.getElementById("titreAchat").innerText = nom;
     document.getElementById("catalogBox").style.display = "none";
