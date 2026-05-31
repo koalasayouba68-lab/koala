@@ -147,12 +147,17 @@ Ici, nous vous proposons deux opportunités uniques :<br><br>
     </button>
 </div>
 
-<div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
-<h3 style="color: green; margin: 0 0 10px 0;">📚 Votre Formation est débloquée :</h3>
-<div class="action-buttons">
-<button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white; font-weight: bold;">👁️ Voir le PDF</button>
-<button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white; font-weight: bold;">⬇️ Télécharger le PDF</button>
+<div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
+    <label style="font-weight: bold; color: #333;">Votre code secret :</label>
+    <input type="text" id="code" placeholder="Code secret de validation" readonly style="width: 100%; padding: 10px; margin-top: 5px; text-align: center; font-weight: bold; font-size: 18px; border: 2px solid #9c27b0; border-radius: 5px;">
 </div>
+
+<div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
+    <h3 style="color: green; margin: 0 0 10px 0;">📚 Votre Formation est débloquée :</h3>
+    <div class="action-buttons">
+        <button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white; font-weight: bold;">👁️ Voir le PDF</button>
+        <button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white; font-weight: bold;">⬇️ Télécharger le PDF</button>
+    </div>
 </div>
 
 <div id="uploadZone">
@@ -301,30 +306,37 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
     btn.disabled = false;
 }
 
-function deconnexion(){
-clearInterval(checkInterval);
-clearInterval(countdown);
-localStorage.removeItem("phone");
-document.getElementById("loginPhone").value = "";
-document.getElementById("code").value = "";
-document.getElementById("loginBox").style.display="block";
-document.getElementById("welcomeBox").style.display="none";
-document.getElementById("catalogBox").style.display="none";
-document.getElementById("siteBox").style.display="none";
-document.getElementById("topcode").style.display="none";
-document.getElementById("timer").style.display="none";
-document.getElementById("uploadZone").style.display = "none";
-document.getElementById("formationAccessZone").style.display = "none";
-document.getElementById("vendeurCounterBox").style.display = "none";
-document.getElementById("retraitInterfaceBox").style.display = "none";
-document.getElementById("zonePaiementStandard").style.display = "block";
-document.getElementById("zoneVerificationCode").style.display = "block";
-timerStarted = false;
-currentPaymentId = null;
-vendeurCodeSecretMasque = "";
-soldeVendeurActuel = 0;
-numEspaceEnCoursGestion = null;
-urlFichierAchete = "formation2026.pdf";
+function deconnexion() {
+    clearInterval(checkInterval);
+    clearInterval(countdown);
+    localStorage.removeItem("phone");
+
+    // On réinitialise les valeurs seulement si les éléments existent
+    if (document.getElementById("loginPhone")) document.getElementById("loginPhone").value = "";
+    if (document.getElementById("code")) document.getElementById("code").value = "";
+
+    // On remet la page dans son état initial
+    if (document.getElementById("loginBox")) document.getElementById("loginBox").style.display = "block";
+    if (document.getElementById("welcomeBox")) document.getElementById("welcomeBox").style.display = "none";
+    if (document.getElementById("catalogBox")) document.getElementById("catalogBox").style.display = "none";
+    if (document.getElementById("siteBox")) document.getElementById("siteBox").style.display = "none";
+    if (document.getElementById("topcode")) document.getElementById("topcode").style.display = "none";
+    if (document.getElementById("timer")) document.getElementById("timer").style.display = "none";
+    if (document.getElementById("uploadZone")) document.getElementById("uploadZone").style.display = "none";
+    if (document.getElementById("formationAccessZone")) document.getElementById("formationAccessZone").style.display = "none";
+    if (document.getElementById("vendeurCounterBox")) document.getElementById("vendeurCounterBox").style.display = "none";
+    if (document.getElementById("retraitInterfaceBox")) document.getElementById("retraitInterfaceBox").style.display = "none";
+    
+    // Réinitialisation des variables
+    timerStarted = false;
+    currentPaymentId = null;
+    vendeurCodeSecretMasque = "";
+    soldeVendeurActuel = 0;
+    numEspaceEnCoursGestion = null;
+    urlFichierAchete = "formation2026.pdf";
+
+    // Rechargement pour nettoyer toute la mémoire
+    location.reload();
 }
 
 async function genererCatalogueEspaces() {
