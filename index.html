@@ -5,14 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KOALA - Plateforme Officielle</title>
 <meta name="google-site-verification" content="v1n-U1ZbQ_z94Hxt0NyvesUKsW1mK5yBPT3q6O8in4c" />
-
-<script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
-
-<script>
-  FedaPay.setPublicKey("pk_sandbox_c82e4dlpeghM7RWY2XFYRhjr");
-  FedaPay.setEnvironment('sandbox');
-</script>
-
 <style>
 body{font-family:Arial, sans-serif;background:#f4f4f4;padding:10px;margin:0;}
 .box{width:95%;max-width:700px;margin:20px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
@@ -121,43 +113,39 @@ Ici, nous vous proposons deux opportunités uniques :<br><br>
     💰 Vos Gains Accumulés : <span id="soldeCompteur">0</span> F CFA
     <button id="btnDeclencherRetrait" style="display: none; background: white; color: #9c27b0; font-weight: bold; margin-top: 10px; width: auto; padding: 5px 15px;" onclick="ouvrirInterfaceRetrait(event)">Retirer</button>
 </div>
-
 <div id="retraitInterfaceBox" class="retrait-box">
-    <h3 style="margin: 0 0 10px 0; color: #856404;">📱 Retrait vers Mobile Money</h3>
-    <p style="font-size: 12px; color: #666;">FedaPay détectera automatiquement votre opérateur (Orange, Moov, Wave, etc.)</p>
-    
-    <input type="tel" id="retraitOrangePhone" placeholder="Ex: 76XXXXXX (Numéro sans indicatif)">
-    <input type="number" id="retraitMontant" placeholder="Montant à retirer">
-    
-    <button onclick="validerDemandeRetrait()" style="background: green; color: white; font-weight: bold; margin-top: 10px;">Lancer le retrait automatique</button>
-    <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white; margin-top: 5px;">Annuler</button>
-</div>
-
-<div id="zonePaiementStandard" style="text-align: center; margin: 20px 0; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
-    <h3 style="color: #333; margin-bottom: 15px;">💰 Paiement Sécurisé</h3>
-    
-    <input type="tel" id="inputPhonePaiement" placeholder="Entrez votre numéro de paiement" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px;">
-    
-    <p style="font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.4;">
-        Après avoir cliqué, vérifiez votre téléphone : une notification apparaîtra automatiquement pour valider la transaction avec votre code PIN.
+    <h3 style="margin: 0 0 10px 0; color: #856404;">📱 Retrait sécurisé</h3>
+    <p style="font-size: 12px; color: #555; margin-bottom: 5px;">
+        Entrez votre numéro avec l'indicatif (ex: +225 pour la CI, +227 pour le Niger, +226 pour le BF).
     </p>
-    
-    <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px;">
-        Payer maintenant
-    </button>
+    <input type="tel" id="retraitOrangePhone" placeholder="+225xxxxxxxxxx">
+    <input type="number" id="retraitMontant" placeholder="Montant à retirer">
+    <button onclick="validerDemandeRetrait()" style="background: green; color: white; font-weight: bold; margin-top: 10px; width: 100%;">Valider le retrait</button>
+    <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white; margin-top: 5px; width: 100%;">Annuler</button>
 </div>
 
-<div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
-    <label style="font-weight: bold; color: #333;">Votre code secret :</label>
-    <input type="text" id="code" placeholder="Code secret de validation" readonly style="width: 100%; padding: 10px; margin-top: 5px; text-align: center; font-weight: bold; font-size: 18px; border: 2px solid #9c27b0; border-radius: 5px;">
+<div id="zonePaiementStandard">
+<h3>💰 Paiement Orange Money</h3>
+<div style="background:#fff3cd; padding:15px; border-radius:8px; font-size:16px;">
+📌 Composez : <b id="syntaxeOrange" style="font-size: 18px; color: #d10000;">*144*10*44295613*300#</b><br><br>
+Puis revenez cliquer sur <b>✔ J’ai payé</b> pour que l'administrateur génère votre code.
+</div>
+<button id="payBtn" onclick="payer()" style="background:green; color:white; font-weight:bold;">✔ J’ai payé</button>
+<hr>
+</div>
+
+<div id="zoneVerificationCode">
+<h3>🔑 Entrer le code reçu</h3>
+<input id="code" placeholder="Entrez le code d'accès">
+<button onclick="verifier()" style="background:#9c27b0; color:white; font-weight:bold;">Vérifier et Accéder</button>
 </div>
 
 <div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
-    <h3 style="color: green; margin: 0 0 10px 0;">📚 Votre Formation est débloquée :</h3>
-    <div class="action-buttons">
-        <button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white; font-weight: bold;">👁️ Voir le PDF</button>
-        <button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white; font-weight: bold;">⬇️ Télécharger le PDF</button>
-    </div>
+<h3 style="color: green; margin: 0 0 10px 0;">📚 Votre Formation est débloquée :</h3>
+<div class="action-buttons">
+<button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white; font-weight: bold;">👁️ Voir le PDF</button>
+<button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white; font-weight: bold;">⬇️ Télécharger le PDF</button>
+</div>
 </div>
 
 <div id="uploadZone">
@@ -238,18 +226,16 @@ function retourAuCatalogue() { document.getElementById("siteBox").style.display 
 async function ouvrirEspaceLocatairePrive() {
     const numeroSaisi = prompt("🔒 Espace Privé Vendeur\n\nEntrez votre numéro de téléphone :");
     if(!numeroSaisi) return;
-    const codeSaisi = prompt("Entrez votre code de connexion unique :");
+    const codeSaisi = prompt("Entrez votre code de connexion unique (généré lors de votre paiement initial de 1000 F) :");
     if(!codeSaisi) return;
 
     try {
-        // J'ai enlevé "&amount=eq.1000" pour éviter que ça bloque si le montant est différent
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${numeroSaisi.trim()}&code=eq.${codeSaisi.trim()}&status=eq.confirmé`, {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${numeroSaisi.trim()}&code=eq.${codeSaisi.trim()}&status=eq.confirmé&amount=eq.1000`, {
             headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
         });
         const data = await res.json();
-        
         if(!data || data.length === 0) {
-            alert("Numéro ou code incorrect pour cet espace ! ❌");
+            alert("Numéro ou code de connexion incorrect pour cet espace ! ❌");
             return;
         }
         
@@ -258,21 +244,15 @@ async function ouvrirEspaceLocatairePrive() {
         
         articleSelectionne = p.name_file || `Location Espace ${p.espace_num ? (p.espace_num < 10 ? '0'+p.espace_num : p.espace_num) : '01'}`;
         numEspaceEnCoursGestion = p.espace_num || 1;
-        montantSelectionne = p.amount || 1000; // On récupère le vrai montant du paiement
+        montantSelectionne = 1000;
         currentRole = "vendeur";
         
-        document.getElementById("titreAchat").innerText = `🏗️ Gestion : Espace ${p.espace_num || '01'}`;
+        document.getElementById("titreAchat").innerText = `🏗️ Gestion : Espace ${numEspaceEnCoursGestion < 10 ? '0'+numEspaceEnCoursGestion : numEspaceEnCoursGestion}`;
         document.getElementById("catalogBox").style.display = "none";
         document.getElementById("siteBox").style.display = "block";
 
-        // Important : On force le rafraîchissement des données de l'espace
         await restaurerCode();
-        
-        // On affiche manuellement la zone des gains si elle était masquée
-        document.getElementById("vendeurCounterBox").style.display = "block";
-        
     } catch(e) {
-        console.error(e);
         alert("Erreur lors de la vérification de vos accès ❌");
     }
 }
@@ -280,30 +260,20 @@ async function ouvrirEspaceLocatairePrive() {
 async function selectionnerAchat(nom, montant, espaceNum = null) {
     const phone = localStorage.getItem("phone");
     
-    // 1. On récupère le numéro de l'espace loué par l'utilisateur connecté (s'il en a un)
-    // On suppose que tu as stocké le numéro d'espace dans le localStorage lors de la connexion
-    const monEspaceLoue = localStorage.getItem("mon_espace_num"); 
-
-    // 2. LOGIQUE DE BASCULE :
-    // Si l'espace cliqué est celui que le locateur a loué, il est "vendeur" (gère son espace)
-    // Sinon, il devient un simple client pour cet achat
-    if (espaceNum && monEspaceLoue && espaceNum.toString() === monEspaceLoue.toString()) {
-        currentRole = "vendeur";
-    } else {
-        // Si c'est une location neuve (montant 1000) et qu'il n'a pas encore d'espace
-        currentRole = (montant === 1000 || nom.startsWith("Location Espace")) ? "vendeur" : "sous_client";
-    }
-
-    // 3. Sécurité : Vérifier double location seulement si on tente de louer un nouvel espace
-    if (currentRole === "vendeur" && montant === 1000 && (!monEspaceLoue || monEspaceLoue == 0)) {
+    // NOUVELLE SÉCURITÉ : Vérifier si l'utilisateur tente de louer un deuxième espace libre
+    if (montant === 1000 || nom.startsWith("Location Espace")) {
         if (phone) {
-            const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&amount=eq.1000`, {
-                headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-            });
-            const checkData = await checkRes.json();
-            if (checkData && checkData.length > 0) {
-                alert("Vous possédez déjà un espace ! ❌");
-                return;
+            try {
+                const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&amount=eq.1000`, {
+                    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+                });
+                const checkData = await checkRes.json();
+                if (checkData && checkData.length > 0) {
+                    alert("impossible pour un seul numero de louer 2 espaces ❌");
+                    return; // On arrête l'exécution ici, rien ne s'ouvre !
+                }
+            } catch (errCheck) {
+                console.error("Erreur de vérification de double location", errCheck);
             }
         }
     }
@@ -312,47 +282,63 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
     montantSelectionne = montant;
     numEspaceEnCoursGestion = espaceNum;
     
-    document.getElementById("titreAchat").innerText = nom;
+    document.getElementById("code").value = "";
+    document.getElementById("topcode").style.display = "none";
+    document.getElementById("topcode").innerText = "";
+    document.getElementById("formationAccessZone").style.display = "none";
+    
+    const formattedNum = espaceNum ? (espaceNum < 10 ? '0' + espaceNum : espaceNum) : '01';
+
+    if (montant === 1000 || nom.startsWith("Location Espace")) {
+        currentRole = "vendeur";
+        document.getElementById("titreAchat").innerText = `📘 Réservation : Espace ${formattedNum}`;
+        document.getElementById("syntaxeOrange").innerText = `*144*10*44295613*1000#`;
+        
+        document.getElementById("uploadZone").style.display = "none";
+        document.getElementById("vendeurCounterBox").style.display = "none";
+        document.getElementById("zonePaiementStandard").style.display = "block";
+        document.getElementById("zoneVerificationCode").style.display = "none";
+    } else {
+        currentRole = "sous_client";
+        document.getElementById("titreAchat").innerText = `📘 Achat Fichier - Espace ${formattedNum}`;
+        document.getElementById("syntaxeOrange").innerText = `*144*10*44295613*${montant}#`;
+        
+        document.getElementById("vendeurCounterBox").style.display = "none";
+        document.getElementById("uploadZone").style.display = "none";
+        document.getElementById("zonePaiementStandard").style.display = "block";
+        document.getElementById("zoneVerificationCode").style.display = "block";
+        
+        restaurerCode();
+    }
+    
     document.getElementById("catalogBox").style.display = "none";
     document.getElementById("siteBox").style.display = "block";
-    document.getElementById("inputPhonePaiement").value = phone || "";
-    
-    const btn = document.getElementById("payBtn");
-    btn.innerText = "Payer maintenant";
-    btn.disabled = false;
 }
 
-function deconnexion() {
-    clearInterval(checkInterval);
-    clearInterval(countdown);
-    localStorage.removeItem("phone");
-
-    // On réinitialise les valeurs seulement si les éléments existent
-    if (document.getElementById("loginPhone")) document.getElementById("loginPhone").value = "";
-    if (document.getElementById("code")) document.getElementById("code").value = "";
-
-    // On remet la page dans son état initial
-    if (document.getElementById("loginBox")) document.getElementById("loginBox").style.display = "block";
-    if (document.getElementById("welcomeBox")) document.getElementById("welcomeBox").style.display = "none";
-    if (document.getElementById("catalogBox")) document.getElementById("catalogBox").style.display = "none";
-    if (document.getElementById("siteBox")) document.getElementById("siteBox").style.display = "none";
-    if (document.getElementById("topcode")) document.getElementById("topcode").style.display = "none";
-    if (document.getElementById("timer")) document.getElementById("timer").style.display = "none";
-    if (document.getElementById("uploadZone")) document.getElementById("uploadZone").style.display = "none";
-    if (document.getElementById("formationAccessZone")) document.getElementById("formationAccessZone").style.display = "none";
-    if (document.getElementById("vendeurCounterBox")) document.getElementById("vendeurCounterBox").style.display = "none";
-    if (document.getElementById("retraitInterfaceBox")) document.getElementById("retraitInterfaceBox").style.display = "none";
-    
-    // Réinitialisation des variables
-    timerStarted = false;
-    currentPaymentId = null;
-    vendeurCodeSecretMasque = "";
-    soldeVendeurActuel = 0;
-    numEspaceEnCoursGestion = null;
-    urlFichierAchete = "formation2026.pdf";
-
-    // Rechargement pour nettoyer toute la mémoire
-    location.reload();
+function deconnexion(){
+clearInterval(checkInterval);
+clearInterval(countdown);
+localStorage.removeItem("phone");
+document.getElementById("loginPhone").value = "";
+document.getElementById("code").value = "";
+document.getElementById("loginBox").style.display="block";
+document.getElementById("welcomeBox").style.display="none";
+document.getElementById("catalogBox").style.display="none";
+document.getElementById("siteBox").style.display="none";
+document.getElementById("topcode").style.display="none";
+document.getElementById("timer").style.display="none";
+document.getElementById("uploadZone").style.display = "none";
+document.getElementById("formationAccessZone").style.display = "none";
+document.getElementById("vendeurCounterBox").style.display = "none";
+document.getElementById("retraitInterfaceBox").style.display = "none";
+document.getElementById("zonePaiementStandard").style.display = "block";
+document.getElementById("zoneVerificationCode").style.display = "block";
+timerStarted = false;
+currentPaymentId = null;
+vendeurCodeSecretMasque = "";
+soldeVendeurActuel = 0;
+numEspaceEnCoursGestion = null;
+urlFichierAchete = "formation2026.pdf";
 }
 
 async function genererCatalogueEspaces() {
@@ -564,48 +550,203 @@ if(currentRole === "vendeur") {
 }
 }
 
-async function payer() {
-    const phoneInput = document.getElementById("inputPhonePaiement").value.trim();
-    
-    if (!phoneInput || phoneInput.length < 8) {
-        alert("Veuillez entrer un numéro de téléphone valide.");
-        return;
+async function payer(){
+const phone = localStorage.getItem("phone");
+if(!phone) return;
+document.getElementById("payBtn").disabled = true;
+
+const res = await fetch(`${SUPABASE_URL}/rest/v1/payments`, {
+method:"POST",
+headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type":"application/json" },
+body:JSON.stringify({ 
+    phone: phone, 
+    status: "en attente", 
+    amount: montantSelectionne, 
+    role: currentRole, 
+    name_file: articleSelectionne,
+    espace_num: numEspaceEnCoursGestion ? parseInt(numEspaceEnCoursGestion) : null
+})
+});
+if(res.ok) { alert("Demande envoyée avec succès ! ⏳"); }
+document.getElementById("payBtn").disabled = false;
+}
+
+function surveillerConfirmation(){
+clearInterval(checkInterval);
+checkInterval = setInterval(async ()=>{
+const phone = localStorage.getItem("phone");
+if(!phone) return;
+
+let urlFiltre = (currentRole === "vendeur") ? `&amount=eq.1000` : `&name_file=eq.${encodeURIComponent(articleSelectionne)}`;
+
+const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}${urlFiltre}&select=*`, {
+headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+});
+const data = await res.json();
+if(!data || data.length===0) return;
+const p = data[data.length - 1];
+currentPaymentId = p.id;
+
+if(p.status === "confirmé") { restaurerCode(); }
+},10000);
+}
+
+async function verifier(){
+const code = document.getElementById("code").value.trim();
+const phone = localStorage.getItem("phone");
+const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&code=eq.${code}&status=eq.confirmé&name_file=eq.${encodeURIComponent(articleSelectionne)}`, {
+headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+});
+const data = await res.json();
+if(data.length > 0) { alert("Accès Validé ✔"); restaurerCode(); } else { alert("Code incorrect ou non lié à ce fichier ❌"); }
+}
+
+async function validerConfigurationEspace() {
+const description = document.getElementById("descFichier").value.trim();
+const numero = document.getElementById("numDepot").value.trim();
+const prix = document.getElementById("prixEspace").value.trim();
+const fileInput = document.getElementById("fileInput");
+
+if (!description || !numero || !prix || fileInput.files.length === 0) {
+    alert("Veuillez remplir tous les champs obligatoires ! ❌");
+    return;
+}
+const fichier = fileInput.files[0];
+if (fichier.size > 10 * 1024 * 1024) { alert("Fichier trop lourd (Max 10 Mo) ❌"); return; }
+
+if(!currentPaymentId) { alert("Aucune location active trouvée pour publier ❌"); return; }
+
+const btnValidation = document.getElementById("btnValiderEspace");
+btnValidation.disabled = true;
+btnValidation.innerText = "Téléversement du fichier en cours... ⏳";
+
+const extension = fichier.name.split('.').pop();
+const nomFichierUnique = "koala_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7) + "." + extension;
+
+try {
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/fichiers-locataires/${nomFichierUnique}`, {
+        method: "POST",
+        headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            "Content-Type": fichier.type
+        },
+        body: fichier
+    });
+
+    if(!uploadRes.ok) {
+        throw new Error("Échec du téléversement vers le stockage Supabase.");
     }
 
-    const btn = document.getElementById("payBtn");
-    btn.innerText = "Traitement en cours...";
-    btn.disabled = true;
+    const urlPubliqueFichier = `${SUPABASE_URL}/storage/v1/object/public/fichiers-locataires/${nomFichierUnique}`;
 
-    const response = await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/functions/v1/hyper-task", {
-        method: "POST",
-        headers: { 
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + SUPABASE_KEY 
-        },
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPaymentId}`, {
+        method: "PATCH",
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-            action: "initier_paiement_direct",
-            phone: phoneInput, // Le numéro saisi par le client
-            amount: montantSelectionne,
-            description: articleSelectionne,
-            role: currentRole,
-            espace_num: numEspaceEnCoursGestion
+            description: description,
+            num_depot: numero,
+            prix_vente: parseInt(prix),
+            espace_num: parseInt(numEspaceEnCoursGestion),
+            name_file: urlPubliqueFichier
         })
     });
 
-    const data = await response.json();
-    console.log("RÉPONSE COMPLÈTE DE SUPABASE :", JSON.stringify(data));
-
-    if (data.success) {
-        if (data.url) {
-            window.location.href = data.url;
-        } else {
-            alert("Demande de paiement envoyée sur le numéro " + phoneInput + ". Veuillez valider avec votre code PIN.");
-        }
+    if(res.ok) {
+        alert("🚀 Félicitations ! Votre fichier a été hébergé et votre espace est publié avec succès !");
+        retourAuCatalogue();
     } else {
-        let messageErreur = data.data ? JSON.stringify(data.data) : (data.error || "Erreur inconnue");
-        alert("Erreur de paiement : " + messageErreur);
-        btn.innerText = "Payer maintenant";
-        btn.disabled = false;
+        alert("Erreur lors de l'enregistrement des informations de l'espace ❌");
+    }
+
+} catch(erreur) {
+    console.error(erreur);
+    alert("Erreur réseau ou problème de droits avec le Bucket Supabase. Vérifie tes RLS Policies. ❌");
+} finally {
+    btnValidation.disabled = false;
+    btnValidation.innerText = "🚀 Valider et publié mon espace";
+}
+}
+
+async function reabonnerVendeur() { payer(); }
+
+function ouvrirPDF() { window.open(urlFichierAchete, "_blank"); }
+function telechargerPDF() { const a = document.createElement("a"); a.href = urlFichierAchete; a.download = "fichier_koala"; a.click(); }
+
+function startTimer(expireDate){
+clearInterval(countdown);
+const exp = new Date(expireDate);
+document.getElementById("timer").style.display="block";
+const updateTimerText = () => {
+    const diff = exp - new Date();
+    if(diff <= 0){ document.getElementById("timer").innerHTML = "❌ Expiré"; return; }
+    document.getElementById("timer").innerHTML = "⏳ Expire dans " + Math.floor(diff/3600000) + "h " + Math.floor((diff%3600000)/60000) + "m";
+};
+updateTimerText();
+countdown = setInterval(updateTimerText, 60000);
+}
+
+function afficherBoutonRetrait() {
+    const btn = document.getElementById("btnDeclencherRetrait");
+    btn.style.display = btn.style.display === "none" ? "inline-block" : "none";
+}
+
+function ouvrirInterfaceRetrait(event) {
+    event.stopPropagation(); 
+    document.getElementById("retraitInterfaceBox").style.display = "block";
+}
+
+function fermerInterfaceRetrait() {
+    document.getElementById("retraitInterfaceBox").style.display = "none";
+}
+
+async function validerDemandeRetrait() {
+    const phoneRetrait = document.getElementById("retraitOrangePhone").value.trim();
+    const montantRetrait = document.getElementById("retraitMontant").value.trim();
+    const phoneVendeur = localStorage.getItem("phone");
+
+    if(!phoneRetrait || !montantRetrait) {
+        alert("Veuillez remplir tous les champs ! ❌");
+        return;
+    }
+
+    // Correction : on vérifie que le numéro commence par '+'
+    if (!phoneRetrait.startsWith("+")) {
+        alert("Veuillez entrer le numéro au format international (commençant par +) ! ❌");
+        return;
+    }
+
+    const montant = parseInt(montantRetrait);
+    if(montant > soldeVendeurActuel) {
+        alert(`Solde insuffisant ! Votre solde actuel est de ${soldeVendeurActuel} F CFA. ❌`);
+        return;
+    }
+
+    try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments`, {
+            method: "POST",
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+                phone: phoneVendeur,
+                status: "retrait_en_attente",
+                amount: montant,
+                role: "vendeur",
+                description: `Demande retrait vers le numéro : ${phoneRetrait}`
+            })
+        });
+
+        if(res.ok) {
+            soldeVendeurActuel -= montant;
+            document.getElementById("soldeCompteur").innerText = soldeVendeurActuel;
+            
+            alert("Votre demande de retrait a été transmise avec succès ! Elle sera validée après traitement. 🚀");
+            fermerInterfaceRetrait();
+            await restaurerCode();
+        } else {
+            alert("Une erreur est survenue lors de la soumission de votre retrait. ❌");
+        }
+    } catch(e) {
+        alert("Erreur de connexion réseau ❌");
     }
 }
 </script>
