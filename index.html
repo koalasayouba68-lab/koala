@@ -267,59 +267,30 @@ async function ouvrirEspaceLocatairePrive() {
 async function selectionnerAchat(nom, montant, espaceNum = null) {
     const phone = localStorage.getItem("phone");
     
-    // NOUVELLE SÉCURITÉ : Vérifier si l'utilisateur tente de louer un deuxième espace libre
-    if (montant === 1000 || nom.startsWith("Location Espace")) {
-        if (phone) {
-            try {
-                const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&amount=eq.1000`, {
-                    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-                });
-                const checkData = await checkRes.json();
-                if (checkData && checkData.length > 0) {
-                    alert("impossible pour un seul numero de louer 2 espaces ❌");
-                    return; // On arrête l'exécution ici, rien ne s'ouvre !
-                }
-            } catch (errCheck) {
-                console.error("Erreur de vérification de double location", errCheck);
-            }
+    if (phone && (montant === 1000 || nom.startsWith("Location Espace"))) {
+        const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&amount=eq.1000`, {
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        const checkData = await checkRes.json();
+        if (checkData && checkData.length > 0) {
+            alert("Impossible de louer 2 espaces avec le même numéro ❌");
+            return;
         }
     }
 
     articleSelectionne = nom;
     montantSelectionne = montant;
     numEspaceEnCoursGestion = espaceNum;
+    currentRole = (montant === 1000 || nom.startsWith("Location Espace")) ? "vendeur" : "sous_client";
     
-    document.getElementById("code").value = "";
-    document.getElementById("topcode").style.display = "none";
-    document.getElementById("topcode").innerText = "";
-    document.getElementById("formationAccessZone").style.display = "none";
-    
-    const formattedNum = espaceNum ? (espaceNum < 10 ? '0' + espaceNum : espaceNum) : '01';
-
-    if (montant === 1000 || nom.startsWith("Location Espace")) {
-        currentRole = "vendeur";
-        document.getElementById("titreAchat").innerText = `📘 Réservation : Espace ${formattedNum}`;
-        document.getElementById("syntaxeOrange").innerText = `*144*10*44295613*1000#`;
-        
-        document.getElementById("uploadZone").style.display = "none";
-        document.getElementById("vendeurCounterBox").style.display = "none";
-        document.getElementById("zonePaiementStandard").style.display = "block";
-        document.getElementById("zoneVerificationCode").style.display = "none";
-    } else {
-        currentRole = "sous_client";
-        document.getElementById("titreAchat").innerText = `📘 Achat Fichier - Espace ${formattedNum}`;
-        document.getElementById("syntaxeOrange").innerText = `*144*10*44295613*${montant}#`;
-        
-        document.getElementById("vendeurCounterBox").style.display = "none";
-        document.getElementById("uploadZone").style.display = "none";
-        document.getElementById("zonePaiementStandard").style.display = "block";
-        document.getElementById("zoneVerificationCode").style.display = "block";
-        
-        restaurerCode();
-    }
-    
+    document.getElementById("titreAchat").innerText = nom;
     document.getElementById("catalogBox").style.display = "none";
     document.getElementById("siteBox").style.display = "block";
+    document.getElementById("inputPhonePaiement").value = phone || "";
+    
+    const btn = document.getElementById("payBtn");
+    btn.innerText = "Payer maintenant";
+    btn.disabled = false;
 }
 
 function deconnexion(){
