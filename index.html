@@ -162,34 +162,35 @@ Ici, nous vous proposons deux opportunités uniques :<br><br>
 </div>
 
 <div id="uploadZone">
-<h3 style="margin:0 0 15px 0; color:#1565c0; border-bottom: 2px solid #2196F3; padding-bottom: 5px;">🏗️ Configuration de votre Espace</h3>
+    <h3 style="margin:0 0 15px 0; color:#1565c0; border-bottom: 2px solid #2196F3; padding-bottom: 5px;">🏗️ Configuration de votre Espace</h3>
 
-<div class="form-group">
-<label for="descFichier">1️⃣ Description de votre PDF / Vidéo (Max 60 lettres) :</label>
-<input type="text" id="descFichier" maxlength="60" placeholder="Ex: Pack de 5 Ebooks pour apprendre le business...">
-</div>
+    <div class="form-group">
+        <label for="descFichier">1️⃣ Description du Pack (Max 60 lettres) :</label>
+        <input type="text" id="descFichier" maxlength="60" placeholder="Ex: Pack de formation complet...">
+    </div>
 
-<div class="form-group">
-<label for="numDepot">2️⃣ Numéro destiné à recevoir vos dépôts :</label>
-<input type="tel" id="numDepot" placeholder="Ex: 76XXXXXX">
-</div>
+    <div class="form-group">
+        <label for="numDepot">2️⃣ Numéro destiné à recevoir vos dépôts :</label>
+        <input type="tel" id="numDepot" placeholder="Ex: 76XXXXXX">
+    </div>
 
-<div class="form-group">
-<label for="prixEspace">3️⃣ Prix de vente de votre fichier (Fr CFA) :</label>
-<input type="number" id="prixEspace" placeholder="Ex: 500">
-</div>
+    <div class="form-group">
+        <label for="prixEspace">3️⃣ Prix de vente du Pack (Fr CFA) :</label>
+        <input type="number" id="prixEspace" placeholder="Ex: 1000">
+    </div>
 
-<div class="form-group">
-<label for="fileInput">4️⃣ Nom du fichier PDF ou Vidéo (Max 10 Mo) :</label>
-<input type="file" id="fileInput" accept="application/pdf, video/*" style="border: none; padding: 5px 0;">
-</div>
+    <div class="form-group">
+        <label>4️⃣ Vos fichiers (Importez 1, 2 ou 3 fichiers au choix) :</label>
+        <input type="file" id="fileInput1" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
+        <input type="file" id="fileInput2" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
+        <input type="file" id="fileInput3" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
+    </div>
 
-<button id="btnValiderEspace" onclick="validerConfigurationEspace()" style="background:#1565c0; color:white; font-weight: bold; font-size: 18px; margin-top: 10px;">🚀 Valider et publié mon espace</button>
+    <button id="btnValiderEspace" onclick="validerConfigurationEspace()" style="background:#1565c0; color:white; font-weight: bold; font-size: 18px; margin-top: 10px;">🚀 Valider et publier mon espace</button>
 </div>
 
 <button onclick="retourAuCatalogue()" style="background:#666; color:white; margin-top:20px;">🏠 Retour au catalogue</button>
 <button onclick="deconnexion()" style="background:red; color:white; margin-top:10px;">Déconnexion du compte</button>
-</div>
 
 <script>
 const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
@@ -564,12 +565,22 @@ if(currentRole === "vendeur") {
     }
 }
 }
-// --- FONCTION DE RETRAIT (Vendeur) ---
 async function validerDemandeRetrait() {
     const phoneRetrait = document.getElementById("retraitOrangePhone").value.trim();
     const montantRetrait = document.getElementById("retraitMontant").value.trim();
     const phoneVendeur = localStorage.getItem("phone");
 
+    // 1. VÉRIFICATION DE L'ABONNEMENT (NOUVEAU)
+    // On compare la date d'aujourd'hui avec la date d'expiration
+    const maintenant = new Date();
+    const dateExp = expirationDateGlobale ? new Date(expirationDateGlobale) : new Date(0);
+    
+    if (maintenant > dateExp) {
+        alert("⚠️ Votre période de location d'espace est arrivée à échéance. Veuillez procéder au renouvellement de votre abonnement pour être en mesure d'effectuer un retrait de vos gains.");
+        return;
+    }
+
+    // 2. VÉRIFICATIONS DE BASE (TON CODE ACTUEL)
     if(!phoneRetrait || !montantRetrait) {
         alert("Veuillez remplir tous les champs ! ❌");
         return;
@@ -580,12 +591,14 @@ async function validerDemandeRetrait() {
         return;
     }
 
+    // 3. VÉRIFICATION DU SOLDE (TON CODE ACTUEL)
     const montant = parseInt(montantRetrait);
     if(montant > soldeVendeurActuel) {
         alert(`Solde insuffisant ! Votre solde actuel est de ${soldeVendeurActuel} F CFA. ❌`);
         return;
     }
 
+    // 4. ENVOI DE LA DEMANDE (TON CODE ACTUEL)
     try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/payments`, {
             method: "POST",
@@ -612,7 +625,6 @@ async function validerDemandeRetrait() {
         alert("Erreur de connexion réseau ❌");
     }
 }
-
 // --- FONCTION PAYER (Paiement Client) ---
 async function payer() {
     const phoneInput = document.getElementById("inputPhonePaiement").value.trim();
@@ -678,6 +690,71 @@ function ouvrirInterfaceRetrait(event) {
 // Cette fonction ferme la fenêtre
 function fermerInterfaceRetrait() {
     document.getElementById("retraitInterfaceBox").style.display = "none";
+}
+
+async function validerConfigurationEspace() {
+    const desc = document.getElementById("descFichier").value;
+    const num = document.getElementById("numDepot").value;
+    const prix = document.getElementById("prixEspace").value;
+    
+    // Récupération des fichiers
+    const file1 = document.getElementById("fileInput1").files[0];
+    const file2 = document.getElementById("fileInput2").files[0];
+    const file3 = document.getElementById("fileInput3").files[0];
+
+    if (!desc || !num || !prix) {
+        alert("⚠️ Veuillez remplir tous les champs !");
+        return;
+    }
+
+    const btn = document.getElementById("btnValiderEspace");
+    btn.innerText = "Envoi en cours...";
+    btn.disabled = true;
+
+    try {
+        // On traite chaque fichier présent
+        const fichiers = [file1, file2, file3].filter(f => f !== undefined);
+        
+        for (let i = 0; i < fichiers.length; i++) {
+            const file = fichiers[i];
+            const fileName = `${numEspaceEnCoursGestion}_file_${i + 1}_${file.name}`;
+            
+            // Envoi du fichier vers le bucket 'espaces' (ou ton bucket habituel)
+            await fetch(`${SUPABASE_URL}/storage/v1/object/fichiers-locataires/${fileName}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
+                body: file
+            });
+        }
+
+        // Mise à jour de la table payments avec les infos
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPaymentId}`, {
+            method: 'PATCH',
+            headers: { 
+                'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 
+                'Content-Type': 'application/json', 'Prefer': 'return=representation' 
+            },
+            body: JSON.stringify({
+                description: desc,
+                num_depot: num,
+                prix_vente: prix,
+                name_file: fichiers.map(f => f.name).join('; ') // Enregistre les noms des fichiers
+            })
+        });
+
+        if (res.ok) {
+            alert("✅ Espace mis à jour avec succès avec vos fichiers !");
+            location.reload();
+        } else {
+            alert("❌ Erreur lors de l'enregistrement des données.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Une erreur est survenue.");
+    } finally {
+        btn.innerText = "🚀 Valider et publier mon espace";
+        btn.disabled = false;
+    }
 }
 </script>
 </body>
