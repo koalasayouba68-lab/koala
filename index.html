@@ -82,6 +82,12 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 <div id="topcode"></div>
 <div id="timer"></div>
 
+<div id="zoneNotifications" style="display:none; background:white; position:fixed; top:50px; right:10px; width:300px; max-height:400px; overflow-y:auto; border:1px solid #ccc; border-radius:10px; padding:10px; z-index:1000; box-shadow:0 5px 15px rgba(0,0,0,0.3);">
+    <h4 style="margin:0; border-bottom:1px solid #eee; padding-bottom:5px;">Mes Notifications</h4>
+    <div id="listeNotifications"></div>
+    <button onclick="fermerNotifications()" style="width:100%; margin-top:10px; background:#666; color:white; cursor:pointer;">Fermer</button>
+</div>
+
 <div id="loginBox" class="box">
 <h2>🔐 Connexion</h2>
 <p>Entre ton numéro pour continuer.</p>
@@ -225,6 +231,8 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 <script>
 const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
+
+const phoneUtilisateur = localStorage.getItem("phone");
 
 let countdown, checkInterval, essais = 0, timerStarted = false, derniereVerification = "";
 let appareilID = obtenirAppareilID();
@@ -876,6 +884,22 @@ async function sauvegarderEtAfficherNotif(notif) {
     // 3. AU LIEU D'AFFICHER JUSTE LA NOUVELLE, ON RECHARGE TOUT DEPUIS LA BASE
     // Cela garantit que toutes les anciennes + la nouvelle sont affichées correctement
     recupererToutesLesNotifications(); 
+}
+
+// Ajoute ces fonctions pour gérer l'ouverture et la fermeture de la fenêtre
+function ouvrirNotifications() {
+    const zone = document.getElementById("zoneNotifications");
+    if (zone) {
+        zone.style.display = "block";
+        recupererToutesLesNotifications(); // Charge les données depuis Supabase
+    }
+}
+
+function fermerNotifications() {
+    const zone = document.getElementById("zoneNotifications");
+    if (zone) {
+        zone.style.display = "none";
+    }
 }
 </script>
 </body>
