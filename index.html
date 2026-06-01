@@ -102,16 +102,20 @@ Ici, nous vous proposons deux opportunités uniques :<br><br>
 </div>
 
 <div id="catalogBox" class="box" style="display:none; max-width: 750px;">
-<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-<h3 style="margin: 0; color: green;">Catalogue des formations</h3>
-<h3 id="compteurEspaces" style="margin: 0; color: #2196F3; text-align: right;">Chargement des espaces...</h3>
-</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+        <h3 style="margin: 0; color: green;">Catalogue des formations</h3>
+        <h3 id="compteurEspaces" style="margin: 0; color: #2196F3; text-align: right;">Chargement des espaces...</h3>
+    </div>
 
-<button onclick="ouvrirEspaceLocatairePrive()" style="background:#9c27b0; color:white; font-weight:bold; margin-bottom:15px; font-size:14px;">🛠 Accéder à mon Espace Locataire (Gains / Gestion)</button>
+    <input type="text" id="searchInput" placeholder="Rechercher un espace par son numéro (ex: 30)..." onkeyup="filtrerEspaces()" style="width: 100%; padding: 10px; margin-top: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
 
-<div class="spaces-list-vertical" id="spacesContainer"></div>
+    <button onclick="ouvrirEspaceLocatairePrive()" style="background:#9c27b0; color:white; font-weight:bold; margin-top:15px; margin-bottom:15px; font-size:14px;">
+        🛠 Accéder à mon Espace Locataire (Gains / Gestion)
+    </button>
 
-<button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
+    <div class="spaces-list-vertical" id="spacesContainer"></div>
+
+    <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
 </div>
 
 <div class="box" id="siteBox" style="display:none;">
@@ -358,71 +362,63 @@ function deconnexion() {
 }
 
 async function genererCatalogueEspaces() {
-const spacesContainer = document.getElementById("spacesContainer");
-spacesContainer.innerHTML = ""; 
-
-try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?status=eq.confirmé&select=*`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-    const data = await res.json();
+    const spacesContainer = document.getElementById("spacesContainer");
+    spacesContainer.innerHTML = "";
     
-    let espacesOccupes = [];
-    data.forEach(item => {
-        if(item.espace_num && (item.amount === 1000 || item.role === "vendeur")) {
-            espacesOccupes.push(parseInt(item.espace_num));
-        }
-    });
+    // 1. Définition des 4 types d'espaces (Total 200 espaces)
+    const tranches = [
+        { prix: 1000, start: 1, end: 50, label: "Espace Classique (10 Mo)" },
+        { prix: 2000, start: 51, end: 100, label: "Espace Confort (20 Mo)" },
+        { prix: 4000, start: 101, end: 150, label: "Espace Pro (50 Mo)" },
+        { prix: 5000, start: 151, end: 200, label: "Espace Premium (100 Mo)" }
+    ];
 
-    let compteLibre = 50 - espacesOccupes.length;
-    document.getElementById("compteurEspaces").innerText = `(${compteLibre} Libres)`;
+    try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?status=eq.confirmé&select=*`, {
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        const data = await res.json();
+        
+        // 2. Génération du catalogue par tranche
+        tranches.forEach(tranche => {
+            const titre = document.createElement("div");
+            titre.className = "titre-louer-bleu";
+            titre.innerHTML = `<strong>${tranche.label}</strong>`;
+            spacesContainer.appendChild(titre);
 
-    for (let i = 1; i <= 50; i++) {
-        if(espacesOccupes.includes(i)) {
-            const formattedNum = i < 10 ? '0' + i : i;
-            const donneeX = data.find(item => parseInt(item.espace_num) === i && (item.amount === 1000 || item.role === "vendeur"));
-            
-            const fichierLie = donneeX && donneeX.name_file ? donneeX.name_file : ('Formation ' + formattedNum);
-            const prixVente = donneeX && donneeX.prix_vente ? donneeX.prix_vente : 500;
+            for (let i = tranche.start; i <= tranche.end; i++) {
+                const donneeX = data.find(item => parseInt(item.espace_num) === i);
+                const formattedNum = i < 10 ? '0' + i : i;
+                
+                const row = document.createElement("div");
+                row.className = "espace-ligne";
+                row.setAttribute("data-num", i); // Pour la recherche
 
-            const row = document.createElement("div");
-            row.className = "espace-ligne";
-            row.innerHTML = `
-                <div class="esp-num">${formattedNum}</div>
-                <div class="esp-desc"><b>${donneeX ? donneeX.description : 'Contenu partagé'}</b></div>
-                <button style="background:green; color:white;" onclick="selectionnerAchat('${fichierLie.replace(/'/g, "\\'")}', ${prixVente}, ${i})">
-                    Suivre (${prixVente} F)
-                </button>
-            `;
-            spacesContainer.appendChild(row);
-        }
+                if (donneeX) {
+                    // Espace occupé
+                    row.innerHTML = `
+                        <div class="esp-num">${formattedNum}</div>
+                        <div class="esp-desc"><b>${donneeX.description || 'Espace Occupé'}</b></div>
+                        <button style="background:green; color:white;" onclick="selectionnerAchat('${(donneeX.name_file || '').replace(/'/g, "\\'")}', ${donneeX.prix_vente || tranche.prix}, ${i})">
+                            Suivre (${donneeX.prix_vente || tranche.prix} F)
+                        </button>
+                    `;
+                } else {
+                    // Espace libre
+                    row.innerHTML = `
+                        <div class="esp-num">${formattedNum}</div>
+                        <div class="esp-desc" style="color:#2196F3;">Espace Libre</div>
+                        <button style="background:#2196F3; color:white;" onclick="selectionnerAchat('Location Espace ${formattedNum}', ${tranche.prix}, ${i})">
+                            Louer (${tranche.prix} F)
+                        </button>
+                    `;
+                }
+                spacesContainer.appendChild(row);
+            }
+        });
+    } catch (e) {
+        console.error("Erreur chargement catalogue", e);
     }
-
-    const titreDiv = document.createElement("div");
-    titreDiv.className = "titre-louer-bleu";
-    titreDiv.innerText = "Espaces à louer";
-    spacesContainer.appendChild(titreDiv);
-
-    for (let i = 1; i <= 50; i++) {
-        if(!espacesOccupes.includes(i)) {
-            const formattedNum = i < 10 ? '0' + i : i;
-            
-            const row = document.createElement("div");
-            row.className = "espace-ligne";
-            row.innerHTML = `
-                <div class="esp-num">${formattedNum}</div>
-                <div class="esp-desc" style="color: #2196F3; font-style: italic;">Espace Libre</div>
-                <button style="background:#2196F3; color:white;" onclick="selectionnerAchat('Location Espace ${formattedNum}', 1000, ${i})">
-                    Louer (1000 F)
-                </button>
-            `;
-            spacesContainer.appendChild(row);
-        }
-    }
-
-} catch (e) {
-    console.error("Erreur chargement catalogue", e);
-}
 }
 
 window.onload = function(){
@@ -695,31 +691,45 @@ function fermerInterfaceRetrait() {
 async function validerConfigurationEspace() {
     const desc = document.getElementById("descFichier").value;
     const num = document.getElementById("numDepot").value;
-    const prix = document.getElementById("prixEspace").value;
+    const prix = parseInt(document.getElementById("prixEspace").value);
     
     // Récupération des fichiers
-    const file1 = document.getElementById("fileInput1").files[0];
-    const file2 = document.getElementById("fileInput2").files[0];
-    const file3 = document.getElementById("fileInput3").files[0];
+    const fichiers = [
+        document.getElementById("fileInput1").files[0],
+        document.getElementById("fileInput2").files[0],
+        document.getElementById("fileInput3").files[0]
+    ].filter(f => f !== undefined);
 
     if (!desc || !num || !prix) {
         alert("⚠️ Veuillez remplir tous les champs !");
         return;
     }
 
+    // --- NOUVELLE LOGIQUE : VÉRIFICATION DE LA TAILLE ---
+    let limiteMo = 10;
+    if (prix >= 5000) limiteMo = 100;
+    else if (prix >= 4000) limiteMo = 50;
+    else if (prix >= 2000) limiteMo = 20;
+    else limiteMo = 10;
+
+    const tailleTotaleOctets = fichiers.reduce((acc, f) => acc + f.size, 0);
+    const tailleTotaleMo = tailleTotaleOctets / (1024 * 1024);
+
+    if (tailleTotaleMo > limiteMo) {
+        alert(`⚠️ Cet espace est limité à ${limiteMo} Mo.\nVos fichiers pèsent au total ${tailleTotaleMo.toFixed(2)} Mo.\nVeuillez réduire la taille de vos fichiers.`);
+        return;
+    }
+    // ----------------------------------------------------
+
     const btn = document.getElementById("btnValiderEspace");
     btn.innerText = "Envoi en cours...";
     btn.disabled = true;
 
     try {
-        // On traite chaque fichier présent
-        const fichiers = [file1, file2, file3].filter(f => f !== undefined);
-        
         for (let i = 0; i < fichiers.length; i++) {
             const file = fichiers[i];
             const fileName = `${numEspaceEnCoursGestion}_file_${i + 1}_${file.name}`;
             
-            // Envoi du fichier vers le bucket 'espaces' (ou ton bucket habituel)
             await fetch(`${SUPABASE_URL}/storage/v1/object/fichiers-locataires/${fileName}`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
@@ -727,7 +737,6 @@ async function validerConfigurationEspace() {
             });
         }
 
-        // Mise à jour de la table payments avec les infos
         const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPaymentId}`, {
             method: 'PATCH',
             headers: { 
@@ -738,22 +747,31 @@ async function validerConfigurationEspace() {
                 description: desc,
                 num_depot: num,
                 prix_vente: prix,
-                name_file: fichiers.map(f => f.name).join('; ') // Enregistre les noms des fichiers
+                name_file: fichiers.map(f => f.name).join('; ')
             })
         });
 
         if (res.ok) {
-            alert("✅ Espace mis à jour avec succès avec vos fichiers !");
+            alert("✅ Espace mis à jour avec succès !");
             location.reload();
         } else {
             alert("❌ Erreur lors de l'enregistrement des données.");
         }
     } catch (e) {
         console.error(e);
-        alert("Une erreur est survenue.");
+        alert("Une erreur est survenue lors de l'envoi.");
     } finally {
         btn.innerText = "🚀 Valider et publier mon espace";
         btn.disabled = false;
+    }
+}
+
+function filtrerEspaces() {
+    const filter = document.getElementById("searchInput").value.toLowerCase();
+    const rows = document.getElementsByClassName("espace-ligne");
+    for (let row of rows) {
+        const num = row.querySelector(".esp-num").innerText;
+        row.style.display = num.includes(filter) ? "" : "none";
     }
 }
 </script>
