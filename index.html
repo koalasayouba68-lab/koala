@@ -658,6 +658,27 @@ async function payer() {
         btn.disabled = false;
     }
 }
+
+// Cette fonction affiche le bouton "Retirer" quand tu cliques sur la box des gains
+function afficherBoutonRetrait() {
+    const btn = document.getElementById("btnDeclencherRetrait");
+    if (btn.style.display === "none") {
+        btn.style.display = "inline-block";
+    } else {
+        btn.style.display = "none";
+    }
+}
+
+// Cette fonction ouvre la fenêtre de saisie quand tu cliques sur le bouton "Retirer"
+function ouvrirInterfaceRetrait(event) {
+    event.stopPropagation(); // Empêche de recliquer sur la box en même temps
+    document.getElementById("retraitInterfaceBox").style.display = "block";
+}
+
+// Cette fonction ferme la fenêtre
+function fermerInterfaceRetrait() {
+    document.getElementById("retraitInterfaceBox").style.display = "none";
+}
 </script>
 </body>
 </html>
