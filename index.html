@@ -89,16 +89,42 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 <button onclick="connexion()" style="background:#2196F3; color:white;">Continuer</button>
 </div>
 
-<div id="welcomeBox" class="box" style="display:none;">
-<h1 style="color: red; text-align: center; font-size: 24px; font-weight: bold;">Bienvenue sur le site KOALA</h1>
-<p style="line-height: 1.6; text-align: justify;">
-Bienvenue dans l'univers KOALA, votre plateforme tout-en-un de partage et d'apprentissage en ligne !<br><br>
-Ici, nous vous proposons deux opportunités uniques :<br><br>
-<b>• Des Espaces de Vente à Louer :</b> Vous êtes créateur ? Louez votre propre espace sécurisé pour seulement 1000 Fr CFA par mois ! Vous pourrez y importer et vendre votre propre fichier PDF ou votre vidéo (taille maximale de 10 Mo) en toute simplicité. Vos clients pourront y accéder et les télécharger en un clic.<br><br>
-<b>• Des Formations en Ligne Accessibles :</b> Découvrez notre catalogue de formation de haute qualité à un coût extrêmement réduit et adapté à vos besoins. Apprenez à votre rythme, payez uniquement ce dont vous avez besoin, et débloquez votre contenu instantanément après validation.<br><br>
-<i>Cliquez sur le bouton ci-dessous pour découvrir nos formations disponibles et louer votre espace de vente dès maintenant !</i>
-</p>
-<button onclick="ouvrirCatalogue()" style="background: red; color: white; font-weight: bold; font-size: 18px; margin-top: 15px;">Découvrir le catalogue ➔</button>
+<!-- Bloc Accueil -->
+<div id="welcomeBox" class="box" style="display:block;">
+    <h1 style="color: red; text-align: center; font-size: 24px; font-weight: bold;">Bienvenue sur KOALA : Votre Hub de Vente et d'Apprentissage</h1>
+    
+    <p style="line-height: 1.6; text-align: justify;">
+        Bienvenue dans l'univers KOALA, la plateforme tout-en-un qui propulse vos projets et enrichit vos connaissances ! Que vous soyez créateur de contenu ou apprenant, nous avons l'espace qu'il vous faut.<br><br>
+        
+        <b>Voici ce que vous pouvez faire chez nous :</b><br><br>
+        
+        <b>• Louez votre Espace de Vente sur-mesure :</b> Rejoignez notre réseau exclusif de 250 espaces de diffusion. Que vous soyez créateur ou formateur, nous avons la solution parfaitement adaptée à vos ambitions. Sélectionnez la formule qui vous correspond — 1 000 F, 2 000 F, 4 000 F ou 5 000 F CFA — et louez votre boutique sécurisée en quelques clics pour partager et vendre vos fichiers (PDF, Vidéos) en toute autonomie. Vous conservez le contrôle total sur vos revenus et pouvez effectuer vos retraits de fonds simplement et rapidement.<br><br>
+        
+        <b>• Accédez à un Catalogue de Formations Premium :</b> Découvrez une sélection de formations de haute qualité à prix accessible. Apprenez à votre rythme, achetez uniquement le contenu qui vous intéresse et bénéficiez d'un accès instantané après validation.<br><br>
+        
+        <i>Prêt à vous lancer ? Que vous souhaitiez louer votre espace professionnel ou explorer nos formations, cliquez sur le bouton ci-dessous pour accéder à notre catalogue complet !</i>
+    </p>
+    
+    <button onclick="ouvrirCatalogue()" style="background: red; color: white; font-weight: bold; font-size: 18px; margin-top: 15px; width: 100%;">Découvrir le catalogue ➔</button>
+    
+    <button onclick="ouvrirAbout()" style="background: #9c27b0; color: white; font-weight: bold; font-size: 18px; margin-top: 10px; width: 100%;">En savoir plus sur KOALA 👤</button>
+</div>
+
+<!-- Bloc À Propos (caché par défaut) -->
+<div id="aboutBox" class="box" style="display:none; text-align: justify;">
+    <h2 style="color: #9c27b0; text-align: center;">À Propos de KOALA</h2>
+    <p><i>"L'art est une copie de la copie, savoir copier est un art."</i></p>
+    <p>Je suis KOALA, étudiant au département d'études germaniques à l'Université Joseph Ki-Zerbo. Bienvenue dans mon univers.</p>
+    <p>Au-delà de mes études de langues, je suis un passionné de création et d'innovation. Pour moi, chaque idée, chaque projet et chaque outil numérique est une forme d'art. Je suis convaincu que la capacité à s'inspirer du monde qui nous entoure, à l'analyser et à le transformer est ce qui définit le véritable créateur. C'est de cette philosophie qu'est née la plateforme KOALA.</p>
+    <p>Mon objectif avec cet espace est simple : offrir à chacun les outils pour partager son savoir, sa créativité et ses ressources de manière simple, sécurisée et accessible. Je conçois cette plateforme comme un pont entre l'apprentissage et l'entrepreneuriat numérique.</p>
+    
+    <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; margin-top: 20px;">
+        <h3 style="margin-top: 0;">Besoin d'échanger ?</h3>
+        <p>Je reste à votre entière disposition pour toute question concernant la plateforme ou vos projets.</p>
+        <p><strong>WhatsApp :</strong> +226 56 65 32 90</p>
+    </div>
+
+    <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px; width: 100%;">⬅ Retour à l'accueil</button>
 </div>
 
 <div id="catalogBox" class="box" style="display:none; max-width: 750px;">
@@ -504,9 +530,26 @@ if(currentRole === "vendeur") {
         document.getElementById("uploadZone").style.display = "block";
         document.getElementById("btnValiderEspace").innerText = "⚠ Réactiver mon Espace (1000 Fr)";
         document.getElementById("btnValiderEspace").onclick = reabonnerVendeur;
+        
+        // Notification automatique de fin de mois
+        const notifFinMois = {
+            type: "Fin de mois",
+            date: new Date().toLocaleString(),
+            message: "Votre abonnement est échu. Renouvelez pour continuer à vendre et retirer vos fonds."
+        };
+        // Appel de la fonction pour afficher le badge et stocker
+        sauvegarderEtAfficherNotif(notifFinMois);
+
     } else {
         document.getElementById("topcode").style.display="block";
-        document.getElementById("topcode").innerHTML = "🔒 Mon Espace Loué (Actif)";
+        document.getElementById("topcode").innerHTML = `
+            <div style="text-align: center;">
+                <div>🔒 Mon Espace Loué (Actif)</div>
+                <div onclick="ouvrirNotifications()" style="cursor:pointer; font-size: 24px; margin-top: 5px;">
+                    🔔 <span id="badgeNotif" style="color: red; font-size: 16px; font-weight: bold; display: none;">!</span>
+                </div>
+            </div>
+        `;
         document.getElementById("code").value = "";
         document.getElementById("uploadZone").style.display = "block";
         
@@ -595,7 +638,7 @@ async function validerDemandeRetrait() {
         return;
     }
 
-    // 4. ENVOI DE LA DEMANDE (TON CODE ACTUEL)
+// 4. ENVOI DE LA DEMANDE
     try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/payments`, {
             method: "POST",
@@ -608,6 +651,14 @@ async function validerDemandeRetrait() {
                 description: `Demande retrait vers le numéro : ${phoneRetrait}`
             })
         });
+
+        if (res.ok) {
+            // Déclenchement automatique de la notification de retrait
+            const nouveauSolde = soldeVendeurActuel - montant;
+            declencherNotifRetrait(montant, nouveauSolde);
+            
+            alert("Demande de retrait enregistrée avec succès ! ✅");
+        }
 
         if(res.ok) {
             soldeVendeurActuel -= montant;
@@ -774,6 +825,57 @@ function filtrerEspaces() {
         const num = row.querySelector(".esp-num").innerText;
         row.style.display = num.includes(filter) ? "" : "none";
     }
+}
+
+function ouvrirAbout() {
+    document.getElementById("welcomeBox").style.display = "none";
+    document.getElementById("aboutBox").style.display = "block";
+}
+
+function retourVersBienvenu() {
+    document.getElementById("aboutBox").style.display = "none";
+    document.getElementById("welcomeBox").style.display = "block";
+}
+
+function chargerNotifications(liste) {
+    const container = document.getElementById("listeNotifications");
+    container.innerHTML = "";
+    
+    liste.forEach(item => {
+        const div = document.createElement("div");
+        div.style.borderBottom = "1px solid #eee";
+        div.style.padding = "10px 0";
+        
+        div.innerHTML = `
+            <div style="font-weight:bold; color:#d32f2f;">${item.type}</div>
+            <div style="font-size:11px; color:#888;">${item.date}</div>
+            <div style="margin-top:5px; font-size:14px;">${item.message}</div>
+        `;
+        container.appendChild(div);
+    });
+    
+    document.getElementById("badgeNotif").style.display = "inline";
+}
+
+async function sauvegarderEtAfficherNotif(notif) {
+    // 1. Sauvegarde dans Supabase
+    await fetch(`${SUPABASE_URL}/rest/v1/notifications`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            phone: phoneUtilisateur,
+            type: notif.type, 
+            message: notif.message, 
+            date: notif.date 
+        })
+    });
+
+    // 2. Affiche le badge
+    document.getElementById("badgeNotif").style.display = "inline";
+    
+    // 3. AU LIEU D'AFFICHER JUSTE LA NOUVELLE, ON RECHARGE TOUT DEPUIS LA BASE
+    // Cela garantit que toutes les anciennes + la nouvelle sont affichées correctement
+    recupererToutesLesNotifications(); 
 }
 </script>
 </body>
