@@ -223,10 +223,10 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
     </div>
 
     <button id="btnValiderEspace" onclick="validerConfigurationEspace()" style="background:#1565c0; color:white; font-weight: bold; font-size: 18px; margin-top: 10px;">🚀 Valider et publier mon espace</button>
-</div>
-
-<button onclick="retourAuCatalogue()" style="background:#666; color:white; margin-top:20px;">🏠 Retour au catalogue</button>
-<button onclick="deconnexion()" style="background:red; color:white; margin-top:10px;">Déconnexion du compte</button>
+    
+    <button onclick="retourAuCatalogue()" style="background:#666; color:white; margin-top:20px;">🏠 Retour au catalogue</button>
+    <button onclick="deconnexion()" style="background:red; color:white; margin-top:10px;">Déconnexion du compte</button>
+</div> 
 
 <script>
 const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
@@ -450,17 +450,16 @@ async function genererCatalogueEspaces() {
 }
 
 window.onload = function(){
-const phone = localStorage.getItem("phone");
-if(phone){
-document.getElementById("loginBox").style.display="none";
-document.getElementById("welcomeBox").style.display="block";
-restaurerCode();
-surveillerConfirmation();
-} else {
-document.getElementById("loginBox").style.display="block";
+    const phone = localStorage.getItem("phone");
+    if(phone){
+        document.getElementById("loginBox").style.display="none";
+        document.getElementById("welcomeBox").style.display="block";
+        restaurerCode();
+        surveillerConfirmation();
+    } else {
+        document.getElementById("loginBox").style.display="block";
+    }
 }
-}
-
 async function restaurerCode(){
 const phone = localStorage.getItem("phone");
 if(!phone) return;
