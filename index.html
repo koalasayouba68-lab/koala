@@ -179,11 +179,10 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
         Après avoir cliqué, vérifiez votre téléphone : une notification apparaîtra automatiquement pour valider la transaction avec votre code PIN.
     </p>
     
-    <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; ...">
-    Payer maintenant
-</button>
-
-<button onclick="retourAuCatalogue()" style="background:#666; color:white; width:100%; margin-top:10px;">⬅ Retour au catalogue</button>
+    <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px;">
+        Payer maintenant
+    </button>
+</div>
 
 <div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
     <label style="font-weight: bold; color: #333;">Votre code secret :</label>
@@ -244,7 +243,7 @@ let vendeurCodeSecretMasque = "";
 let soldeVendeurActuel = 0;
 let numEspaceEnCoursGestion = null;
 
-let urlFichierAchete = "";
+let urlFichierAchete = "formation2026.pdf";
 
 function genererIdentifiantSecours() { return 'dev-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36); }
 function obtenirAppareilID() {
