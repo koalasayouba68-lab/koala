@@ -450,14 +450,18 @@ async function genererCatalogueEspaces() {
 }
 
 window.onload = function(){
+    // On cache TOUT au démarrage pour être sûr
+    document.getElementById("welcomeBox").style.display = "none";
+    document.getElementById("catalogBox").style.display = "none";
+    document.getElementById("siteBox").style.display = "none";
+    
+    // On vérifie ensuite la connexion
     const phone = localStorage.getItem("phone");
     if(phone){
-        document.getElementById("loginBox").style.display="none";
-        document.getElementById("welcomeBox").style.display="block";
-        restaurerCode();
-        surveillerConfirmation();
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("welcomeBox").style.display = "block";
     } else {
-        document.getElementById("loginBox").style.display="block";
+        document.getElementById("loginBox").style.display = "block";
     }
 }
 async function restaurerCode(){
