@@ -191,11 +191,15 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 
 <div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
     <h3 style="color: green; margin: 0 0 10px 0;">📚 Votre Formation est débloquée :</h3>
+    
     <div class="action-buttons">
         <button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white; font-weight: bold;">👁️ Voir le PDF</button>
         <button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white; font-weight: bold;">⬇️ Télécharger le PDF</button>
     </div>
-    <button onclick="retourAuCatalogue()" style="background:#666; color:white; width:100%; margin-top:15px; font-weight:bold;">⬅ Retour au catalogue</button>
+
+    <button onclick="retourAuCatalogue()" style="display: block; width: 100%; margin-top: 15px; padding: 12px; background: #666; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+        ⬅ Retour au catalogue
+    </button>
 </div>
 
 <div id="uploadZone">
