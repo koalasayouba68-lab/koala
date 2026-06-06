@@ -1,51 +1,3 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>KOALA - Panel Administration Officiel</title>
-<style>
-body{font-family:Arial, sans-serif;background:#f4f4f4;padding:20px;color:#333;}
-.box{max-width:850px;margin:auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
-.item{background:#eee;padding:15px;margin:10px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;border-left:5px solid gold;}
-button{padding:10px 15px;cursor:pointer;border-radius:5px;font-weight:bold;border:none;}
-.btn-primary {background:#2196F3; color:white; margin-right: 10px;}
-.btn-success {background:green; color:white; margin-right:5px;}
-.btn-danger {background:red; color:white; margin-right:5px;}
-.btn-delete {background:#d32f2f; color:white;} /* Style spécifique bouton supprimer */
-.badge{padding:4px 8px;border-radius:4px;color:white;font-size:12px;font-weight:bold;}
-.badge-vendeur{background:#9c27b0;}
-.badge-client{background:#009688;}
-.action-bar { background: #e0e0e0; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-
-/* Zone d'authentification admin */
-#authBox { text-align: center; max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
-#authBox input { width: 100%; padding: 10px; margin-top: 15px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; text-align: center; }
-</style>
-</head>
-<body>
-
-<div id="authBox">
-    <h2>🔑 Accès Administrateur</h2>
-    <p>Veuillez entrer le code secret pour déverrouiller le panel.</p>
-    <input type="password" id="adminCodeField" placeholder="Code d'accès">
-    <button onclick="verifierCodeAdmin()" style="background:#9c27b0; color:white; width:100%; margin-top:15px; font-size:16px;">Connexion</button>
-</div>
-
-<div class="box" id="panelAdminPrincipal" style="display:none;">
-<h2>🟣 KOALA - Gestion des Validations Réelles</h2>
-
-<div class="action-bar">
-    <button class="btn-primary" onclick="load()">🔄 Actualiser</button>
-    <button class="btn-primary" style="background:#555;" onclick="selectionnerTout()">📋 Sélectionner Tout</button>
-    <span style="margin-left:auto; font-weight:bold;">Actions groupées :</span>
-    <button class="btn-success" onclick="validerSelectionnes()">✔ Valider Sélection</button>
-    <button class="btn-danger" onclick="bloquerSelectionnes()">🔒 Bloquer Sélection</button>
-    <button class="btn-delete" onclick="supprimerSelectionnes()">🗑️ Supprimer Sélection</button>
-</div>
-
-<div id="list">Chargement des demandes...</div>
-</div>
-
 <script>
 const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
@@ -68,7 +20,7 @@ function verifierCodeAdmin() {
 }
 
 async function load(){
-    if(!verifié) return; 
+    if(!verifié) return;
     const listDiv = document.getElementById("list");
     try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?select=*`, {
@@ -139,12 +91,7 @@ async function executerValidationUnique(id, role) {
     
     await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
         method: "PATCH",
-        headers: { 
-            apikey: SUPABASE_KEY, 
-            Authorization: `Bearer ${SUPABASE_KEY}`, 
-            "Content-Type": "application/json",
-            "Prefer": "return=representation" 
-        },
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", "Prefer": "return=representation" },
         body: JSON.stringify({ status: "confirmé", code: code, expires_at: d.toISOString() })
     });
     load();
@@ -153,62 +100,7 @@ async function executerValidationUnique(id, role) {
 async function executerBloquerUnique(id) {
     await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
         method: "PATCH",
-        headers: { 
-            apikey: SUPABASE_KEY, 
-            Authorization: `Bearer ${SUPABASE_KEY}`, 
-            "Content-Type": "application/json",
-            "Prefer": "return=representation" 
-        },
-        body: JSON.stringify({ status: "bloqué" })
-    });
-    load();
-}
-
-async function executerSuppressionTotale(id, telephone) {
-    const confirmation = confirm(`⚠ ATTENTION : Voulez-vous supprimer entièrement le compte lié au numéro ${telephone} ?`);
-    if (confirmation) {
-        await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
-            method: "DELETE",
-            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-        });
-        load();
-    }
-}
-
-async function validerSelectionnes() {
-    const checkboxes = document.querySelectorAll('.checkbox-select:checked');
-    for(let cb of checkboxes) {
-        await executerValidationUnique(cb.getAttribute('data-id'), cb.getAttribute('data-role'));
-    }
-    load();
-}
-
-async function bloquerSelectionnes() {
-    const checkboxes = document.querySelectorAll('.checkbox-select:checked');
-    for(let cb of checkboxes) {
-        await executerBloquerUnique(cb.getAttribute('data-id'));
-    }
-    load();
-}
-
-async function supprimerSelectionnes() {
-    const checkboxes = document.querySelectorAll('.checkbox-select:checked');
-    if(confirm("Confirmer la suppression de la sélection ?")) {
-        for(let cb of checkboxes) {
-            await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${cb.getAttribute('data-id')}`, {
-                method: "DELETE",
-                headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-            });
-        }
-        load();
-    }
-}
-</script>
-
-async function executerBloquerUnique(id) {
-    await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
-        method: "PATCH",
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", "Prefer": "return=representation" },
         body: JSON.stringify({ status: "bloqué" })
     });
     load();
@@ -217,17 +109,12 @@ async function executerBloquerUnique(id) {
 // SUPPRESSION TOTALE INDIVIDUELLE
 async function executerSuppressionTotale(id, telephone) {
     const confirmation = confirm(`⚠ ATTENTION : Voulez-vous supprimer entièrement le compte lié au numéro ${telephone} ?\n\nCette action effacera ses données et libérera immédiatement son espace sur le catalogue.`);
-    
     if (confirmation) {
         try {
             const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
                 method: "DELETE",
-                headers: { 
-                    apikey: SUPABASE_KEY, 
-                    Authorization: `Bearer ${SUPABASE_KEY}` 
-                }
+                headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
             });
-            
             if(res.ok) {
                 alert("Compte supprimé avec succès ! L'espace est à nouveau libre. 🍃");
                 load();
@@ -245,17 +132,15 @@ async function executerSuppressionTotale(id, telephone) {
 async function validerSelectionnes() {
     const checkboxes = document.querySelectorAll('.checkbox-select:checked');
     if(checkboxes.length === 0) { alert("Aucune ligne cochée ! ❌"); return; }
-    
     for(let cb of checkboxes) {
         const id = cb.getAttribute('data-id');
         const role = cb.getAttribute('data-role');
         const code = Math.random().toString(36).substring(2,8).toUpperCase();
         const d = new Date();
         if(role === 'vendeur') { d.setDate(d.getDate() + 30); } else { d.setHours(d.getHours() + 72); }
-
         await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
             method: "PATCH",
-            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", "Prefer": "return=representation" },
             body: JSON.stringify({ status: "confirmé", code: code, expires_at: d.toISOString() })
         });
     }
@@ -267,12 +152,11 @@ async function validerSelectionnes() {
 async function bloquerSelectionnes() {
     const checkboxes = document.querySelectorAll('.checkbox-select:checked');
     if(checkboxes.length === 0) { alert("Aucune ligne cochée ! ❌"); return; }
-
     for(let cb of checkboxes) {
         const id = cb.getAttribute('data-id');
         await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
             method: "PATCH",
-            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", "Prefer": "return=representation" },
             body: JSON.stringify({ status: "bloqué" })
         });
     }
@@ -284,18 +168,13 @@ async function bloquerSelectionnes() {
 async function supprimerSelectionnes() {
     const checkboxes = document.querySelectorAll('.checkbox-select:checked');
     if(checkboxes.length === 0) { alert("Aucune ligne cochée ! ❌"); return; }
-
     const confirmation = confirm(`⚠ ATTENTION CRITIQUE : Vous allez supprimer ENTIÈREMENT les ${checkboxes.length} comptes sélectionnés.\n\nCette action est irréversible et libérera leurs espaces. Continuer ?`);
-    
     if(confirmation) {
         for(let cb of checkboxes) {
             const id = cb.getAttribute('data-id');
             await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
                 method: "DELETE",
-                headers: { 
-                    apikey: SUPABASE_KEY, 
-                    Authorization: `Bearer ${SUPABASE_KEY}` 
-                }
+                headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
             });
         }
         alert("Tous les éléments sélectionnés ont été définitivement supprimés ! 🍃");
@@ -303,5 +182,3 @@ async function supprimerSelectionnes() {
     }
 }
 </script>
-</body>
-</html>
