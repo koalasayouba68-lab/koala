@@ -116,7 +116,6 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
     <button onclick="ouvrirAbout()" style="background: #9c27b0; color: white; font-weight: bold; font-size: 18px; margin-top: 10px; width: 100%;">En savoir plus sur KOALA 👤</button>
 </div>
 
-<!-- Bloc À Propos (caché par défaut) -->
 <div id="aboutBox" class="box" style="display:none; text-align: justify;">
     <h2 style="color: #9c27b0; text-align: center;">À Propos de KOALA</h2>
     <p><i>"L'art est une copie de la copie, savoir copier est un art."</i></p>
@@ -131,6 +130,24 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
     </div>
 
     <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px; width: 100%;">⬅ Retour à l'accueil</button>
+</div>
+
+<div id="catalogBox" class="box" style="display:none; max-width: 750px;">
+    <button onclick="deconnexion()" style="background:red; color:white; font-size:12px; padding:5px; margin-bottom:10px; width:auto;">🔴 Déconnexion</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+        <h3 style="margin: 0; color: green;">Catalogue des formations</h3>
+        <h3 id="compteurEspaces" style="margin: 0; color: #2196F3; text-align: right;">Chargement des espaces...</h3>
+    </div>
+
+    <input type="text" id="searchInput" placeholder="Rechercher un espace par son numéro (ex: 30)..." onkeyup="filtrerEspaces()" style="width: 100%; padding: 10px; margin-top: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+
+    <button onclick="ouvrirEspaceLocatairePrive()" style="background:#9c27b0; color:white; font-weight:bold; margin-top:15px; margin-bottom:15px; font-size:14px;">
+        🛠 Accéder à mon Espace Locataire (Gains / Gestion)
+    </button>
+
+    <div class="spaces-list-vertical" id="spacesContainer"></div>
+
+    <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
 </div>
 
 <div id="catalogBox" class="box" style="display:none; max-width: 750px;">
