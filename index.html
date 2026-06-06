@@ -246,8 +246,7 @@ let vendeurCodeSecretMasque = "";
 let soldeVendeurActuel = 0;
 let numEspaceEnCoursGestion = null;
 
-let urlFichierAchete = "formation2026.pdf";
-
+let urlFichierAchete = "";
 function genererIdentifiantSecours() { return 'dev-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36); }
 function obtenirAppareilID() {
 let id = localStorage.getItem("appareilID");
@@ -302,12 +301,18 @@ async function ouvrirEspaceLocatairePrive() {
         numEspaceEnCoursGestion = p.espace_num;
         currentRole = "vendeur";
         
+        // --- NETTOYAGE ICI ---
+        // On s'assure que le titre ne contient pas de nom de fichier parasite
         document.getElementById("titreAchat").innerText = `🏗️ Gestion : Espace ${p.espace_num || '01'}`;
+        
         document.getElementById("catalogBox").style.display = "none";
         document.getElementById("siteBox").style.display = "block";
 
         await restaurerCode();
         document.getElementById("vendeurCounterBox").style.display = "block";
+        
+        // S'assurer que la zone de paiement standard est bien cachée pour un vendeur
+        document.getElementById("zonePaiementStandard").style.display = "none";
         
     } catch(e) {
         console.error(e);
