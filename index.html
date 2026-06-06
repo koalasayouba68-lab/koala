@@ -158,10 +158,6 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 
     <input type="text" id="searchInput" placeholder="Rechercher un espace par son numéro (ex: 30)..." onkeyup="filtrerEspaces()" style="width: 100%; padding: 10px; margin-top: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
 
-    <button onclick="ouvrirEspaceLocatairePrive()" style="background:#9c27b0; color:white; font-weight:bold; margin-top:15px; margin-bottom:15px; font-size:14px;">
-        🛠 Accéder à mon Espace Locataire (Gains / Gestion)
-    </button>
-
     <div class="spaces-list-vertical" id="spacesContainer"></div>
 
     <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
@@ -281,10 +277,6 @@ restaurerCode();
 surveillerConfirmation();
 }
 
-function abrirCatalogue() { // Correction typo si nécessaire, aligné sur ouvrirCatalogue
-ouvrirCatalogue();
-}
-
 function ouvrirCatalogue() { 
 document.getElementById("welcomeBox").style.display = "none"; 
 document.getElementById("catalogBox").style.display = "block"; 
@@ -292,7 +284,6 @@ genererCatalogueEspaces();
 }
 
 function retourVersBienvenu() { document.getElementById("catalogBox").style.display = "none"; document.getElementById("welcomeBox").style.display = "block"; }
-function retourAuCatalogue() { document.getElementById("siteBox").style.display = "none"; document.getElementById("catalogBox").style.display = "block"; }
 
 async function ouvrirEspaceLocatairePrive() {
     const numeroSaisi = prompt("🔒 Espace Privé Vendeur\n\nEntrez votre numéro de téléphone :");
@@ -452,8 +443,12 @@ async function genererCatalogueEspaces() {
                     row.innerHTML = `
                         <div class="esp-num">${formattedNum}</div>
                         <div class="esp-desc"><b>${donneeX.description || 'Espace Occupé'}</b></div>
-                        <button style="background:green; color:white;" onclick="selectionnerAchat('${(donneeX.name_file || '').replace(/'/g, "\\'")}', ${donneeX.prix_vente || tranche.prix}, ${i})">
+                        <button style="background:green; color:white; margin-right:5px;" onclick="selectionnerAchat('${(donneeX.name_file || '').replace(/'/g, "\\'")}', ${donneeX.prix_vente || tranche.prix}, ${i})">
                             Suivre (${donneeX.prix_vente || tranche.prix} F)
+                        </button>
+                        <button style="background:orange; color:white; padding:5px; border:none; border-radius:3px;" 
+                                onclick="voirFacture('${donneeX.id}', '${donneeX.prix_vente || tranche.prix}', '${donneeX.expires_at || ''}')">
+                            📄 Facture
                         </button>
                     `;
                 } else {
@@ -475,15 +470,23 @@ async function genererCatalogueEspaces() {
 }
 
 window.onload = function(){
-    // On cache TOUT au démarrage pour être sûr
+    const params = new URLSearchParams(window.location.search);
+    const idFacture = params.get('id');
+    const montantFacture = params.get('montant');
+
+    document.getElementById("loginBox").style.display = "none";
     document.getElementById("welcomeBox").style.display = "none";
     document.getElementById("catalogBox").style.display = "none";
     document.getElementById("siteBox").style.display = "none";
-    
-    // On vérifie ensuite la connexion
+
+    if (idFacture && montantFacture) {
+        document.getElementById("siteBox").style.display = "block";
+        document.getElementById("titreAchat").innerText = "📄 Règlement de votre facture";
+        return;
+    }
+
     const phone = localStorage.getItem("phone");
     if(phone){
-        document.getElementById("loginBox").style.display = "none";
         document.getElementById("welcomeBox").style.display = "block";
     } else {
         document.getElementById("loginBox").style.display = "block";
@@ -920,6 +923,20 @@ function fermerNotifications() {
     const zone = document.getElementById("zoneNotifications");
     if (zone) {
         zone.style.display = "none";
+    }
+}
+
+function voirFacture(id, montant, expires_at) {
+    if(!expires_at) { alert("Date d'expiration introuvable."); return; }
+    
+    const expiration = new Date(expires_at);
+    const aujourdhui = new Date();
+    const diff = expiration - aujourdhui;
+    const jours = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    
+    if(confirm(`Votre espace expire dans ${jours > 0 ? jours : 0} jours.\nSouhaitez-vous procéder au paiement de ${montant} F CFA pour renouveler ?`)) {
+        // Redirection vers la page de paiement avec les paramètres
+        window.location.href = `paiement.html?id=${id}&montant=${montant}`;
     }
 }
 </script>
