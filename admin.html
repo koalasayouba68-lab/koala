@@ -68,7 +68,7 @@ function verifierCodeAdmin() {
 }
 
 async function load(){
-    if(!verifié) return; // Sécurité blocage requêtes
+    if(!verifié) return; 
     const listDiv = document.getElementById("list");
     try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?select=*`, {
@@ -88,7 +88,6 @@ async function load(){
             const isConfirmed = p.status === "confirmé";
             const estVendeur = (p.amount === 1000 || p.role === "vendeur");
             
-            // Affichage des informations réelles envoyées par le locataire
             let infoEspaceLocataire = "";
             if(estVendeur && p.description) {
                 infoEspaceLocataire = `<div style="background:#fff; padding:5px; margin-top:5px; border-radius:4px; font-size:12px;">
@@ -127,7 +126,6 @@ async function load(){
     }
 }
 
-// COCHER TOUT LE MONDE RÉELLEMENT
 function selectionnerTout() {
     const checkboxes = document.querySelectorAll('.checkbox-select');
     checkboxes.forEach(cb => cb.checked = true);
@@ -141,11 +139,71 @@ async function executerValidationUnique(id, role) {
     
     await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
         method: "PATCH",
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+        headers: { 
+            apikey: SUPABASE_KEY, 
+            Authorization: `Bearer ${SUPABASE_KEY}`, 
+            "Content-Type": "application/json",
+            "Prefer": "return=representation" 
+        },
         body: JSON.stringify({ status: "confirmé", code: code, expires_at: d.toISOString() })
     });
     load();
 }
+
+async function executerBloquerUnique(id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
+        method: "PATCH",
+        headers: { 
+            apikey: SUPABASE_KEY, 
+            Authorization: `Bearer ${SUPABASE_KEY}`, 
+            "Content-Type": "application/json",
+            "Prefer": "return=representation" 
+        },
+        body: JSON.stringify({ status: "bloqué" })
+    });
+    load();
+}
+
+async function executerSuppressionTotale(id, telephone) {
+    const confirmation = confirm(`⚠ ATTENTION : Voulez-vous supprimer entièrement le compte lié au numéro ${telephone} ?`);
+    if (confirmation) {
+        await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
+            method: "DELETE",
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        load();
+    }
+}
+
+async function validerSelectionnes() {
+    const checkboxes = document.querySelectorAll('.checkbox-select:checked');
+    for(let cb of checkboxes) {
+        await executerValidationUnique(cb.getAttribute('data-id'), cb.getAttribute('data-role'));
+    }
+    load();
+}
+
+async function bloquerSelectionnes() {
+    const checkboxes = document.querySelectorAll('.checkbox-select:checked');
+    for(let cb of checkboxes) {
+        await executerBloquerUnique(cb.getAttribute('data-id'));
+    }
+    load();
+}
+
+async function supprimerSelectionnes() {
+    const checkboxes = document.querySelectorAll('.checkbox-select:checked');
+    if(confirm("Confirmer la suppression de la sélection ?")) {
+        for(let cb of checkboxes) {
+            await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${cb.getAttribute('data-id')}`, {
+                method: "DELETE",
+                headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+            });
+        }
+        load();
+    }
+}
+</script>
 
 async function executerBloquerUnique(id) {
     await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
