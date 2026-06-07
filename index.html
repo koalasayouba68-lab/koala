@@ -83,9 +83,9 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
     </div>
 
 <div id="btnFactureFixe" style="position:fixed; top:70px; right:10px; z-index:999; display:none;">
-    <button onclick="window.location.href='paiement.html'" style="background: orange; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-        📄 Facture
-    </button>
+    <button id="btnFacture" onclick="allerVersPaiement()" style="background: orange; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+    📄 Facture
+</button>
 </div>
 
 <div id="loginBox" class="box">
@@ -478,21 +478,26 @@ async function genererCatalogueEspaces() {
     }
 }
 
-window.onload = function(){
-    // On cache TOUT au démarrage pour être sûr
+window.onload = function() {
     document.getElementById("welcomeBox").style.display = "none";
     document.getElementById("catalogBox").style.display = "none";
     document.getElementById("siteBox").style.display = "none";
     
-    // On vérifie ensuite la connexion
     const phone = localStorage.getItem("phone");
-    if(phone){
+    
+    if (phone) {
         document.getElementById("loginBox").style.display = "none";
         document.getElementById("welcomeBox").style.display = "block";
+        
+        restaurerCode().then(() => {
+        }).catch(err => {
+            console.error(err);
+        });
+        
     } else {
         document.getElementById("loginBox").style.display = "block";
     }
-}
+};
 async function restaurerCode(){
 const phone = localStorage.getItem("phone");
 if(!phone) return;
@@ -930,6 +935,19 @@ function fermerNotifications() {
     const zone = document.getElementById("zoneNotifications");
     if (zone) {
         zone.style.display = "none";
+    }
+}
+
+function allerVersPaiement() {
+    // Récupère le prix de vente (prixEspace) que tu as déjà dans ton interface
+    const champPrix = document.getElementById("prixEspace");
+    const prix = champPrix ? champPrix.value : null;
+
+    if (prix) {
+        // Redirige vers la page de paiement avec le montant en paramètre
+        window.location.href = `paiement.html?montant=${prix}`;
+    } else {
+        alert("Le prix de l'espace n'est pas disponible.");
     }
 }
 </script>
