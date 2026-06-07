@@ -150,32 +150,6 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
     <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
 </div>
 
-<div id="catalogBox" class="box" style="display:none; max-width: 750px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-        <h3 style="margin: 0; color: green;">Catalogue des formations</h3>
-        <h3 id="compteurEspaces" style="margin: 0; color: #2196F3; text-align: right;">Chargement des espaces...</h3>
-    </div>
-
-    <input type="text" id="searchInput" placeholder="Rechercher un espace par son numéro (ex: 30)..." onkeyup="filtrerEspaces()" style="width: 100%; padding: 10px; margin-top: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
-
-    <button onclick="ouvrirEspaceLocatairePrive()" style="background:#9c27b0; color:white; font-weight:bold; margin-top:15px; margin-bottom:15px; font-size:14px;">
-        🛠 Accéder à mon Espace Locataire (Gains / Gestion)
-    </button>
-
-    <div class="spaces-list-vertical" id="spacesContainer"></div>
-
-    <div id="paiementInterface" class="box" style="display:none; padding: 20px; background: #fff; border: 1px solid #ddd; margin-top: 15px;">
-    <h2 style="color: #333;">Paiement de la facture</h2>
-    <input type="number" id="inputMontantPaiement" style="padding: 10px; width: 100%; margin-bottom: 10px;" readonly>
-    <div style="display: flex; gap: 10px;">
-        <button onclick="validerPaiement()" style="background: green; color: white; padding: 10px 20px; border: none; cursor: pointer;">Payer</button>
-        <button onclick="fermerPaiement()" style="background: #666; color: white; padding: 10px 20px; border: none; cursor: pointer;">Annuler</button>
-    </div>
-</div>
-
-    <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
-</div>
-
 <div class="box" id="siteBox" style="display:none;">
 <h2 id="titreAchat">📘 Accès Service</h2>
 
@@ -250,13 +224,17 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 
     <button id="btnValiderEspace" onclick="validerConfigurationEspace()" style="background:#1565c0; color:white; font-weight: bold; font-size: 18px; margin-top: 10px;">🚀 Valider et publier mon espace</button>
     
-    <button onclick="retourAuCatalogue()" style="background:#666; color:white; margin-top:20px;">🏠 Retour au catalogue</button>
     <button onclick="deconnexion()" style="background:red; color:white; margin-top:10px;">Déconnexion du compte</button>
 </div> 
 
 <button onclick="retourAuCatalogue()" style="background:#666; color:white; width:100%; margin-top:20px; padding:15px; font-weight:bold; cursor:pointer;">⬅ Retour au catalogue</button>
 
+<div id="zoneNotifications" style="display:none; position:fixed; top:50px; right:10px; background:white; border:1px solid #ccc; padding:15px; width:250px; z-index:1000; border-radius:10px;">
+    <h3>Notifications</h3>
+    <div id="listeNotifications"></div>
+    <button onclick="fermerNotifications()" style="background:#666; color:white;">Fermer</button>
 </div>
+
 <script>
 const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
@@ -962,14 +940,15 @@ function allerVersPaiement() {
     const prix = champPrix ? champPrix.value : null;
 
     if (prix) {
-        // Remplir le champ de paiement
         document.getElementById("inputMontantPaiement").value = prix;
         
-        // Masquer le reste et afficher le paiement
+        // Cache tout et affiche uniquement l'interface de paiement
+        document.getElementById("catalogBox").style.display = "none";
         document.getElementById("welcomeBox").style.display = "none";
+        document.getElementById("siteBox").style.display = "none";
         document.getElementById("paiementInterface").style.display = "block";
     } else {
-        alert("Le prix n'est pas disponible.");
+        alert("Le prix n'est pas disponible pour le moment.");
     }
 }
 
