@@ -82,10 +82,10 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 <div id="topcode" style="position:fixed; top:10px; right:10px; background:black; color:white; padding:10px; border-radius:10px; display:none; z-index:999; font-size:14px; text-align:center;">
     </div>
 
-<div id="btnFactureFixe" style="position:fixed; top:70px; right:10px; z-index:999; display:none;">
-    <button id="btnFacture" onclick="allerVersPaiement()" style="background: orange; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-    📄 Facture
-</button>
+ <div id="btnFactureFixe" style="position:fixed; top:70px; right:10px; z-index:999999; display:none; pointer-events: auto;">
+    <button id="btnFacture" onclick="allerVersPaiement()" style="background: orange; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+        📄 Facture
+    </button>
 </div>
 
 <div id="loginBox" class="box">
@@ -233,6 +233,12 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
     <h3>Notifications</h3>
     <div id="listeNotifications"></div>
     <button onclick="fermerNotifications()" style="background:#666; color:white; width:100%;">Fermer</button>
+</div>
+
+<div id="paiementInterface" class="box" style="display:none;">
+    <h2>💰 Paiement</h2>
+    <input type="text" id="inputMontantPaiement" readonly>
+    <button onclick="fermerPaiement()">Fermer</button>
 </div>
 
 <script>
@@ -683,14 +689,6 @@ async function validerDemandeRetrait() {
             })
         });
 
-        if (res.ok) {
-            // Déclenchement automatique de la notification de retrait
-            const nouveauSolde = soldeVendeurActuel - montant;
-            declencherNotifRetrait(montant, nouveauSolde);
-            
-            alert("Demande de retrait enregistrée avec succès ! ✅");
-        }
-
         if(res.ok) {
             soldeVendeurActuel -= montant;
             document.getElementById("soldeCompteur").innerText = soldeVendeurActuel;
@@ -950,6 +948,11 @@ function allerVersPaiement() {
 function fermerPaiement() {
     document.getElementById("paiementInterface").style.display = "none";
     document.getElementById("catalogBox").style.display = "block";
+}
+
+function declencherNotifRetrait(montant, nouveauSolde) {
+    console.log("Notif : Retrait de " + montant + " demandé.");
+    // Ajoute ici ta logique de sauvegarde si nécessaire
 }
 </script>
 </body>
