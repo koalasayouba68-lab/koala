@@ -932,16 +932,20 @@ function allerVersPaiement() {
     const champPrix = document.getElementById("prixEspace");
     const prix = champPrix ? champPrix.value : null;
 
-    if (prix) {
-        document.getElementById("inputMontantPaiement").value = prix;
-        
-        // Cache tout et affiche uniquement l'interface de paiement
-        document.getElementById("catalogBox").style.display = "none";
-        document.getElementById("welcomeBox").style.display = "none";
-        document.getElementById("siteBox").style.display = "none";
-        document.getElementById("paiementInterface").style.display = "block";
+    // Cache les boîtes principales
+    document.getElementById("catalogBox").style.display = "none";
+    document.getElementById("welcomeBox").style.display = "none";
+    document.getElementById("siteBox").style.display = "none";
+
+    // Affiche l'interface de paiement
+    const interfacePaiement = document.getElementById("paiementInterface");
+    if (interfacePaiement) {
+        interfacePaiement.style.display = "block";
+        if (prix) {
+            document.getElementById("inputMontantPaiement").value = prix + " F CFA";
+        }
     } else {
-        alert("Le prix n'est pas disponible pour le moment.");
+        alert("Erreur : La zone de paiement est introuvable.");
     }
 }
 
