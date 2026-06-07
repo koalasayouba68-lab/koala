@@ -921,18 +921,17 @@ function fermerNotifications() {
     if (zone) {
         zone.style.display = "none";
     }
+}
 function allerVersPaiement() {
-    // 1. Cache les boîtes inutiles
+    // 1. On cache les boîtes de contenu
     document.getElementById("catalogBox").style.display = "none";
     document.getElementById("welcomeBox").style.display = "none";
-    document.getElementById("siteBox").style.display = "block"; // On garde siteBox car il contient la zone de paiement
+    document.getElementById("siteBox").style.display = "none";
     
-    // 2. Affiche spécifiquement la zone de paiement
+    // 2. On affiche directement la zone de paiement qui existe déjà dans ton HTML
     const zonePaiement = document.getElementById("zonePaiementStandard");
     if (zonePaiement) {
         zonePaiement.style.display = "block";
-    } else {
-        alert("Zone de paiement introuvable dans le code.");
     }
 }
 
