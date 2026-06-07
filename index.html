@@ -922,30 +922,16 @@ function fermerNotifications() {
         zone.style.display = "none";
     }
 }
-
-function ouvrirPaiement() {
-    document.getElementById("welcomeBox").style.display = "none";
-    document.getElementById("paiementInterface").style.display = "block";
-}
-
 function allerVersPaiement() {
-    const champPrix = document.getElementById("prixEspace");
-    const prix = champPrix ? champPrix.value : null;
-
-    // Cache les boîtes principales
+    // 1. On cache les boîtes de contenu
     document.getElementById("catalogBox").style.display = "none";
     document.getElementById("welcomeBox").style.display = "none";
     document.getElementById("siteBox").style.display = "none";
-
-    // Affiche l'interface de paiement
-    const interfacePaiement = document.getElementById("paiementInterface");
-    if (interfacePaiement) {
-        interfacePaiement.style.display = "block";
-        if (prix) {
-            document.getElementById("inputMontantPaiement").value = prix + " F CFA";
-        }
-    } else {
-        alert("Erreur : La zone de paiement est introuvable.");
+    
+    // 2. On affiche directement la zone de paiement qui existe déjà dans ton HTML
+    const zonePaiement = document.getElementById("zonePaiementStandard");
+    if (zonePaiement) {
+        zonePaiement.style.display = "block";
     }
 }
 
