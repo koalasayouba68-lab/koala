@@ -164,6 +164,15 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 
     <div class="spaces-list-vertical" id="spacesContainer"></div>
 
+    <div id="paiementInterface" class="box" style="display:none; padding: 20px; background: #fff; border: 1px solid #ddd; margin-top: 15px;">
+    <h2 style="color: #333;">Paiement de la facture</h2>
+    <input type="number" id="inputMontantPaiement" style="padding: 10px; width: 100%; margin-bottom: 10px;" readonly>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="validerPaiement()" style="background: green; color: white; padding: 10px 20px; border: none; cursor: pointer;">Payer</button>
+        <button onclick="fermerPaiement()" style="background: #666; color: white; padding: 10px 20px; border: none; cursor: pointer;">Annuler</button>
+    </div>
+</div>
+
     <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
 </div>
 
@@ -938,17 +947,35 @@ function fermerNotifications() {
     }
 }
 
+function ouvrirPaiement() {
+    document.getElementById("welcomeBox").style.display = "none";
+    document.getElementById("paiementInterface").style.display = "block";
+}
+
+function fermerPaiement() {
+    document.getElementById("paiementInterface").style.display = "none";
+    document.getElementById("welcomeBox").style.display = "block";
+}
+
 function allerVersPaiement() {
-    // Récupère le prix de vente (prixEspace) que tu as déjà dans ton interface
     const champPrix = document.getElementById("prixEspace");
     const prix = champPrix ? champPrix.value : null;
 
     if (prix) {
-        // Redirige vers la page de paiement avec le montant en paramètre
-        window.location.href = `paiement.html?montant=${prix}`;
+        // Remplir le champ de paiement
+        document.getElementById("inputMontantPaiement").value = prix;
+        
+        // Masquer le reste et afficher le paiement
+        document.getElementById("welcomeBox").style.display = "none";
+        document.getElementById("paiementInterface").style.display = "block";
     } else {
-        alert("Le prix de l'espace n'est pas disponible.");
+        alert("Le prix n'est pas disponible.");
     }
+}
+
+function fermerPaiement() {
+    document.getElementById("paiementInterface").style.display = "none";
+    document.getElementById("welcomeBox").style.display = "block";
 }
 </script>
 </body>
