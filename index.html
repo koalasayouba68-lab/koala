@@ -150,7 +150,8 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
     <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
 </div>
 
-<div class="box" id="siteBox" style="display:none;">
+<div class="box" id="siteBox" style="display:none;"></div>
+
 <h2 id="titreAchat">📘 Accès Service</h2>
 
 <div id="vendeurCounterBox" class="vendeur-counter-box" style="display: none;" onclick="afficherBoutonRetrait()">
@@ -923,16 +924,21 @@ function fermerNotifications() {
     }
 }
 function allerVersPaiement() {
-    // 1. On cache les boîtes de contenu
+    // 1. On cache les menus de navigation
     document.getElementById("catalogBox").style.display = "none";
     document.getElementById("welcomeBox").style.display = "none";
-    document.getElementById("siteBox").style.display = "none";
     
-    // 2. On affiche directement la zone de paiement qui existe déjà dans ton HTML
-    const zonePaiement = document.getElementById("zonePaiementStandard");
-    if (zonePaiement) {
-        zonePaiement.style.display = "block";
-    }
+    // 2. On AFFICHE la boîte parent (siteBox)
+    document.getElementById("siteBox").style.display = "block";
+    
+    // 3. On s'assure que la zone de paiement est visible
+    document.getElementById("zonePaiementStandard").style.display = "block";
+    
+    // 4. On cache ce qui ne doit pas être visible au moment du paiement
+    document.getElementById("retraitInterfaceBox").style.display = "none";
+    document.getElementById("vendeurCounterBox").style.display = "none";
+    document.getElementById("uploadZone").style.display = "none";
+    document.getElementById("formationAccessZone").style.display = "none";
 }
 
 function fermerPaiement() {
