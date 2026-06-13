@@ -11,18 +11,9 @@
 <script>
   FedaPay.setPublicKey("pk_sandbox_c82e4dlpeghM7RWY2XFYRhjr");
   FedaPay.setEnvironment('sandbox');
-
-  // FONCTION DE NAVIGATION (à garder)
-  function naviguer(id) {
-    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-  }
 </script>
 
 <style>
-/* CLASSE POUR MASQUER LES SECTIONS */
-.section { display: none; }
-
 body{font-family:Arial, sans-serif;background:#f4f4f4;padding:10px;margin:0;}
 .box{width:95%;max-width:700px;margin:20px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
 
@@ -104,7 +95,8 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 <button onclick="connexion()" style="background:#2196F3; color:white;">Continuer</button>
 </div>
 
-<div id="welcomeBox" class="box section" style="display:block;">
+<!-- Bloc Accueil -->
+<div id="welcomeBox" class="box" style="display:block;">
     <h1 style="color: red; text-align: center; font-size: 24px; font-weight: bold;">Bienvenue sur KOALA : Votre Hub de Vente et d'Apprentissage</h1>
     
     <p style="line-height: 1.6; text-align: justify;">
@@ -119,12 +111,12 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
         <i>Prêt à vous lancer ? Que vous souhaitiez louer votre espace professionnel ou explorer nos formations, cliquez sur le bouton ci-dessous pour accéder à notre catalogue complet !</i>
     </p>
     
-    <button onclick="naviguer('catalogBox')" style="background: red; color: white; font-weight: bold; font-size: 18px; margin-top: 15px; width: 100%;">Découvrir le catalogue ➔</button>
+    <button onclick="ouvrirCatalogue()" style="background: red; color: white; font-weight: bold; font-size: 18px; margin-top: 15px; width: 100%;">Découvrir le catalogue ➔</button>
     
-    <button onclick="naviguer('aboutBox')" style="background: #9c27b0; color: white; font-weight: bold; font-size: 18px; margin-top: 10px; width: 100%;">En savoir plus sur KOALA 👤</button>
+    <button onclick="ouvrirAbout()" style="background: #9c27b0; color: white; font-weight: bold; font-size: 18px; margin-top: 10px; width: 100%;">En savoir plus sur KOALA 👤</button>
 </div>
 
-<div id="aboutBox" class="box section" style="display:none; text-align: justify;">
+<div id="aboutBox" class="box" style="display:none; text-align: justify;">
     <h2 style="color: #9c27b0; text-align: center;">À Propos de KOALA</h2>
     <p><i>"L'art est une copie de la copie, savoir copier est un art."</i></p>
     <p>Je suis KOALA, étudiant au département d'études germaniques à l'Université Joseph Ki-Zerbo. Bienvenue dans mon univers.</p>
@@ -137,10 +129,10 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
         <p><strong>WhatsApp :</strong> +226 56 65 32 90</p>
     </div>
 
-    <button onclick="naviguer('welcomeBox')" style="background:#666; color:white; margin-top: 20px; width: 100%;">⬅ Retour à l'accueil</button>
+    <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px; width: 100%;">⬅ Retour à l'accueil</button>
 </div>
 
-<div id="catalogBox" class="box section" style="display:none; max-width: 750px;">
+<div id="catalogBox" class="box" style="display:none; max-width: 750px;">
     <button onclick="deconnexion()" style="background:red; color:white; font-size:12px; padding:5px; margin-bottom:10px; width:auto;">🔴 Déconnexion</button>
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
         <h3 style="margin: 0; color: green;">Catalogue des formations</h3>
@@ -155,46 +147,47 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 
     <div class="spaces-list-vertical" id="spacesContainer"></div>
 
-    <button onclick="naviguer('welcomeBox')" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
+    <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
 </div>
 
-<div class="box section" id="siteBox" style="display:none;">
-    <h2 id="titreAchat">📘 Accès Service</h2>
+<div class="box" id="siteBox" style="display:none;"></div>
 
-    <div id="vendeurCounterBox" class="vendeur-counter-box" style="display: none;" onclick="afficherBoutonRetrait()">
-        💰 Vos Gains Accumulés : <span id="soldeCompteur">0</span> F CFA
-        <button id="btnDeclencherRetrait" style="display: none; background: white; color: #9c27b0; font-weight: bold; margin-top: 10px; width: auto; padding: 5px 15px;" onclick="ouvrirInterfaceRetrait(event)">Retirer</button>
-    </div>
+<h2 id="titreAchat">📘 Accès Service</h2>
 
-    <div id="retraitInterfaceBox" class="retrait-box">
-        <h3 style="color: #856404;">📱 Retrait sécurisé</h3>
-        <p style="font-size: 12px; color: #555; margin-bottom: 5px;">
-            Entrez votre numéro avec l'indicatif (ex: +225 pour la CI, +227 pour le Niger, +226 pour le BF).
-        </p>
-        <input type="tel" id="retraitOrangePhone" placeholder="+225xxxxxxxxxx">
-        <input type="number" id="retraitMontant" placeholder="Montant à retirer">
-        <button onclick="validerDemandeRetrait()" style="background: green; color: white; font-weight: bold;">Valider le retrait</button>
-        <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white;">Annuler</button>
-    </div>
+<div id="vendeurCounterBox" class="vendeur-counter-box" style="display: none;" onclick="afficherBoutonRetrait()">
+    💰 Vos Gains Accumulés : <span id="soldeCompteur">0</span> F CFA
+    <button id="btnDeclencherRetrait" style="display: none; background: white; color: #9c27b0; font-weight: bold; margin-top: 10px; width: auto; padding: 5px 15px;" onclick="ouvrirInterfaceRetrait(event)">Retirer</button>
+</div>
 
-    <div id="zonePaiementStandard" style="text-align: center; margin: 20px 0; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
-        <h3 style="color: #333; margin-bottom: 15px;">💰 Paiement Sécurisé</h3>
-        
-        <input type="tel" id="inputPhonePaiement" placeholder="Entrez votre numéro de paiement" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px;">
-        
-        <p style="font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.4;">
-            Après avoir cliqué, vérifiez votre téléphone : une notification apparaîtra automatiquement pour valider la transaction avec votre code PIN.
-        </p>
-        
-        <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px;">
-            Payer maintenant
-        </button>
-    </div>
+<div id="retraitInterfaceBox" class="retrait-box">
+    <h3 style="color: #856404;">📱 Retrait sécurisé</h3>
+    <!-- Ajout du texte d'instruction -->
+    <p style="font-size: 12px; color: #555; margin-bottom: 5px;">
+        Entrez votre numéro avec l'indicatif (ex: +225 pour la CI, +227 pour le Niger, +226 pour le BF).
+    </p>
+    <input type="tel" id="retraitOrangePhone" placeholder="+225xxxxxxxxxx">
+    <input type="number" id="retraitMontant" placeholder="Montant à retirer">
+    <button onclick="validerDemandeRetrait()" style="background: green; color: white; font-weight: bold;">Valider le retrait</button>
+    <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white;">Annuler</button>
+</div>
 
-    <div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
-        <label style="font-weight: bold; color: #333;">Votre code secret :</label>
-        <input type="text" id="code" placeholder="Code secret de validation" readonly style="width: 100%; padding: 10px; margin-top: 5px; text-align: center; font-weight: bold; font-size: 18px; border: 2px solid #9c27b0; border-radius: 5px;">
-    </div>
+<div id="zonePaiementStandard" style="text-align: center; margin: 20px 0; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
+    <h3 style="color: #333; margin-bottom: 15px;">💰 Paiement Sécurisé</h3>
+    
+    <input type="tel" id="inputPhonePaiement" placeholder="Entrez votre numéro de paiement" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px;">
+    
+    <p style="font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.4;">
+        Après avoir cliqué, vérifiez votre téléphone : une notification apparaîtra automatiquement pour valider la transaction avec votre code PIN.
+    </p>
+    
+    <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px;">
+        Payer maintenant
+    </button>
+</div>
+
+<div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
+    <label style="font-weight: bold; color: #333;">Votre code secret :</label>
+    <input type="text" id="code" placeholder="Code secret de validation" readonly style="width: 100%; padding: 10px; margin-top: 5px; text-align: center; font-weight: bold; font-size: 18px; border: 2px solid #9c27b0; border-radius: 5px;">
 </div>
 
 <div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
@@ -956,7 +949,6 @@ function fermerPaiement() {
 function declencherNotifRetrait(montant, nouveauSolde) {
     console.log("Notif : Retrait de " + montant + " demandé.");
     // Ajoute ici ta logique de sauvegarde si nécessaire
-
 }
 </script>
 </body>
