@@ -150,83 +150,75 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
     <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
 </div>
 
-<div class="box" id="siteBox" style="display:none;"></div>
+<div class="box" id="siteBox" style="display:none;">
+    <h2 id="titreAchat">📘 Accès Service</h2>
 
-<h2 id="titreAchat">📘 Accès Service</h2>
-
-<div id="vendeurCounterBox" class="vendeur-counter-box" style="display: none;" onclick="afficherBoutonRetrait()">
-    💰 Vos Gains Accumulés : <span id="soldeCompteur">0</span> F CFA
-    <button id="btnDeclencherRetrait" style="display: none; background: white; color: #9c27b0; font-weight: bold; margin-top: 10px; width: auto; padding: 5px 15px;" onclick="ouvrirInterfaceRetrait(event)">Retirer</button>
-</div>
-
-<div id="retraitInterfaceBox" class="retrait-box">
-    <h3 style="color: #856404;">📱 Retrait sécurisé</h3>
-    <!-- Ajout du texte d'instruction -->
-    <p style="font-size: 12px; color: #555; margin-bottom: 5px;">
-        Entrez votre numéro avec l'indicatif (ex: +225 pour la CI, +227 pour le Niger, +226 pour le BF).
-    </p>
-    <input type="tel" id="retraitOrangePhone" placeholder="+225xxxxxxxxxx">
-    <input type="number" id="retraitMontant" placeholder="Montant à retirer">
-    <button onclick="validerDemandeRetrait()" style="background: green; color: white; font-weight: bold;">Valider le retrait</button>
-    <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white;">Annuler</button>
-</div>
-
-<div id="zonePaiementStandard" style="text-align: center; margin: 20px 0; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
-    <h3 style="color: #333; margin-bottom: 15px;">💰 Paiement Sécurisé</h3>
-    
-    <input type="tel" id="inputPhonePaiement" placeholder="Entrez votre numéro de paiement" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px;">
-    
-    <p style="font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.4;">
-        Après avoir cliqué, vérifiez votre téléphone : une notification apparaîtra automatiquement pour valider la transaction avec votre code PIN.
-    </p>
-    
-    <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px;">
-        Payer maintenant
-    </button>
-</div>
-
-<div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
-    <label style="font-weight: bold; color: #333;">Votre code secret :</label>
-    <input type="text" id="code" placeholder="Code secret de validation" readonly style="width: 100%; padding: 10px; margin-top: 5px; text-align: center; font-weight: bold; font-size: 18px; border: 2px solid #9c27b0; border-radius: 5px;">
-</div>
-
-<div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
-    <h3 style="color: green; margin: 0 0 10px 0;">📚 Votre Formation est débloquée :</h3>
-    <div class="action-buttons">
-        <button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white; font-weight: bold;">👁️ Voir le PDF</button>
-        <button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white; font-weight: bold;">⬇️ Télécharger le PDF</button>
-    </div>
-</div>
-
-<div id="uploadZone">
-    <h3 style="margin:0 0 15px 0; color:#1565c0; border-bottom: 2px solid #2196F3; padding-bottom: 5px;">🏗️ Configuration de votre Espace</h3>
-
-    <div class="form-group">
-        <label for="descFichier">1️⃣ Description du Pack (Max 60 lettres) :</label>
-        <input type="text" id="descFichier" maxlength="60" placeholder="Ex: Pack de formation complet...">
+    <div id="vendeurCounterBox" class="vendeur-counter-box" style="display: none;" onclick="afficherBoutonRetrait()">
+        💰 Vos Gains Accumulés : <span id="soldeCompteur">0</span> F CFA
+        <button id="btnDeclencherRetrait" style="display: none; background: white; color: #9c27b0; font-weight: bold; margin-top: 10px; width: auto; padding: 5px 15px;" onclick="ouvrirInterfaceRetrait(event)">Retirer</button>
     </div>
 
-    <div class="form-group">
-        <label for="numDepot">2️⃣ Numéro destiné à recevoir vos dépôts :</label>
-        <input type="tel" id="numDepot" placeholder="Ex: 76XXXXXX">
+    <div id="retraitInterfaceBox" class="retrait-box">
+        <h3 style="color: #856404;">📱 Retrait sécurisé</h3>
+        <p style="font-size: 12px; color: #555; margin-bottom: 5px;">
+            Entrez votre numéro avec l'indicatif (ex: +225 pour la CI, +227 pour le Niger, +226 pour le BF).
+        </p>
+        <input type="tel" id="retraitOrangePhone" placeholder="+225xxxxxxxxxx">
+        <input type="number" id="retraitMontant" placeholder="Montant à retirer">
+        <button onclick="validerDemandeRetrait()" style="background: green; color: white; font-weight: bold;">Valider le retrait</button>
+        <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white;">Annuler</button>
     </div>
 
-    <div class="form-group">
-        <label for="prixEspace">3️⃣ Prix de vente du Pack (Fr CFA) :</label>
-        <input type="number" id="prixEspace" placeholder="Ex: 1000">
+    <div id="zonePaiementStandard" style="text-align: center; margin: 20px 0; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
+        <h3 style="color: #333; margin-bottom: 15px;">💰 Paiement Sécurisé</h3>
+        <input type="tel" id="inputPhonePaiement" placeholder="Entrez votre numéro de paiement" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px;">
+        <p style="font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.4;">
+            Après avoir cliqué, vérifiez votre téléphone : une notification apparaîtra automatiquement pour valider la transaction avec votre code PIN.
+        </p>
+        <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px;">
+            Payer maintenant
+        </button>
     </div>
 
-    <div class="form-group">
-        <label>4️⃣ Vos fichiers (Importez 1, 2 ou 3 fichiers au choix) :</label>
-        <input type="file" id="fileInput1" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
-        <input type="file" id="fileInput2" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
-        <input type="file" id="fileInput3" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
+    <div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
+        <label style="font-weight: bold; color: #333;">Votre code secret :</label>
+        <input type="text" id="code" placeholder="Code secret de validation" readonly style="width: 100%; padding: 10px; margin-top: 5px; text-align: center; font-weight: bold; font-size: 18px; border: 2px solid #9c27b0; border-radius: 5px;">
     </div>
 
-    <button id="btnValiderEspace" onclick="validerConfigurationEspace()" style="background:#1565c0; color:white; font-weight: bold; font-size: 18px; margin-top: 10px;">🚀 Valider et publier mon espace</button>
-    
-    <button onclick="deconnexion()" style="background:red; color:white; margin-top:10px;">Déconnexion du compte</button>
-</div> 
+    <div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
+        <h3 style="color: green; margin: 0 0 10px 0;">📚 Votre Formation est débloquée :</h3>
+        <div class="action-buttons">
+            <button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white; font-weight: bold;">👁️ Voir le PDF</button>
+            <button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white; font-weight: bold;">⬇️ Télécharger le PDF</button>
+        </div>
+    </div>
+
+    <div id="uploadZone">
+        <h3 style="margin:0 0 15px 0; color:#1565c0; border-bottom: 2px solid #2196F3; padding-bottom: 5px;">🏗️ Configuration de votre Espace</h3>
+        <div class="form-group">
+            <label for="descFichier">1️⃣ Description du Pack (Max 60 lettres) :</label>
+            <input type="text" id="descFichier" maxlength="60" placeholder="Ex: Pack de formation complet...">
+        </div>
+        <div class="form-group">
+            <label for="numDepot">2️⃣ Numéro destiné à recevoir vos dépôts :</label>
+            <input type="tel" id="numDepot" placeholder="Ex: 76XXXXXX">
+        </div>
+        <div class="form-group">
+            <label for="prixEspace">3️⃣ Prix de vente du Pack (Fr CFA) :</label>
+            <input type="number" id="prixEspace" placeholder="Ex: 1000">
+        </div>
+        <div class="form-group">
+            <label>4️⃣ Vos fichiers (Importez 1, 2 ou 3 fichiers au choix) :</label>
+            <input type="file" id="fileInput1" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
+            <input type="file" id="fileInput2" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
+            <input type="file" id="fileInput3" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
+        </div>
+        <button id="btnValiderEspace" onclick="validerConfigurationEspace()" style="background:#1565c0; color:white; font-weight: bold; font-size: 18px; margin-top: 10px;">🚀 Valider et publier mon espace</button>
+        <button onclick="deconnexion()" style="background:red; color:white; margin-top:10px;">Déconnexion du compte</button>
+    </div> 
+
+    <button onclick="retourAuCatalogue()" style="background:#666; color:white; width:100%; margin-top:20px; padding:15px; font-weight:bold; cursor:pointer;">⬅ Retour au catalogue</button>
+</div>
 
 <button onclick="retourAuCatalogue()" style="background:#666; color:white; width:100%; margin-top:20px; padding:15px; font-weight:bold; cursor:pointer;">⬅ Retour au catalogue</button>
 
@@ -949,6 +941,19 @@ function fermerPaiement() {
 function declencherNotifRetrait(montant, nouveauSolde) {
     console.log("Notif : Retrait de " + montant + " demandé.");
     // Ajoute ici ta logique de sauvegarde si nécessaire
+}
+
+function afficherPage(id) {
+    // 1. On cache toutes les boîtes (tous les éléments avec la classe 'box')
+    document.querySelectorAll('.box').forEach(box => box.style.display = 'none');
+    
+    // 2. On affiche uniquement la boîte demandée
+    const page = document.getElementById(id);
+    if (page) page.style.display = 'block';
+    
+    // 3. Gestion des boutons flottants
+    const btnFacture = document.getElementById("btnFactureFixe");
+    if (btnFacture) btnFacture.style.display = (id === 'siteBox') ? 'block' : 'none';
 }
 </script>
 </body>
