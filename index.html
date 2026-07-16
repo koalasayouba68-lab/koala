@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KOALA - Plateforme Officielle</title>
 <meta name="google-site-verification" content="v1n-U1ZbQ_z94Hxt0NyvesUKsW1mK5yBPT3q6O8in4c" />
-  
+
 <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
 
 <script>
@@ -14,16 +14,22 @@
 </script>
 
 <style>
-body{font-family:Arial, sans-serif;background:#f4f4f4;padding:10px;margin:0;}
-.box{width:95%;max-width:700px;margin:20px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
+.box { 
+    display: none !important; 
+    width: 95%;
+    max-width: 700px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
 
-/* Conteneur de la liste unique verticale */
-.spaces-list-vertical {
-display: flex;
-flex-direction: column;
-max-height: 480px;
-overflow-y: auto;
-padding: 5px;
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    padding: 10px;
+    margin: 0;
 }
 
 /* Style d'une ligne d'espace (Occupé ou Libre) */
@@ -79,148 +85,98 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 </head>
 <body>
 
-<div id="topcode" style="position:fixed; top:10px; right:10px; background:black; color:white; padding:10px; border-radius:10px; display:none; z-index:999; font-size:14px; text-align:center;">
-    </div>
+<div id="topcode" style="position:fixed; top:10px; right:10px; background:black; color:white; padding:10px; border-radius:10px; display:none; z-index:999; font-size:14px; text-align:center;"></div>
 
- <div id="btnFactureFixe" style="position:fixed; top:70px; right:10px; z-index:999999; display:none; pointer-events: auto;">
+<div id="btnFactureFixe" style="position:fixed; top:70px; right:10px; z-index:999999; display:none; pointer-events: auto;">
     <button id="btnFacture" onclick="allerVersPaiement()" style="background: orange; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">
         📄 Facture
     </button>
 </div>
 
 <div id="loginBox" class="box">
-<h2>🔐 Connexion</h2>
-<p>Entre ton numéro pour continuer.</p>
-<input id="loginPhone" type="tel" placeholder="Entrer votre numéro">
-<button onclick="connexion()" style="background:#2196F3; color:white;">Continuer</button>
+    <h2>🔐 Connexion</h2>
+    <p>Entre ton numéro pour continuer.</p>
+    <input id="loginPhone" type="tel" placeholder="Entrer votre numéro">
+    <button onclick="connexion()" style="background:#2196F3; color:white;">Continuer</button>
 </div>
 
-<!-- Bloc Accueil -->
-<div id="welcomeBox" class="box" style="display:block;">
+<div id="welcomeBox" class="box">
     <h1 style="color: red; text-align: center; font-size: 24px; font-weight: bold;">Bienvenue sur KOALA : Votre Hub de Vente et d'Apprentissage</h1>
-    
     <p style="line-height: 1.6; text-align: justify;">
         Bienvenue dans l'univers KOALA, la plateforme tout-en-un qui propulse vos projets et enrichit vos connaissances ! Que vous soyez créateur de contenu ou apprenant, nous avons l'espace qu'il vous faut.<br><br>
-        
         <b>Voici ce que vous pouvez faire chez nous :</b><br><br>
-        
         <b>• Louez votre Espace de Vente sur-mesure :</b> Rejoignez notre réseau exclusif de 250 espaces de diffusion. Que vous soyez créateur ou formateur, nous avons la solution parfaitement adaptée à vos ambitions. Sélectionnez la formule qui vous correspond — 1 000 F, 2 000 F, 4 000 F ou 5 000 F CFA — et louez votre boutique sécurisée en quelques clics pour partager et vendre vos fichiers (PDF, Vidéos) en toute autonomie. Vous conservez le contrôle total sur vos revenus et pouvez effectuer vos retraits de fonds simplement et rapidement.<br><br>
-        
         <b>• Accédez à un Catalogue de Formations Premium :</b> Découvrez une sélection de formations de haute qualité à prix accessible. Apprenez à votre rythme, achetez uniquement le contenu qui vous intéresse et bénéficiez d'un accès instantané après validation.<br><br>
-        
         <i>Prêt à vous lancer ? Que vous souhaitiez louer votre espace professionnel ou explorer nos formations, cliquez sur le bouton ci-dessous pour accéder à notre catalogue complet !</i>
     </p>
-    
-    <button onclick="ouvrirCatalogue()" style="background: red; color: white; font-weight: bold; font-size: 18px; margin-top: 15px; width: 100%;">Découvrir le catalogue ➔</button>
-    
-    <button onclick="ouvrirAbout()" style="background: #9c27b0; color: white; font-weight: bold; font-size: 18px; margin-top: 10px; width: 100%;">En savoir plus sur KOALA 👤</button>
+    <button onclick="afficherPage('catalogBox')" style="background: red; color: white; font-weight: bold; font-size: 18px; margin-top: 15px; width: 100%;">Découvrir le catalogue ➔</button>
+    <button onclick="afficherPage('aboutBox')" style="background: #9c27b0; color: white; font-weight: bold; font-size: 18px; margin-top: 10px; width: 100%;">En savoir plus sur KOALA 👤</button>
 </div>
 
-<div id="aboutBox" class="box" style="display:none; text-align: justify;">
+<div id="aboutBox" class="box" style="text-align: justify;">
     <h2 style="color: #9c27b0; text-align: center;">À Propos de KOALA</h2>
     <p><i>"L'art est une copie de la copie, savoir copier est un art."</i></p>
     <p>Je suis KOALA, étudiant au département d'études germaniques à l'Université Joseph Ki-Zerbo. Bienvenue dans mon univers.</p>
     <p>Au-delà de mes études de langues, je suis un passionné de création et d'innovation. Pour moi, chaque idée, chaque projet et chaque outil numérique est une forme d'art. Je suis convaincu que la capacité à s'inspirer du monde qui nous entoure, à l'analyser et à le transformer est ce qui définit le véritable créateur. C'est de cette philosophie qu'est née la plateforme KOALA.</p>
     <p>Mon objectif avec cet espace est simple : offrir à chacun les outils pour partager son savoir, sa créativité et ses ressources de manière simple, sécurisée et accessible. Je conçois cette plateforme comme un pont entre l'apprentissage et l'entrepreneuriat numérique.</p>
-    
     <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; margin-top: 20px;">
         <h3 style="margin-top: 0;">Besoin d'échanger ?</h3>
         <p>Je reste à votre entière disposition pour toute question concernant la plateforme ou vos projets.</p>
         <p><strong>WhatsApp :</strong> +226 56 65 32 90</p>
     </div>
-
-    <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px; width: 100%;">⬅ Retour à l'accueil</button>
+    <button onclick="afficherPage('welcomeBox')" style="background:#666; color:white; margin-top: 20px; width: 100%;">⬅ Retour à l'accueil</button>
 </div>
 
-<div id="catalogBox" class="box" style="display:none; max-width: 750px;">
+<div id="catalogBox" class="box" style="max-width: 750px;">
     <button onclick="deconnexion()" style="background:red; color:white; font-size:12px; padding:5px; margin-bottom:10px; width:auto;">🔴 Déconnexion</button>
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
         <h3 style="margin: 0; color: green;">Catalogue des formations</h3>
         <h3 id="compteurEspaces" style="margin: 0; color: #2196F3; text-align: right;">Chargement des espaces...</h3>
     </div>
-
     <input type="text" id="searchInput" placeholder="Rechercher un espace par son numéro (ex: 30)..." onkeyup="filtrerEspaces()" style="width: 100%; padding: 10px; margin-top: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
-
-    <button onclick="ouvrirEspaceLocatairePrive()" style="background:#9c27b0; color:white; font-weight:bold; margin-top:15px; margin-bottom:15px; font-size:14px;">
-        🛠 Accéder à mon Espace Locataire (Gains / Gestion)
-    </button>
-
+    <button onclick="ouvrirEspaceLocatairePrive()" style="background:#9c27b0; color:white; font-weight:bold; margin-top:15px; margin-bottom:15px; font-size:14px;">🛠 Accéder à mon Espace Locataire (Gains / Gestion)</button>
     <div class="spaces-list-vertical" id="spacesContainer"></div>
-
-    <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
+    <button onclick="afficherPage('welcomeBox')" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
 </div>
 
-<div class="box" id="siteBox" style="display:none;">
+<div class="box" id="siteBox">
     <h2 id="titreAchat">📘 Accès Service</h2>
-
     <div id="vendeurCounterBox" class="vendeur-counter-box" style="display: none;" onclick="afficherBoutonRetrait()">
         💰 Vos Gains Accumulés : <span id="soldeCompteur">0</span> F CFA
         <button id="btnDeclencherRetrait" style="display: none; background: white; color: #9c27b0; font-weight: bold; margin-top: 10px; width: auto; padding: 5px 15px;" onclick="ouvrirInterfaceRetrait(event)">Retirer</button>
     </div>
-
-    <div id="retraitInterfaceBox" class="retrait-box">
+    <div id="retraitInterfaceBox" class="retrait-box" style="display:none;">
         <h3 style="color: #856404;">📱 Retrait sécurisé</h3>
-        <p style="font-size: 12px; color: #555; margin-bottom: 5px;">
-            Entrez votre numéro avec l'indicatif (ex: +225 pour la CI, +227 pour le Niger, +226 pour le BF).
-        </p>
         <input type="tel" id="retraitOrangePhone" placeholder="+225xxxxxxxxxx">
         <input type="number" id="retraitMontant" placeholder="Montant à retirer">
         <button onclick="validerDemandeRetrait()" style="background: green; color: white; font-weight: bold;">Valider le retrait</button>
         <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white;">Annuler</button>
     </div>
-
     <div id="zonePaiementStandard" style="text-align: center; margin: 20px 0; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
         <h3 style="color: #333; margin-bottom: 15px;">💰 Paiement Sécurisé</h3>
         <input type="tel" id="inputPhonePaiement" placeholder="Entrez votre numéro de paiement" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px;">
-        <p style="font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.4;">
-            Après avoir cliqué, vérifiez votre téléphone : une notification apparaîtra automatiquement pour valider la transaction avec votre code PIN.
-        </p>
-        <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px;">
-            Payer maintenant
-        </button>
+        <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px;">Payer maintenant</button>
     </div>
-
     <div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
         <label style="font-weight: bold; color: #333;">Votre code secret :</label>
-        <input type="text" id="code" placeholder="Code secret de validation" readonly style="width: 100%; padding: 10px; margin-top: 5px; text-align: center; font-weight: bold; font-size: 18px; border: 2px solid #9c27b0; border-radius: 5px;">
+        <input type="text" id="code" readonly style="width: 100%; padding: 10px; margin-top: 5px; text-align: center; font-weight: bold; font-size: 18px; border: 2px solid #9c27b0; border-radius: 5px;">
     </div>
-
     <div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
         <h3 style="color: green; margin: 0 0 10px 0;">📚 Votre Formation est débloquée :</h3>
-        <div class="action-buttons">
-            <button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white; font-weight: bold;">👁️ Voir le PDF</button>
-            <button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white; font-weight: bold;">⬇️ Télécharger le PDF</button>
-        </div>
+        <button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white; font-weight: bold;">👁️ Voir le PDF</button>
+        <button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white; font-weight: bold;">⬇️ Télécharger le PDF</button>
     </div>
-
-    <div id="uploadZone">
+    <div id="uploadZone" style="display:none;">
         <h3 style="margin:0 0 15px 0; color:#1565c0; border-bottom: 2px solid #2196F3; padding-bottom: 5px;">🏗️ Configuration de votre Espace</h3>
-        <div class="form-group">
-            <label for="descFichier">1️⃣ Description du Pack (Max 60 lettres) :</label>
-            <input type="text" id="descFichier" maxlength="60" placeholder="Ex: Pack de formation complet...">
-        </div>
-        <div class="form-group">
-            <label for="numDepot">2️⃣ Numéro destiné à recevoir vos dépôts :</label>
-            <input type="tel" id="numDepot" placeholder="Ex: 76XXXXXX">
-        </div>
-        <div class="form-group">
-            <label for="prixEspace">3️⃣ Prix de vente du Pack (Fr CFA) :</label>
-            <input type="number" id="prixEspace" placeholder="Ex: 1000">
-        </div>
-        <div class="form-group">
-            <label>4️⃣ Vos fichiers (Importez 1, 2 ou 3 fichiers au choix) :</label>
-            <input type="file" id="fileInput1" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
-            <input type="file" id="fileInput2" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
-            <input type="file" id="fileInput3" accept="application/pdf, video/*" style="border: none; padding: 5px 0; display: block;">
-        </div>
+        <input type="text" id="descFichier" maxlength="60" placeholder="Ex: Pack de formation complet...">
+        <input type="tel" id="numDepot" placeholder="Ex: 76XXXXXX">
+        <input type="number" id="prixEspace" placeholder="Ex: 1000">
+        <input type="file" id="fileInput1">
         <button id="btnValiderEspace" onclick="validerConfigurationEspace()" style="background:#1565c0; color:white; font-weight: bold; font-size: 18px; margin-top: 10px;">🚀 Valider et publier mon espace</button>
         <button onclick="deconnexion()" style="background:red; color:white; margin-top:10px;">Déconnexion du compte</button>
     </div> 
-
-    <button onclick="retourAuCatalogue()" style="background:#666; color:white; width:100%; margin-top:20px; padding:15px; font-weight:bold; cursor:pointer;">⬅ Retour au catalogue</button>
+    <button onclick="afficherPage('catalogBox')" style="background:#666; color:white; width:100%; margin-top:20px; padding:15px; font-weight:bold; cursor:pointer;">⬅ Retour au catalogue</button>
 </div>
-
-<button onclick="retourAuCatalogue()" style="background:#666; color:white; width:100%; margin-top:20px; padding:15px; font-weight:bold; cursor:pointer;">⬅ Retour au catalogue</button>
 
 <div id="zoneNotifications" style="display:none; position:fixed; top:50px; right:10px; background:white; border:1px solid #ccc; padding:15px; width:250px; z-index:9999; border-radius:10px;">
     <h3>Notifications</h3>
@@ -465,23 +421,15 @@ async function genererCatalogueEspaces() {
 }
 
 window.onload = function() {
-    document.getElementById("welcomeBox").style.display = "none";
-    document.getElementById("catalogBox").style.display = "none";
-    document.getElementById("siteBox").style.display = "none";
+    document.querySelectorAll('.box').forEach(box => box.style.display = 'none');
     
     const phone = localStorage.getItem("phone");
     
     if (phone) {
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("welcomeBox").style.display = "block";
-        
-        restaurerCode().then(() => {
-        }).catch(err => {
-            console.error(err);
-        });
-        
+        afficherPage('welcomeBox');
+        restaurerCode().catch(err => console.error(err));
     } else {
-        document.getElementById("loginBox").style.display = "block";
+        afficherPage('loginBox');
     }
 };
 async function restaurerCode(){
