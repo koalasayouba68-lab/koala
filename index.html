@@ -191,6 +191,29 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
 </div>
 
 <script>
+function afficherPage(id) {
+    document.querySelectorAll('.box').forEach(box => box.style.display = 'none');
+    const page = document.getElementById(id);
+    if (page) page.style.display = 'block';
+    const btnFacture = document.getElementById("btnFactureFixe");
+    if (btnFacture) btnFacture.style.display = (id === 'siteBox') ? 'block' : 'none';
+}
+
+window.onload = function() {
+    document.querySelectorAll('.box').forEach(box => box.style.display = 'none');
+    const phone = localStorage.getItem("phone");
+    if (phone) {
+        afficherPage('welcomeBox');
+        if (typeof restaurerCode === 'function') {
+            restaurerCode().catch(err => console.error(err));
+        }
+    } else {
+        afficherPage('loginBox');
+    }
+};
+</script>
+
+<script>
 const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
 
@@ -420,18 +443,6 @@ async function genererCatalogueEspaces() {
     }
 }
 
-window.onload = function() {
-    console.log("Le site a bien démarré"); // Vérification dans la console
-    
-    // On force l'affichage de la bonne boîte
-    const phone = localStorage.getItem("phone");
-    if (phone) {
-        afficherPage('welcomeBox');
-        restaurerCode().catch(err => console.error(err));
-    } else {
-        afficherPage('loginBox');
-    }
-};
 async function restaurerCode(){
 const phone = localStorage.getItem("phone");
 if(!phone) return;
@@ -889,19 +900,6 @@ function fermerPaiement() {
 function declencherNotifRetrait(montant, nouveauSolde) {
     console.log("Notif : Retrait de " + montant + " demandé.");
     // Ajoute ici ta logique de sauvegarde si nécessaire
-}
-
-function afficherPage(id) {
-    // 1. On cache toutes les boîtes (tous les éléments avec la classe 'box')
-    document.querySelectorAll('.box').forEach(box => box.style.display = 'none');
-    
-    // 2. On affiche uniquement la boîte demandée
-    const page = document.getElementById(id);
-    if (page) page.style.display = 'block';
-    
-    // 3. Gestion des boutons flottants
-    const btnFacture = document.getElementById("btnFactureFixe");
-    if (btnFacture) btnFacture.style.display = (id === 'siteBox') ? 'block' : 'none';
 }
 </script>
 </body>
