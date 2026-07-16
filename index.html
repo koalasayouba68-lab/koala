@@ -421,14 +421,13 @@ async function genererCatalogueEspaces() {
 }
 
 window.onload = function() {
-    document.querySelectorAll('.box').forEach(box => box.style.display = 'none');
+    console.log("Le site a bien démarré"); // Vérification dans la console
     
+    // On force l'affichage de la bonne boîte
     const phone = localStorage.getItem("phone");
     if (phone) {
         afficherPage('welcomeBox');
-        if (typeof restaurerCode === 'function') {
-            restaurerCode().catch(err => console.error(err));
-        }
+        restaurerCode().catch(err => console.error(err));
     } else {
         afficherPage('loginBox');
     }
