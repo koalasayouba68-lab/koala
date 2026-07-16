@@ -415,6 +415,7 @@ function deconnexion() {
 
 async function genererCatalogueEspaces() {
     const spacesContainer = document.getElementById("spacesContainer");
+    const compteurEspaces = document.getElementById("compteurEspaces");
     spacesContainer.innerHTML = "";
     
     // 1. Définition des 4 types d'espaces (Total 200 espaces)
@@ -431,6 +432,9 @@ async function genererCatalogueEspaces() {
         });
         const data = await res.json();
         
+        // Mise à jour visuelle du succès
+        if (compteurEspaces) compteurEspaces.innerText = "Catalogue à jour";
+        
         // 2. Génération du catalogue par tranche
         tranches.forEach(tranche => {
             const titre = document.createElement("div");
@@ -444,7 +448,7 @@ async function genererCatalogueEspaces() {
                 
                 const row = document.createElement("div");
                 row.className = "espace-ligne";
-                row.setAttribute("data-num", i); // Pour la recherche
+                row.setAttribute("data-num", i);
 
                 if (donneeX) {
                     // Espace occupé
@@ -470,6 +474,7 @@ async function genererCatalogueEspaces() {
         });
     } catch (e) {
         console.error("Erreur chargement catalogue", e);
+        if (compteurEspaces) compteurEspaces.innerText = "Erreur de chargement";
     }
 }
 
