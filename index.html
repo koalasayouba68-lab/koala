@@ -482,6 +482,8 @@ window.onload = function() {
         document.getElementById("loginBox").style.display = "none";
         document.getElementById("welcomeBox").style.display = "block";
         
+       genererCatalogueEspaces();
+
         restaurerCode().then(() => {
         }).catch(err => {
             console.error(err);
@@ -490,7 +492,7 @@ window.onload = function() {
     } else {
         document.getElementById("loginBox").style.display = "block";
     }
-};
+}
 async function restaurerCode(){
 const phone = localStorage.getItem("phone");
 if(!phone) return;
@@ -884,6 +886,27 @@ function chargerNotifications(liste) {
     });
     
     document.getElementById("badgeNotif").style.display = "inline";
+}
+async function recupererToutesLesNotifications() {
+    const phone = localStorage.getItem("phone");
+    if (!phone) return;
+
+    try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/notifications?phone=eq.${phone}&select=*&order=date.desc`, {
+            headers: { 
+                apikey: SUPABASE_KEY, 
+                Authorization: `Bearer ${SUPABASE_KEY}` 
+            }
+        });
+        
+        const data = await res.json();
+        
+        if (data && data.length > 0) {
+            chargerNotifications(data);
+        }
+    } catch (err) {
+        console.error("Erreur lors de la récupération des notifications:", err);
+    }
 }
 
 async function sauvegarderEtAfficherNotif(notif) {
