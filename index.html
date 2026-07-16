@@ -294,6 +294,8 @@ async function ouvrirEspaceLocatairePrive() {
     if(!codeSaisi) return;
 
     try {
+        document.getElementById("compteurEspaces").innerText = "Catalogue chargé";
+        
         const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${numeroSaisi.trim()}&code=eq.${codeSaisi.trim()}&status=eq.confirmé`, {
             headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
         });
