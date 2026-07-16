@@ -424,10 +424,11 @@ window.onload = function() {
     document.querySelectorAll('.box').forEach(box => box.style.display = 'none');
     
     const phone = localStorage.getItem("phone");
-    
     if (phone) {
         afficherPage('welcomeBox');
-        restaurerCode().catch(err => console.error(err));
+        if (typeof restaurerCode === 'function') {
+            restaurerCode().catch(err => console.error(err));
+        }
     } else {
         afficherPage('loginBox');
     }
