@@ -442,23 +442,23 @@ async function genererCatalogueEspaces() {
                 row.className = "espace-ligne";
                 row.setAttribute("data-num", i);
 
-                if (donneeX) {
-                    row.innerHTML = `
-                        <div class="esp-num">${formattedNum}</div>
-                        <div class="esp-desc"><b>${donneeX.description || 'Espace Occupé'}</b></div>
-                        <button style="background:green; color:white;" onclick="selectionnerAchat('${(donneeX.name_file || '').replace(/'/g, "\\'")}', ${donneeX.prix_vente || tranche.prix}, ${i})">
-                            Voir produits
-                        </button>
-                    `;
-                } else {
-                    row.innerHTML = `
-                        <div class="esp-num">${formattedNum}</div>
-                        <div class="esp-desc" style="color:#2196F3;">Espace Libre</div>
-                        <button style="background:#2196F3; color:white;" onclick="selectionnerAchat('Location Espace ${formattedNum}', ${tranche.prix}, ${i})">
-                            Louer (${tranche.prix} F)
-                        </button>
-                    `;
-                }
+               if (donneeX) {
+    row.innerHTML = `
+        <div class="esp-num">${formattedNum}</div>
+        <div class="esp-desc"><b>${donneeX.description || 'Espace Occupé'}</b></div>
+        <button style="background:green; color:white;" onclick="selectionnerAchat('${(donneeX.name_file || '').replace(/'/g, "\\'")}', ${donneeX.prix_vente}, ${i})">
+            Acheter le produit
+        </button>
+    `;
+} else {
+    row.innerHTML = `
+        <div class="esp-num">${formattedNum}</div>
+        <div class="esp-desc" style="color:#2196F3;">Espace Libre</div>
+        <button style="background:#2196F3; color:white;" onclick="selectionnerAchat('Location Espace ${formattedNum}', ${tranche.prix}, ${i})">
+            Louer (${tranche.prix} F)
+        </button>
+    `;
+}
                 spacesContainer.appendChild(row);
             }
         });
