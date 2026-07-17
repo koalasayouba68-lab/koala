@@ -63,6 +63,16 @@ function verifierCodeAdmin() {
     }
 }
 
+async function validerRetrait(id, montant, phone) {
+    if(!confirm(`Valider le retrait de ${montant} F CFA pour ${phone} ?`)) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${id}`, {
+        method: "PATCH",
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "payé" })
+    });
+    load();
+}
+
 async function load(){
     if(!verifié) return;
     const listDiv = document.getElementById("list");
@@ -81,6 +91,16 @@ async function load(){
             let infoEspaceLocataire = estVendeur && p.description ? 
                 `<div style="background:#fff; padding:5px; margin-top:5px; border-radius:4px; font-size:12px;">📌 <b>Espace :</b> ${p.description} <br> 💰 <b>Prix :</b> ${p.prix_vente || 0} F | 📞 <b>Dépôt :</b> ${p.num_depot || 'Non défini'}</div>` : "";
 
+            let boutons = `
+                <button class="btn-success" onclick="executerValidationUnique('${p.id}', '${estVendeur ? 'vendeur' : 'client'}')">✔</button>
+                <button class="btn-danger" onclick="executerBloquerUnique('${p.id}')">🔒</button>
+                <button class="btn-delete" onclick="executerSuppressionTotale('${p.id}', '${p.phone}')">🗑️</button>
+            `;
+
+            if (p.status === "demande_retrait") {
+                boutons = `<button class="btn-success" style="background:orange;" onclick="validerRetrait('${p.id}', '${p.amount}', '${p.phone}')">Valider Retrait</button>`;
+            }
+
             html += `
             <div class="item" style="border-left: 6px solid ${isConfirmed ? 'green' : 'gold'};">
                 <div style="display:flex; align-items:center; gap:15px;">
@@ -92,11 +112,7 @@ async function load(){
                         ${infoEspaceLocataire}
                     </div>
                 </div>
-                <div>
-                    <button class="btn-success" onclick="executerValidationUnique('${p.id}', '${estVendeur ? 'vendeur' : 'client'}')">✔</button>
-                    <button class="btn-danger" onclick="executerBloquerUnique('${p.id}')">🔒</button>
-                    <button class="btn-delete" onclick="executerSuppressionTotale('${p.id}', '${p.phone}')">🗑️</button>
-                </div>
+                <div>${boutons}</div>
             </div>`;
         });
         listDiv.innerHTML = html;
