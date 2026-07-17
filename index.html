@@ -702,15 +702,15 @@ async function payer() {
     });
 
     const data = await response.json();
-    console.log("RÉPONSE COMPLÈTE DE SUPABASE :", JSON.stringify(data));
 
     if (data.success) {
-        await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/rest/v1/payments", {
+        await fetch(`${SUPABASE_URL}/rest/v1/payments`, {
             method: "POST",
             headers: { 
                 "apikey": SUPABASE_KEY,
                 "Authorization": "Bearer " + SUPABASE_KEY,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Prefer": "return=representation"
             },
             body: JSON.stringify({
                 phone: phoneInput,
