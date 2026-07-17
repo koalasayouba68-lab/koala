@@ -265,7 +265,7 @@ async function reabonnerVendeur() {
     if (!phone) return alert("Numéro introuvable.");
 
     // Envoi de la mise à jour vers Supabase
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/vendeurs?phone=eq.${phone}`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}`, {
         method: 'PATCH',
         headers: {
             'apikey': SUPABASE_KEY,
