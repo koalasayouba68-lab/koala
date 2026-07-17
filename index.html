@@ -167,28 +167,40 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
         <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white;">Annuler</button>
     </div>
 
-    <div id="zonePaiementStandard" style="text-align: center; margin: 20px 0; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
+ <!-- ... (le reste au-dessus est bon) ... -->
+
+<div id="zonePaiementStandard" style="text-align: center; margin: 20px 0; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
     <h3 style="color: #333; margin-bottom: 15px;">💰 Paiement Sécurisé</h3>
     <input type="tel" id="inputPhonePaiement" placeholder="Votre numéro de paiement" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">
     <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; width: 100%; font-size: 16px;">Payer maintenant</button>
 </div>
 
-<div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
-    <label style="font-weight: bold; color: #333;">Code secret :</label>
-    <input type="text" id="code" readonly style="width: 100%; padding: 10px; border: 2px solid #9c27b0; border-radius: 5px;">
+<!-- NOUVELLE ZONE AJOUTÉE : Pour afficher le code du client après validation -->
+<div id="zoneCodeClient" style="display:none; background: #e8f5e9; border: 2px solid green; padding: 15px; margin-bottom: 15px; text-align: center;">
+    <h3 style="color: green;">Code reçu : <span id="valeurCodeClient">En attente...</span></h3>
+    <p style="color: red; font-weight: bold;">Expire dans : <span id="compteur24h">24:00:00</span></p>
 </div>
 
-<div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
-    <h3 style="color: green;">📚 Formation débloquée</h3>
-    <button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white;">👁️ Voir le PDF</button>
-    <button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white;">⬇️ Télécharger</button>
-</div>
+<!-- TU ENCADRES ICI TOUT CE QUI EST LOCATAIRE -->
+<div id="zoneStrictementLocataire">
+    <div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
+        <label style="font-weight: bold; color: #333;">Code secret :</label>
+        <input type="text" id="code" readonly style="width: 100%; padding: 10px; border: 2px solid #9c27b0; border-radius: 5px;">
+    </div>
 
-<div id="zoneAcces" style="text-align: center; margin-top: 20px;">
-    <hr>
-    <h3 style="color: #333;">🛠 Accéder à mon Espace Locataire</h3>
-    <button onclick="verifierAccesEspace()" style="background: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Vérifier mon statut et voir mon code</button>
+    <div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
+        <h3 style="color: green;">📚 Formation débloquée</h3>
+        <button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white;">👁️ Voir le PDF</button>
+        <button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white;">⬇️ Télécharger</button>
+    </div>
+
+    <div id="zoneAcces" style="text-align: center; margin-top: 20px;">
+        <hr>
+        <h3 style="color: #333;">🛠 Accéder à mon Espace Locataire</h3>
+        <button onclick="verifierAccesEspace()" style="background: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Vérifier mon statut et voir mon code</button>
+    </div>
 </div>
+<!-- FIN DE LA ZONE LOCATAIRE -->
 
     <div id="uploadZone">
         <h3 style="color:#1565c0;">🏗️ Configuration de votre Espace</h3>
@@ -329,14 +341,12 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
     const phone = localStorage.getItem("phone");
     const monEspaceLoue = localStorage.getItem("mon_espace_num"); 
 
-    // 1. Déterminer si le visiteur est le vendeur de CET espace
     if (espaceNum && monEspaceLoue && espaceNum.toString() === monEspaceLoue.toString()) {
         currentRole = "vendeur";
     } else {
         currentRole = "sous_client";
     }
 
-    // 2. Vérification d'occupation : uniquement si c'est une NOUVELLE LOCATION
     if (espaceNum && nom.startsWith("Location Espace")) {
         const checkEspace = await fetch(`${SUPABASE_URL}/rest/v1/payments?espace_num=eq.${espaceNum}&status=eq.confirmé&select=id`, {
             headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
@@ -348,7 +358,6 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
         }
     }
 
-    // 3. Vérification si le client possède déjà un autre espace
     if (montant >= 1000 && nom.startsWith("Location Espace")) {
         if (phone) {
             const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&select=id`, {
@@ -367,7 +376,6 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
     montantSelectionne = montant;
     numEspaceEnCoursGestion = espaceNum;
     
-    // 4. Adaptation du titre pour le client (Achat produit vs Location)
     if (nom.startsWith("Location Espace")) {
         document.getElementById("titreAchat").innerText = nom;
     } else {
@@ -381,34 +389,26 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
     const zonePaiement = document.getElementById("zonePaiementStandard");
     if (zonePaiement) zonePaiement.style.display = "block";
 
-    // 5. Masquer les outils de gestion pour le client
+    const zoneLocataire = document.getElementById("zoneStrictementLocataire");
+    const zoneCodeClient = document.getElementById("zoneCodeClient");
+
     if (currentRole !== "vendeur") {
-        document.getElementById("vendeurCounterBox").style.display = "none";
-        document.getElementById("uploadZone").style.display = "none";
-        document.getElementById("retraitInterfaceBox").style.display = "none";
-        // Masquer l'accès au code locataire pour le client
-        if(document.getElementById("formationAccessZone")) {
-            document.getElementById("formationAccessZone").style.display = "none";
-        }
+        if (zoneLocataire) zoneLocataire.style.display = "none";
+        if (zoneCodeClient) zoneCodeClient.style.display = "none";
     } else {
-        document.getElementById("vendeurCounterBox").style.display = "block";
-        document.getElementById("uploadZone").style.display = "block";
-        document.getElementById("retraitInterfaceBox").style.display = "block";
-        if(document.getElementById("formationAccessZone")) {
-            document.getElementById("formationAccessZone").style.display = "block";
-        }
+        if (zoneLocataire) zoneLocataire.style.display = "block";
+        if (zoneCodeClient) zoneCodeClient.style.display = "none";
     }
     
     const btn = document.getElementById("payBtn");
     btn.innerText = "Payer maintenant";
     btn.disabled = false;
 
-    // 6. Message de validation par l'admin
     btn.onclick = async function() {
         alert("Votre demande sera validée par l'admin après vérification.");
-        await payer(); // Appel de la fonction de paiement que tu as définie
+        await payer();
     };
-}
+}a
 
 function deconnexion() {
     clearInterval(checkInterval);
