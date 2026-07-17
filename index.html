@@ -343,7 +343,7 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
         });
         const espaceData = await checkEspace.json();
         if (espaceData && espaceData.length > 0) {
-            alert("❌ Cet espace est déjà loué.");
+            alert("❌ Cet espace est déjà loué et occupé.");
             return;
         }
 
@@ -352,12 +352,55 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
                 headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
             });
             const checkData = await checkRes.json();
+            
             if (checkData && checkData.length > 0) {
                 alert("❌ Impossible : vous possédez déjà un espace actif.");
                 return;
             }
         }
     }
+
+    // 3. Initialisation des données pour le paiement (Location OU Achat Produit)
+    articleSelectionne = nom;
+    montantSelectionne = montant;
+    numEspaceEnCoursGestion = espaceNum;
+    
+    // Si c'est un produit, on affiche le prix spécifique demandé
+    if (!nom.startsWith("Location Espace")) {
+        document.getElementById("titreAchat").innerText = `Effectuez le paiement de ${montant} F`;
+    } else {
+        document.getElementById("titreAchat").innerText = nom;
+    }
+    
+    document.getElementById("inputPhonePaiement").value = phone || "";
+    
+    changerDePage("siteBox");
+
+    const zonePaiement = document.getElementById("zonePaiementStandard");
+    if (zonePaiement) zonePaiement.style.display = "block";
+
+    // 4. Gestion stricte des rôles et affichage des interfaces
+    if (currentRole !== "vendeur") {
+        document.getElementById("vendeurCounterBox").style.display = "none";
+        document.getElementById("uploadZone").style.display = "none";
+        document.getElementById("retraitInterfaceBox").style.display = "none";
+        document.getElementById("formationAccessZone").style.display = "none";
+    } else {
+        document.getElementById("vendeurCounterBox").style.display = "block";
+        document.getElementById("uploadZone").style.display = "block";
+        document.getElementById("retraitInterfaceBox").style.display = "block";
+        document.getElementById("formationAccessZone").style.display = "block";
+    }
+    
+    const btn = document.getElementById("payBtn");
+    btn.innerText = "Payer maintenant";
+    btn.disabled = false;
+    
+    // 5. Message après clic valider (Logique côté admin)
+    btn.onclick = function() {
+        alert("Votre demande sera validée par l'admin après vérification.");
+    };
+}
 
     // 3. Initialisation de la zone de paiement (valable pour achat produit ET location)
     articleSelectionne = nom;
