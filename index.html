@@ -684,6 +684,7 @@ async function payer() {
     btn.innerText = "Traitement en cours...";
     btn.disabled = true;
 
+    // 1. Appel vers ton API
     const response = await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/functions/v1/hyper-task", {
         method: "POST",
         headers: { 
@@ -695,14 +696,15 @@ async function payer() {
             phone: phoneInput,
             amount: montantSelectionne,
             description: articleSelectionne,
-            role: currentRole,
-            espace_num: numEspaceEnCoursGestion
+            role: currentRole, // Ici, le système sait déjà si c'est "vendeur" ou "sous_client"
+            espace_num: numEspaceEnCoursGestion // Important pour identifier la boutique
         })
     });
 
     const data = await response.json();
 
     if (data.success) {
+        // 2. Enregistrement dans Supabase avec le numéro d'espace
         const resSupabase = await fetch(`${SUPABASE_URL}/rest/v1/payments`, {
             method: "POST",
             headers: { 
@@ -716,7 +718,8 @@ async function payer() {
                 amount: montantSelectionne,
                 description: articleSelectionne,
                 role: currentRole,
-                status: "en_attente"
+                espace_num: numEspaceEnCoursGestion, // L'admin saura quel espace est payé
+                status: "en_attente" // L'admin doit valider ce statut
             })
         });
 
@@ -725,11 +728,14 @@ async function payer() {
             console.error("Erreur enregistrement Supabase :", err);
         }
 
-        if (data.url) {
-            window.location.href = data.url;
-        } else {
-            alert("Demande de paiement envoyée sur le numéro " + phoneInput + ". Veuillez valider avec votre code PIN.");
-        }
+        // 3. Message pour le client
+        alert("Votre demande est envoyée. Elle sera validée par l'admin. Après validation, vous recevrez votre code d'accès valable 24h.");
+        
+        btn.innerText = "Payer maintenant";
+        btn.disabled = false;
+        
+        // Retour au catalogue ou fermeture de la zone
+        changerDePage("catalogue"); 
     } else {
         let messageErreur = data.data ? JSON.stringify(data.data) : (data.error || "Erreur inconnue");
         alert("Erreur de paiement : " + messageErreur);
