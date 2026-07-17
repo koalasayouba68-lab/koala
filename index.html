@@ -234,21 +234,6 @@ if (!id) { id = genererIdentifiantSecours(); localStorage.setItem("appareilID", 
 return id;
 }
 
-function changerDePage(idAffiche) {
-    // On ne garde dans la liste que les blocs principaux
-    const pages = ["loginBox", "welcomeBox", "catalogBox", "siteBox", "aboutBox", "zoneNotifications"];
-    
-    pages.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = "none";
-    });
-
-    const target = document.getElementById(idAffiche);
-    if (target) {
-        target.style.display = "block";
-    }
-}
-
 function connexion(){
     const phone = document.getElementById("loginPhone").value.trim();
     if(!phone || phone.length < 8){ alert("Numéro invalide ❌"); return; }
@@ -451,7 +436,8 @@ async function genererCatalogueEspaces() {
             spacesContainer.appendChild(titre);
 
             for (let i = tranche.start; i <= tranche.end; i++) {
-                const donneeX = data.find(item => parseInt(item.espace_num) === i);
+                // Correction : on ignore les NULL et on utilise Number() pour comparer
+                const donneeX = data.find(item => item.espace_num !== null && Number(item.espace_num) === i);
                 const formattedNum = i < 10 ? '0' + i : i;
                 
                 const row = document.createElement("div");
@@ -461,9 +447,9 @@ async function genererCatalogueEspaces() {
                 if (donneeX) {
                     row.innerHTML = `
                         <div class="esp-num">${formattedNum}</div>
-                        <div class="esp-desc"><b>${donneeX.description || 'Espace Occupé'}</b></div>
-                        <button style="background:green; color:white;" onclick="selectionnerAchat('${(donneeX.name_file || '').replace(/'/g, "\\'")}', ${donneeX.prix_vente || tranche.prix}, ${i})">
-                            Suivre (${donneeX.prix_vente || tranche.prix} F)
+                        <div class="esp-desc"><b style="color:red;">${donneeX.description || 'Espace Occupé'}</b></div>
+                        <button style="background:gray; color:white;" onclick="selectionnerAchat('${(donneeX.name_file || '').replace(/'/g, "\\'")}', ${donneeX.prix_vente || tranche.prix}, ${i})">
+                            Occupé
                         </button>
                     `;
                 } else {
