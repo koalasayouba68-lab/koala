@@ -411,7 +411,6 @@ function deconnexion() {
 
     location.reload();
 }
-
 async function genererCatalogueEspaces() {
     const spacesContainer = document.getElementById("spacesContainer");
     spacesContainer.innerHTML = "";
@@ -436,7 +435,6 @@ async function genererCatalogueEspaces() {
             spacesContainer.appendChild(titre);
 
             for (let i = tranche.start; i <= tranche.end; i++) {
-                // Correction : on ignore les NULL et on utilise Number() pour comparer
                 const donneeX = data.find(item => item.espace_num !== null && Number(item.espace_num) === i);
                 const formattedNum = i < 10 ? '0' + i : i;
                 
@@ -447,9 +445,9 @@ async function genererCatalogueEspaces() {
                 if (donneeX) {
                     row.innerHTML = `
                         <div class="esp-num">${formattedNum}</div>
-                        <div class="esp-desc"><b style="color:red;">${donneeX.description || 'Espace Occupé'}</b></div>
-                        <button style="background:gray; color:white;" onclick="selectionnerAchat('${(donneeX.name_file || '').replace(/'/g, "\\'")}', ${donneeX.prix_vente || tranche.prix}, ${i})">
-                            Occupé
+                        <div class="esp-desc"><b>${donneeX.description || 'Espace Occupé'}</b></div>
+                        <button style="background:green; color:white;" onclick="selectionnerAchat('${(donneeX.name_file || '').replace(/'/g, "\\'")}', ${donneeX.prix_vente || tranche.prix}, ${i})">
+                            Voir produits
                         </button>
                     `;
                 } else {
