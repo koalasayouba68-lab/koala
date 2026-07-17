@@ -169,6 +169,7 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
         <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white;">Annuler</button>
     </div>
 
+    <!-- Zone Paiement Standard -->
     <div id="zonePaiementStandard" style="text-align: center; margin: 20px 0; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
         <h3 style="color: #333; margin-bottom: 15px;">💰 Paiement Sécurisé</h3>
         <input type="tel" id="inputPhonePaiement" placeholder="Entrez votre numéro de paiement" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px;">
@@ -178,6 +179,17 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
         <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px;">
             Payer maintenant
         </button>
+    </div>
+
+    <!-- ZONE AJOUTÉE : Nécessaire pour éviter l'erreur "null" -->
+    <div id="zoneInstructionPaiement" style="display:none; background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
+        <p style="font-weight:bold;">Veuillez composer ce code pour payer :</p>
+        <code id="codeUSSD" style="font-size: 18px; color: #d9534f; background: #eee; padding: 5px;"></code>
+    </div>
+
+    <!-- ZONE AJOUTÉE : Nécessaire pour afficher le code client -->
+    <div id="zoneCodeClient" style="display:none; background: #e8f5e9; border: 2px solid green; padding: 15px; text-align: center; margin-bottom: 15px;">
+        <h3 style="color: green;">Code reçu : <span id="valeurCodeClient"></span></h3>
     </div>
 
     <div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
