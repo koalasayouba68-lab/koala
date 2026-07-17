@@ -167,18 +167,25 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
         <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white;">Annuler</button>
     </div>
 
- <!-- ... (le reste au-dessus est bon) ... -->
+ <div id="siteBox" class="box" style="display:none;">
+    <h2 id="titreAchat"></h2>
 
-<div id="zonePaiementStandard" style="text-align: center; margin: 20px 0; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
-    <h3 style="color: #333; margin-bottom: 15px;">💰 Paiement Sécurisé</h3>
-    <input type="tel" id="inputPhonePaiement" placeholder="Votre numéro de paiement" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">
-    <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; width: 100%; font-size: 16px;">Payer maintenant</button>
-</div>
+    <!-- Zone d'instruction de paiement (S'affiche dynamiquement) -->
+    <div id="zoneInstructionPaiement" style="display:none; background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+        <p style="font-weight:bold;">Veuillez composer ce code pour payer :</p>
+        <code id="codeUSSD" style="font-size: 18px; color: #d9534f; background: #eee; padding: 5px;"></code>
+    </div>
 
-<!-- NOUVELLE ZONE AJOUTÉE : Pour afficher le code du client après validation -->
-<div id="zoneCodeClient" style="display:none; background: #e8f5e9; border: 2px solid green; padding: 15px; margin-bottom: 15px; text-align: center;">
-    <h3 style="color: green;">Code reçu : <span id="valeurCodeClient">En attente...</span></h3>
-    <p style="color: red; font-weight: bold;">Expire dans : <span id="compteur24h">24:00:00</span></p>
+    <div id="zonePaiementStandard">
+        <input type="tel" id="inputPhonePaiement" placeholder="Votre numéro de paiement" style="width: 100%; padding: 12px; margin-bottom: 10px;">
+        <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; width: 100%;">Valider</button>
+    </div>
+
+    <!-- Zone Code Client (S'affiche après validation admin) -->
+    <div id="zoneCodeClient" style="display:none; background: #e8f5e9; border: 2px solid green; padding: 15px; text-align: center;">
+        <h3 style="color: green;">Code reçu : <span id="valeurCodeClient"></span></h3>
+        <p>Expire dans : <span id="compteur24h"></span></p>
+    </div>
 </div>
 
 <!-- TU ENCADRES ICI TOUT CE QUI EST LOCATAIRE -->
@@ -318,25 +325,27 @@ async function ouvrirEspaceLocatairePrive() {
         numEspaceEnCoursGestion = p.espace_num;
         currentRole = "vendeur";
         
-        // --- NETTOYAGE ICI ---
-        // On s'assure que le titre ne contient pas de nom de fichier parasite
         document.getElementById("titreAchat").innerText = `🏗️ Gestion : Espace ${p.espace_num || '01'}`;
         
         document.getElementById("catalogBox").style.display = "none";
         document.getElementById("siteBox").style.display = "block";
 
         await restaurerCode();
-        document.getElementById("vendeurCounterBox").style.display = "block";
         
-        // S'assurer que la zone de paiement standard est bien cachée pour un vendeur
+        // --- MISE À JOUR : S'assurer que les zones vendeur sont affichées ---
+        document.getElementById("vendeurCounterBox").style.display = "block";
+        if (document.getElementById("zoneStrictementLocataire")) document.getElementById("zoneStrictementLocataire").style.display = "block";
+        if (document.getElementById("uploadZone")) document.getElementById("uploadZone").style.display = "block";
+        
+        // On masque la zone de paiement standard et la zone code client pour le vendeur
         document.getElementById("zonePaiementStandard").style.display = "none";
+        if (document.getElementById("zoneCodeClient")) document.getElementById("zoneCodeClient").style.display = "none";
         
     } catch(e) {
         console.error(e);
         alert("Erreur lors de la vérification de vos accès ❌");
     }
 }
-
 async function selectionnerAchat(nom, montant, espaceNum = null) {
     const phone = localStorage.getItem("phone");
     const monEspaceLoue = localStorage.getItem("mon_espace_num"); 
@@ -391,13 +400,18 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
 
     const zoneLocataire = document.getElementById("zoneStrictementLocataire");
     const zoneCodeClient = document.getElementById("zoneCodeClient");
+    const uploadZone = document.getElementById("uploadZone");
 
     if (currentRole !== "vendeur") {
+        // C'est un client
         if (zoneLocataire) zoneLocataire.style.display = "none";
         if (zoneCodeClient) zoneCodeClient.style.display = "none";
+        if (uploadZone) uploadZone.style.display = "none";
     } else {
+        // C'est le vendeur
         if (zoneLocataire) zoneLocataire.style.display = "block";
         if (zoneCodeClient) zoneCodeClient.style.display = "none";
+        if (uploadZone) uploadZone.style.display = "block";
     }
     
     const btn = document.getElementById("payBtn");
@@ -408,7 +422,7 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
         alert("Votre demande sera validée par l'admin après vérification.");
         await payer();
     };
-}a
+}
 
 function deconnexion() {
     clearInterval(checkInterval);
@@ -995,6 +1009,25 @@ function changerDePage(idAffiche) {
 
     const target = document.getElementById(idAffiche);
     if (target) target.style.display = "block";
+}
+function afficherCodeClient(codeRecu) {
+    document.getElementById("zoneInstructionPaiement").style.display = "none";
+    document.getElementById("zonePaiementStandard").style.display = "none";
+    
+    const zoneCode = document.getElementById("zoneCodeClient");
+    zoneCode.style.display = "block";
+    document.getElementById("valeurCodeClient").innerText = codeRecu;
+    
+    // Lancer le compteur de 24h
+    let temps = 24 * 60 * 60;
+    const interval = setInterval(() => {
+        temps--;
+        let h = Math.floor(temps / 3600);
+        let m = Math.floor((temps % 3600) / 60);
+        let s = temps % 60;
+        document.getElementById("compteur24h").innerText = `${h}h ${m}m ${s}s`;
+        if (temps <= 0) clearInterval(interval);
+    }, 1000);
 }
 </script>
 </body>
