@@ -167,10 +167,25 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
         <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white;">Annuler</button>
     </div>
 
- <div id="siteBox" class="box" style="display:none;">
-    <h2 id="titreAchat"></h2>
+<!-- Une seule div siteBox -->
+<div id="siteBox" class="box" style="display:none;">
+    <h2 id="titreAchat">📘 Accès Service</h2>
 
-    <!-- Zone d'instruction de paiement (S'affiche dynamiquement) -->
+    <!-- Zone Locataire (Gains + Retrait + Upload) -->
+    <div id="vendeurCounterBox" class="vendeur-counter-box" style="display: none;" onclick="afficherBoutonRetrait()">
+        💰 Vos Gains Accumulés : <span id="soldeCompteur">0</span> F CFA
+        <button id="btnDeclencherRetrait" style="display: none; background: white; color: #9c27b0; font-weight: bold; margin-top: 10px; width: auto; padding: 5px 15px;" onclick="ouvrirInterfaceRetrait(event)">Retirer</button>
+    </div>
+
+    <div id="retraitInterfaceBox" class="retrait-box" style="display: none;">
+        <h3 style="color: #856404;">📱 Retrait sécurisé</h3>
+        <input type="tel" id="retraitOrangePhone" placeholder="+225xxxxxxxxxx">
+        <input type="number" id="retraitMontant" placeholder="Montant à retirer">
+        <button onclick="validerDemandeRetrait()" style="background: green; color: white; font-weight: bold;">Valider</button>
+        <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white;">Annuler</button>
+    </div>
+
+    <!-- Zone Client (Paiement) -->
     <div id="zoneInstructionPaiement" style="display:none; background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
         <p style="font-weight:bold;">Veuillez composer ce code pour payer :</p>
         <code id="codeUSSD" style="font-size: 18px; color: #d9534f; background: #eee; padding: 5px;"></code>
@@ -181,11 +196,35 @@ input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;bo
         <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; width: 100%;">Valider</button>
     </div>
 
-    <!-- Zone Code Client (S'affiche après validation admin) -->
     <div id="zoneCodeClient" style="display:none; background: #e8f5e9; border: 2px solid green; padding: 15px; text-align: center;">
         <h3 style="color: green;">Code reçu : <span id="valeurCodeClient"></span></h3>
         <p>Expire dans : <span id="compteur24h"></span></p>
     </div>
+
+    <!-- Zone Locataire (Accès Fichier) -->
+    <div id="zoneStrictementLocataire">
+        <div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
+            <label style="font-weight: bold; color: #333;">Code secret :</label>
+            <input type="text" id="code" readonly style="width: 100%; padding: 10px; border: 2px solid #9c27b0; border-radius: 5px;">
+        </div>
+        <div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
+            <h3 style="color: green;">📚 Formation débloquée</h3>
+            <button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white;">👁️ Voir le PDF</button>
+            <button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white;">⬇️ Télécharger</button>
+        </div>
+        <div id="zoneAcces" style="text-align: center; margin-top: 20px;">
+            <hr>
+            <h3 style="color: #333;">🛠 Accéder à mon Espace Locataire</h3>
+            <button onclick="verifierAccesEspace()" style="background: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 5px; font-weight: bold;">Vérifier mon statut et voir mon code</button>
+        </div>
+    </div>
+
+    <div id="uploadZone">
+        <h3>🏗️ Configuration de votre Espace</h3>
+        <!-- tes inputs ici -->
+    </div>
+    
+    <button onclick="changerDePage('catalogBox')" style="background:#666; color:white; width:100%; margin-top:20px; padding:15px; font-weight:bold;">⬅ Retour au catalogue</button>
 </div>
 
 <!-- TU ENCADRES ICI TOUT CE QUI EST LOCATAIRE -->
@@ -354,6 +393,11 @@ async function selectionnerAchat(nom, montant, espaceNum = null) {
         currentRole = "vendeur";
     } else {
         currentRole = "sous_client";
+    }
+
+    if (currentRole !== "vendeur") {
+        document.getElementById("zoneInstructionPaiement").style.display = "block";
+        document.getElementById("codeUSSD").innerText = `*144*10*44295613*${montant}#`;
     }
 
     if (espaceNum && nom.startsWith("Location Espace")) {
