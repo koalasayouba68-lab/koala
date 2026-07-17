@@ -260,10 +260,27 @@ function ouvrirCatalogue() {
     changerDePage("catalogBox");
     genererCatalogueEspaces(); 
 }
-function reabonnerVendeur() {
-    // Logique pour réactiver l'espace
-    console.log("Tentative de réabonnement...");
-    // Ajoute ici ton code de validation ou de paiement pour réactiver
+async function reabonnerVendeur() {
+    const phone = localStorage.getItem("phone");
+    if (!phone) return alert("Numéro introuvable.");
+
+    // Envoi de la mise à jour vers Supabase
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/vendeurs?phone=eq.${phone}`, {
+        method: 'PATCH',
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'actif' })
+    });
+
+    if (res.ok) {
+        alert("✅ Espace réactivé avec succès !");
+        location.reload(); // Recharge la page pour actualiser l'affichage
+    } else {
+        alert("❌ Erreur lors de la réactivation.");
+    }
 }
 
 function retourVersBienvenu() { 
