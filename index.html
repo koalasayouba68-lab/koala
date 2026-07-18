@@ -1,915 +1,159 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOALA - Plateforme Officielle</title>
-<meta name="google-site-verification" content="v1n-U1ZbQ_z94Hxt0NyvesUKsW1mK5yBPT3q6O8in4c" />
-
-<script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
-
-<script>
-  FedaPay.setPublicKey("pk_sandbox_c82e4dlpeghM7RWY2XFYRhjr");
-  FedaPay.setEnvironment('sandbox');
-</script>
-
-<style>
-body{font-family:Arial, sans-serif;background:#f4f4f4;padding:10px;margin:0;}
-.box{width:95%;max-width:700px;margin:20px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
-
-/* Conteneur de la liste unique verticale */
-.spaces-list-vertical {
-display: flex;
-flex-direction: column;
-max-height: 480px;
-overflow-y: auto;
-padding: 5px;
-}
-
-/* Style d'une ligne d'espace (Occupé ou Libre) */
-.espace-ligne {
-display: flex;
-align-items: center;
-justify-content: space-between;
-background: #fdfdfd;
-border: 1px solid #ddd;
-padding: 10px;
-border-radius: 8px;
-font-size: 14px;
-margin-bottom: 6px;
-}
-
-@media (max-width: 600px) {
-.espace-ligne { flex-direction: column; align-items: flex-start; gap: 8px; }
-.espace-ligne button { width: 100%; }
-}
-
-.esp-num { font-weight: bold; color: #333; min-width: 35px; }
-.esp-desc { flex-grow: 1; color: #555; padding: 0 15px; text-align: left; }
-
-/* Titre "Espaces à louer" en bleu inséré entre les occupés et les libres */
-.titre-louer-bleu {
-color: #007bff;
-font-size: 16px;
-font-weight: bold;
-margin: 10px 0;
-padding: 5px 0;
-text-align: left;
-border-bottom: 1px dashed #007bff;
-}
-
-button{padding:10px;width:100%;margin-top:10px;cursor:pointer;border:none;border-radius:8px;font-size:16px;}
-button:hover{opacity:0.9;}
-.espace-ligne button { width: auto; min-width: 110px; margin-top: 0; font-size: 13px; font-weight: bold; }
-
-input, textarea{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;border-radius:8px;border:1px solid #ccc;font-size:16px;}
-#topcode{position:fixed;top:10px;right:10px;background:black;color:white;padding:10px;border-radius:10px;display:none;z-index:999;font-size:14px;}
-#timer{position:fixed;top:60px;right:10px;background:red;color:white;padding:10px;border-radius:10px;display:none;z-index:999;font-size:14px;}
-
-/* Zone de configuration pour les locataires */
-#uploadZone { background: #e3f2fd; border: 2px dashed #2196F3; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; }
-.form-group { margin-bottom: 15px; }
-.form-group label { font-weight: bold; color: #1565c0; font-size: 14px; }
-.action-buttons { display: flex; gap: 10px; margin-top: 15px; }
-
-/* styles additionnels intégrés sans modification des styles existants */
-.vendeur-counter-box { background: #9c27b0; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; cursor: pointer; font-weight: bold; }
-.retrait-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 400px; margin: 80px auto 20px auto; padding: 20px; }
+        
+        /* Header Profil */
+        #header { position: fixed; top: 0; width: 100%; height: 60px; background: #fff; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: flex-end; padding-right: 20px; z-index: 500; }
+        .profil-zone { display: flex; align-items: center; cursor: pointer; }
+        .profil-rond { width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #2E7D32; }
+        
+        /* Menu Paramètres */
+        #menuProfil { display: none; position: fixed; top: 60px; right: 10px; background: white; border: 1px solid #ccc; padding: 15px; border-radius: 8px; width: 250px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 600; }
+        
+        .box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; margin-top: 10px; cursor: pointer; }
+    </style>
 </head>
 <body>
 
-<div id="topcode" style="position:fixed; top:10px; right:10px; background:black; color:white; padding:10px; border-radius:10px; display:none; z-index:999; font-size:14px; text-align:center;">
+<!-- Header Facebook-like -->
+<div id="header">
+    <div class="profil-zone" onclick="toggleMenu()">
+        <div class="profil-rond" id="btnChangePhoto" onclick="event.stopPropagation(); modifierPhoto()">
+            📷
+        </div>
+        <span style="margin-left: 10px; font-weight: bold;">Profil</span>
+        <span style="margin-left: 5px;">▼</span>
+    </div>
+</div>
+
+<!-- Menu Paramètres (Déroulant) -->
+<div id="menuProfil">
+    <h3>Paramètres du compte</h3>
+    <input type="text" id="nomInput" placeholder="Nom">
+    <input type="text" id="prenomInput" placeholder="Prénom">
+    <input type="tel" id="telInput" placeholder="Numéro de téléphone">
+    <button onclick="enregistrerProfil()" style="background:#2E7D32; color:white; border:none; border-radius:5px;">Enregistrer</button>
+</div>
+
+<div class="container">
+    <!-- Interface Login -->
+    <div id="loginInterface" class="box">
+        <h2>Connexion</h2>
+        <input type="tel" id="loginPhone" placeholder="Numéro de téléphone">
+        <input type="number" id="loginCode" placeholder="Code à 6 chiffres">
+        <button onclick="seConnecter()">Se connecter</button>
+        <button onclick="afficherCreation()">Créer un compte</button>
     </div>
 
- <div id="btnFactureFixe" style="position:fixed; top:70px; right:10px; z-index:999999; display:none; pointer-events: auto;">
-    <button id="btnFacture" onclick="allerVersPaiement()" style="background: orange; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-        📄 Facture
-    </button>
+    <!-- Interface Création -->
+    <div id="creationInterface" class="box" style="display:none;">
+        <h2>Créer un compte</h2>
+        <input type="tel" id="createPhone" placeholder="Numéro de téléphone">
+        <input type="number" id="createCode" placeholder="Code à 6 chiffres">
+        <button onclick="validerCreation()">Valider</button>
+    </div>
 </div>
 
-<div id="loginBox" class="box">
-<h2>🔐 Connexion</h2>
-<p>Entre ton numéro pour continuer.</p>
-<input id="loginPhone" type="tel" placeholder="Entrer votre numéro">
-<button onclick="connexion()" style="background:#2196F3; color:white;">Continuer</button>
-</div>
-
-<!-- Bloc Accueil -->
-<div id="welcomeBox" class="box" style="display:block;">
-    <h1 style="color: red; text-align: center; font-size: 24px; font-weight: bold;">Bienvenue sur KOALA : Votre Hub de Vente et d'Apprentissage</h1>
-    
-    <p style="line-height: 1.6; text-align: justify;">
-        Bienvenue dans l'univers KOALA, la plateforme tout-en-un qui propulse vos projets et enrichit vos connaissances ! Que vous soyez créateur de contenu ou apprenant, nous avons l'espace qu'il vous faut.<br><br>
+<!-- Interface Nouveau Statut (Popup) -->
+<div id="popupPublier" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; padding:20px; box-sizing:border-box;">
+    <div style="background:white; padding:20px; border-radius:15px; margin-top:50px; max-width:400px; margin-left:auto; margin-right:auto;">
+        <h2 style="text-align:center; color:#2E7D32;">Créer un Statut</h2>
         
-        <b>Voici ce que vous pouvez faire chez nous :</b><br><br>
+        <textarea id="texteStatut" style="width:100%; height:100px; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box;" placeholder="Écris ton message..."></textarea>
         
-        <b>• Louez votre Espace de Vente sur-mesure :</b> Rejoignez notre réseau exclusif de 250 espaces de diffusion. Que vous soyez créateur ou formateur, nous avons la solution parfaitement adaptée à vos ambitions. Sélectionnez la formule qui vous correspond — 1 000 F, 2 000 F, 4 000 F ou 5 000 F CFA — et louez votre boutique sécurisée en quelques clics pour partager et vendre vos fichiers (PDF, Vidéos) en toute autonomie. Vous conservez le contrôle total sur vos revenus et pouvez effectuer vos retraits de fonds simplement et rapidement.<br><br>
+        <!-- Sélection des 10 couleurs de fond -->
+        <div style="margin: 10px 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+            <button onclick="changerCouleur('#009E60')" style="height: 40px; background: #009E60; border: none; border-radius: 50%;" title="Vert Faso"></button>
+            <button onclick="changerCouleur('#EF2B2D')" style="height: 40px; background: #EF2B2D; border: none; border-radius: 50%;" title="Rouge Faso"></button>
+            <button onclick="changerCouleur('#FF8C00')" style="height: 40px; background: #FF8C00; border: none; border-radius: 50%;" title="Orange Soleil"></button>
+            <button onclick="changerCouleur('#002366')" style="height: 40px; background: #002366; border: none; border-radius: 50%;" title="Bleu Royal"></button>
+            <button onclick="changerCouleur('#8A2BE2')" style="height: 40px; background: #8A2BE2; border: none; border-radius: 50%;" title="Violet Luxe"></button>
+            <button onclick="changerCouleur('#FFC0CB')" style="height: 40px; background: #FFC0CB; border: none; border-radius: 50%;" title="Rose Bonbon"></button>
+            <button onclick="changerCouleur('#FFD700')" style="height: 40px; background: #FFD700; border: none; border-radius: 50%;" title="Jaune Or"></button>
+            <button onclick="changerCouleur('#1A1A1A')" style="height: 40px; background: #1A1A1A; border: none; border-radius: 50%;" title="Noir Élégant"></button>
+            <button onclick="changerCouleur('#40E0D0')" style="height: 40px; background: #40E0D0; border: none; border-radius: 50%;" title="Turquoise Eau"></button>
+            <button onclick="changerCouleur('linear-gradient(#009E60, #EF2B2D)')" style="height: 40px; background: linear-gradient(#009E60, #EF2B2D); border: none; border-radius: 50%;" title="Dégradé Faso"></button>
+        </div>
+
+        <!-- Input file caché -->
+        <input type="file" id="filePicker" accept="image/*,video/*" style="display:none;">
         
-        <b>• Accédez à un Catalogue de Formations Premium :</b> Découvrez une sélection de formations de haute qualité à prix accessible. Apprenez à votre rythme, achetez uniquement le contenu qui vous intéresse et bénéficiez d'un accès instantané après validation.<br><br>
+        <button onclick="document.getElementById('filePicker').click()" style="background:#FFA000; color:white; width:100%; padding:12px; border-radius:8px; border:none; margin-top:10px; font-weight:bold;">
+            + Ajouter Photo ou Vidéo
+        </button>
         
-        <i>Prêt à vous lancer ? Que vous souhaitiez louer votre espace professionnel ou explorer nos formations, cliquez sur le bouton ci-dessous pour accéder à notre catalogue complet !</i>
-    </p>
-    
-    <button onclick="ouvrirCatalogue()" style="background: red; color: white; font-weight: bold; font-size: 18px; margin-top: 15px; width: 100%;">Découvrir le catalogue ➔</button>
-    
-    <button onclick="ouvrirAbout()" style="background: #9c27b0; color: white; font-weight: bold; font-size: 18px; margin-top: 10px; width: 100%;">En savoir plus sur KOALA 👤</button>
-</div>
-
-<div id="aboutBox" class="box" style="display:none; text-align: justify;">
-    <h2 style="color: #9c27b0; text-align: center;">À Propos de KOALA</h2>
-    <p><i>"L'art est une copie de la copie, savoir copier est un art."</i></p>
-    <p>Je suis KOALA, étudiant au département d'études germaniques à l'Université Joseph Ki-Zerbo. Bienvenue dans mon univers.</p>
-    <p>Au-delà de mes études de langues, je suis un passionné de création et d'innovation. Pour moi, chaque idée, chaque projet et chaque outil numérique est une forme d'art. Je suis convaincu que la capacité à s'inspirer du monde qui nous entoure, à l'analyser et à le transformer est ce qui définit le véritable créateur. C'est de cette philosophie qu'est née la plateforme KOALA.</p>
-    <p>Mon objectif avec cet espace est simple : offrir à chacun les outils pour partager son savoir, sa créativité et ses ressources de manière simple, sécurisée et accessible. Je conçois cette plateforme comme un pont entre l'apprentissage et l'entrepreneuriat numérique.</p>
-    
-    <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; margin-top: 20px;">
-        <h3 style="margin-top: 0;">Besoin d'échanger ?</h3>
-        <p>Je reste à votre entière disposition pour toute question concernant la plateforme ou vos projets.</p>
-        <p><strong>WhatsApp :</strong> +226 56 65 32 90</p>
+        <div style="margin:15px 0; font-size:14px;">
+            <input type="checkbox" id="compressCheck" checked>
+            <label for="compressCheck"> Compresser automatiquement</label>
+            <p style="font-size:12px; color:#666; margin:5px 0;">Pour économiser les méga</p>
+        </div>
+        
+        <button id="btnPublier" style="background:#2E7D32; color:white; width:100%; padding:15px; border-radius:8px; border:none; font-weight:bold; font-size:16px;">PUBLIER</button>
+        <button onclick="fermerPopup()" style="background:#D32F2F; color:white; width:100%; padding:10px; border-radius:8px; border:none; margin-top:10px;">Annuler</button>
     </div>
-
-    <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px; width: 100%;">⬅ Retour à l'accueil</button>
-</div>
-
-<div id="catalogBox" class="box" style="display:none; max-width: 750px;">
-    <button onclick="deconnexion()" style="background:red; color:white; font-size:12px; padding:5px; margin-bottom:10px; width:auto;">🔴 Déconnexion</button>
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-        <h3 style="margin: 0; color: green;">Catalogue des formations</h3>
-        <h3 id="compteurEspaces" style="margin: 0; color: #2196F3; text-align: right;">Chargement...</h3>
-    </div>
-
-    <input type="text" id="searchInput" placeholder="Rechercher par numéro (ex: 30)..." onkeyup="filtrerEspaces()" style="width: 100%; padding: 10px; margin-top: 15px; border: 1px solid #ccc; border-radius: 5px;">
-
-    <button onclick="ouvrirEspaceLocatairePrive()" style="background:#9c27b0; color:white; font-weight:bold; margin-top:15px; margin-bottom:15px; font-size:14px;">
-        🛠 Accéder à mon Espace Locataire
-    </button>
-
-    <div class="spaces-list-vertical" id="spacesContainer"></div>
-
-    <button onclick="retourVersBienvenu()" style="background:#666; color:white; margin-top: 20px;">⬅ Retour à l'accueil</button>
-</div>
-
-<!-- Tout le contenu transactionnel est maintenant DANS siteBox -->
-<div class="box" id="siteBox" style="display:none;">
-    <h2 id="titreAchat">📘 Accès Service</h2>
-
-    <div id="vendeurCounterBox" class="vendeur-counter-box" style="display: none;" onclick="afficherBoutonRetrait()">
-        💰 Vos Gains Accumulés : <span id="soldeCompteur">0</span> F CFA
-        <button id="btnDeclencherRetrait" style="display: none; background: white; color: #9c27b0; font-weight: bold; margin-top: 10px; width: auto; padding: 5px 15px;" onclick="ouvrirInterfaceRetrait(event)">Retirer</button>
-    </div>
-
-    <div id="retraitInterfaceBox" class="retrait-box">
-        <h3 style="color: #856404;">📱 Retrait sécurisé</h3>
-        <input type="tel" id="retraitOrangePhone" placeholder="+225xxxxxxxxxx">
-        <input type="number" id="retraitMontant" placeholder="Montant à retirer">
-        <button onclick="validerDemandeRetrait()" style="background: green; color: white; font-weight: bold;">Valider</button>
-        <button onclick="fermerInterfaceRetrait()" style="background: #666; color: white;">Annuler</button>
-    </div>
-
-    <div id="zonePaiementStandard" style="text-align: center; margin: 20px 0; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
-        <h3 style="color: #333; margin-bottom: 15px;">💰 Paiement Sécurisé</h3>
-        <input type="tel" id="inputPhonePaiement" placeholder="Votre numéro de paiement" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">
-        <button id="payBtn" onclick="payer()" style="background: #28a745; color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; width: 100%; font-size: 16px;">Payer maintenant</button>
-    </div>
-
-    <div id="zoneVerificationCode" style="display:none; margin-top: 15px; text-align: center;">
-        <label style="font-weight: bold; color: #333;">Code secret :</label>
-        <input type="text" id="code" readonly style="width: 100%; padding: 10px; border: 2px solid #9c27b0; border-radius: 5px;">
-    </div>
-
-    <div id="formationAccessZone" style="display:none; margin-top: 20px; border-top: 2px solid green; padding-top: 15px;">
-        <h3 style="color: green;">📚 Formation débloquée</h3>
-        <button id="btnVoirFichier" onclick="ouvrirPDF()" style="background: #ff5722; color: white;">👁️ Voir le PDF</button>
-        <button id="btnTelechargerFichier" onclick="telechargerPDF()" style="background: green; color: white;">⬇️ Télécharger</button>
-    </div>
-
-    <div id="uploadZone">
-        <h3 style="color:#1565c0;">🏗️ Configuration de votre Espace</h3>
-        <input type="text" id="descFichier" maxlength="60" placeholder="Description du Pack...">
-        <input type="tel" id="numDepot" placeholder="Numéro de réception...">
-        <input type="number" id="prixEspace" placeholder="Prix de vente...">
-        <input type="file" id="fileInput1">
-        <input type="file" id="fileInput2">
-        <input type="file" id="fileInput3">
-        <button id="btnValiderEspace" onclick="validerConfigurationEspace()" style="background:#1565c0; color:white; font-weight:bold;">🚀 Publier</button>
-        <button onclick="deconnexion()" style="background:red; color:white;">Déconnexion</button>
-    </div>
-
-    <button onclick="changerDePage('catalogBox')" style="background:#666; color:white; width:100%; margin-top:20px; padding:15px; font-weight:bold;">⬅ Retour au catalogue</button>
-</div>
-
-<div id="zoneNotifications" style="display:none; position:fixed; top:50px; right:10px; background:white; border:1px solid #ccc; padding:15px; width:250px; z-index:9999; border-radius:10px;">
-    <h3>Notifications</h3>
-    <div id="listeNotifications"></div>
-    <button onclick="fermerNotifications()" style="background:#666; color:white; width:100%;">Fermer</button>
 </div>
 
 <script>
-const SUPABASE_URL = "https://gkqlmpkmzfvurkzgrjlm.supabase.co";
-const SUPABASE_KEY = "sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr";
-
-const phoneUtilisateur = localStorage.getItem("phone");
-
-let countdown, checkInterval, essais = 0, timerStarted = false, derniereVerification = "";
-let appareilID = obtenirAppareilID();
-let articleSelectionne = "", montantSelectionne = 300, expirationDateGlobale = null, currentRole = "sous_client"; 
-let currentPaymentId = null;
-
-let vendeurCodeSecretMasque = "";
-let soldeVendeurActuel = 0;
-let numEspaceEnCoursGestion = null;
-
-let urlFichierAchete = "";
-function genererIdentifiantSecours() { return 'dev-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36); }
-function obtenirAppareilID() {
-let id = localStorage.getItem("appareilID");
-if (!id) { id = genererIdentifiantSecours(); localStorage.setItem("appareilID", id); }
-return id;
-}
-
-function changerDePage(idAffiche) {
-    // On ne garde dans la liste que les blocs principaux
-    const pages = ["loginBox", "welcomeBox", "catalogBox", "siteBox", "aboutBox", "zoneNotifications"];
-    
-    pages.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = "none";
-    });
-
-    const target = document.getElementById(idAffiche);
-    if (target) {
-        target.style.display = "block";
-    }
-}
-
-function connexion(){
-    const phone = document.getElementById("loginPhone").value.trim();
-    if(!phone || phone.length < 8){ alert("Numéro invalide ❌"); return; }
-    localStorage.setItem("phone", phone);
-    changerDePage("welcomeBox");
-    restaurerCode();
-    surveillerConfirmation();
-}
-
-function abrirCatalogue() {
-    ouvrirCatalogue();
-}
-
-function ouvrirCatalogue() { 
-    changerDePage("catalogBox");
-    genererCatalogueEspaces(); 
-}
-async function reabonnerVendeur() {
-    const phone = localStorage.getItem("phone");
-    if (!phone) return alert("Numéro introuvable.");
-
-    // Envoi de la mise à jour vers Supabase
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}`, {
-        method: 'PATCH',
-        headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: 'actif' })
-    });
-
-    if (res.ok) {
-        alert("✅ Espace réactivé avec succès !");
-        location.reload(); // Recharge la page pour actualiser l'affichage
-    } else {
-        alert("❌ Erreur lors de la réactivation.");
-    }
-}
-
-function retourVersBienvenu() { 
-    changerDePage("welcomeBox"); 
-}
-
-function retourAuCatalogue() { 
-    changerDePage("catalogBox"); 
-}
-
-async function ouvrirEspaceLocatairePrive() {
-    const numeroSaisi = prompt("🔒 Espace Privé Vendeur\n\nEntrez votre numéro de téléphone :");
-    if(!numeroSaisi) return;
-    const codeSaisi = prompt("Entrez votre code de connexion unique :");
-    if(!codeSaisi) return;
-
-    try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${numeroSaisi.trim()}&code=eq.${codeSaisi.trim()}&status=eq.confirmé`, {
-            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-        });
-        const data = await res.json();
-        
-        if(!data || data.length === 0) {
-            alert("Numéro ou code incorrect pour cet espace ! ❌");
-            return;
-        }
-        
-        localStorage.setItem("phone", numeroSaisi.trim());
-        const p = data[data.length - 1];
-        localStorage.setItem("mon_espace_num", p.espace_num);
-        
-        numEspaceEnCoursGestion = p.espace_num;
-        currentRole = "vendeur";
-        
-        // --- NETTOYAGE ICI ---
-        // On s'assure que le titre ne contient pas de nom de fichier parasite
-        document.getElementById("titreAchat").innerText = `🏗️ Gestion : Espace ${p.espace_num || '01'}`;
-        
-        document.getElementById("catalogBox").style.display = "none";
-        document.getElementById("siteBox").style.display = "block";
-
-        await restaurerCode();
-        document.getElementById("vendeurCounterBox").style.display = "block";
-        
-        // S'assurer que la zone de paiement standard est bien cachée pour un vendeur
-        document.getElementById("zonePaiementStandard").style.display = "none";
-        
-    } catch(e) {
-        console.error(e);
-        alert("Erreur lors de la vérification de vos accès ❌");
-    }
-}
-
-async function selectionnerAchat(nom, montant, espaceNum = null) {
-    const phone = localStorage.getItem("phone");
-    const monEspaceLoue = localStorage.getItem("mon_espace_num"); 
-
-    if (espaceNum && monEspaceLoue && espaceNum.toString() === monEspaceLoue.toString()) {
-        currentRole = "vendeur";
-    } else {
-        currentRole = "sous_client";
+    // Fonctions Profil
+    function toggleMenu() {
+        const menu = document.getElementById('menuProfil');
+        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
     }
 
-    if (montant >= 1000 && nom.startsWith("Location Espace")) {
-        if (phone) {
-            const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&select=id`, {
-                headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-            });
-            const checkData = await checkRes.json();
-            
-            if (checkData && checkData.length > 0) {
-                alert("❌ Impossible : vous possédez déjà un espace actif.");
-                return;
-            }
-        }
+    function modifierPhoto() {
+        alert("Ouverture de la galerie pour modifier ta photo de profil.");
     }
 
-    articleSelectionne = nom;
-    montantSelectionne = montant;
-    numEspaceEnCoursGestion = espaceNum;
-    
-    document.getElementById("titreAchat").innerText = nom;
-    document.getElementById("inputPhonePaiement").value = phone || "";
-    
-    // Utilisation de changerDePage pour assurer une navigation propre
-    changerDePage("siteBox");
-
-    // S'assurer que la zone de paiement est bien affichée
-    const zonePaiement = document.getElementById("zonePaiementStandard");
-    if (zonePaiement) zonePaiement.style.display = "block";
-
-    if (currentRole !== "vendeur") {
-        document.getElementById("vendeurCounterBox").style.display = "none";
-        document.getElementById("uploadZone").style.display = "none";
-        document.getElementById("retraitInterfaceBox").style.display = "none";
+    function enregistrerProfil() {
+        const nom = document.getElementById('nomInput').value;
+        const prenom = document.getElementById('prenomInput').value;
+        alert("Informations enregistrées pour : " + nom + " " + prenom);
+        toggleMenu();
     }
-    
-    const btn = document.getElementById("payBtn");
-    btn.innerText = "Payer maintenant";
-    btn.disabled = false;
-}
 
-function deconnexion() {
-    clearInterval(checkInterval);
-    clearInterval(countdown);
-    localStorage.removeItem("phone");
-
-    if (document.getElementById("loginPhone")) document.getElementById("loginPhone").value = "";
-    if (document.getElementById("code")) document.getElementById("code").value = "";
-
-    changerDePage("loginBox");
-    
-    if (document.getElementById("topcode")) document.getElementById("topcode").style.display = "none";
-    if (document.getElementById("btnFactureFixe")) document.getElementById("btnFactureFixe").style.display = "none";
-    
-    if (document.getElementById("timer")) document.getElementById("timer").style.display = "none";
-    if (document.getElementById("uploadZone")) document.getElementById("uploadZone").style.display = "none";
-    if (document.getElementById("formationAccessZone")) document.getElementById("formationAccessZone").style.display = "none";
-    if (document.getElementById("vendeurCounterBox")) document.getElementById("vendeurCounterBox").style.display = "none";
-    if (document.getElementById("retraitInterfaceBox")) document.getElementById("retraitInterfaceBox").style.display = "none";
-    
-    timerStarted = false;
-    currentPaymentId = null;
-    vendeurCodeSecretMasque = "";
-    soldeVendeurActuel = 0;
-    numEspaceEnCoursGestion = null;
-    urlFichierAchete = "formation2026.pdf";
-
-    location.reload();
-}
-
-async function genererCatalogueEspaces() {
-    const spacesContainer = document.getElementById("spacesContainer");
-    spacesContainer.innerHTML = "";
-    
-    const tranches = [
-        { prix: 1000, start: 1, end: 50, label: "Espace Classique (10 Mo)" },
-        { prix: 2000, start: 51, end: 100, label: "Espace Confort (20 Mo)" },
-        { prix: 4000, start: 101, end: 150, label: "Espace Pro (50 Mo)" },
-        { prix: 5000, start: 151, end: 200, label: "Espace Premium (100 Mo)" }
-    ];
-
-    try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?status=eq.confirmé&select=*`, {
-            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-        });
-        const data = await res.json();
-        
-        tranches.forEach(tranche => {
-            const titre = document.createElement("div");
-            titre.className = "titre-louer-bleu";
-            titre.innerHTML = `<strong>${tranche.label}</strong>`;
-            spacesContainer.appendChild(titre);
-
-            for (let i = tranche.start; i <= tranche.end; i++) {
-                const donneeX = data.find(item => parseInt(item.espace_num) === i);
-                const formattedNum = i < 10 ? '0' + i : i;
-                
-                const row = document.createElement("div");
-                row.className = "espace-ligne";
-                row.setAttribute("data-num", i);
-
-                if (donneeX) {
-                    row.innerHTML = `
-                        <div class="esp-num">${formattedNum}</div>
-                        <div class="esp-desc"><b>${donneeX.description || 'Espace Occupé'}</b></div>
-                        <button style="background:green; color:white;" onclick="selectionnerAchat('${(donneeX.name_file || '').replace(/'/g, "\\'")}', ${donneeX.prix_vente || tranche.prix}, ${i})">
-                            Suivre (${donneeX.prix_vente || tranche.prix} F)
-                        </button>
-                    `;
-                } else {
-                    row.innerHTML = `
-                        <div class="esp-num">${formattedNum}</div>
-                        <div class="esp-desc" style="color:#2196F3;">Espace Libre</div>
-                        <button style="background:#2196F3; color:white;" onclick="selectionnerAchat('Location Espace ${formattedNum}', ${tranche.prix}, ${i})">
-                            Louer (${tranche.prix} F)
-                        </button>
-                    `;
-                }
-                spacesContainer.appendChild(row);
-            }
-        });
-    } catch (e) {
-        console.error("Erreur chargement catalogue", e);
+    // Fonctions Login/Statut
+    function afficherCreation() {
+        document.getElementById('loginInterface').style.display = 'none';
+        document.getElementById('creationInterface').style.display = 'block';
     }
-}
 
-window.onload = function() {
-    const phone = localStorage.getItem("phone");
-    
-    if (phone) {
-        changerDePage("welcomeBox");
-        restaurerCode().catch(err => console.error(err));
-    } else {
-        changerDePage("loginBox");
+    function validerCreation() {
+        alert("Compte créé");
+        document.getElementById('creationInterface').style.display = 'none';
+        document.getElementById('loginInterface').style.display = 'block';
     }
-};
 
-async function restaurerCode(){
-    const phone = localStorage.getItem("phone");
-    if(!phone) return;
+    function seConnecter() {
+        alert("Connexion...");
+        ouvrirPopup();
+    }
 
-    if(currentRole === "vendeur") {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&status=eq.confirmé&amount=eq.1000&select=*`, {
-            headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-        });
-        const data = await res.json();
-        if(!data || data.length===0) return;
-        const p = data[data.length - 1];
-        currentPaymentId = p.id;
-        numEspaceEnCoursGestion = p.espace_num;
+    function ouvrirPopup() {
+        document.getElementById('popupPublier').style.display = 'block';
+    }
 
-        const maintenant = new Date();
-        const dateExp = p.expires_at ? new Date(p.expires_at) : null;
-        const estExpire = dateExp ? dateExp < maintenant : false;
+    function fermerPopup() {
+        document.getElementById('popupPublier').style.display = 'none';
+    }
 
-        vendeurCodeSecretMasque = p.code || "";
-        
-        try {
-            const urlFichierAChasser = p.name_file;
-            let totalGains = 0;
-            
-            if(urlFichierAChasser && urlFichierAChasser !== "") {
-                const resAchats = await fetch(`${SUPABASE_URL}/rest/v1/payments?name_file=eq.${encodeURIComponent(urlFichierAChasser)}&status=eq.confirmé&select=amount`, {
-                    headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-                });
-                const dataAchats = await resAchats.json();
-                if(dataAchats && dataAchats.length > 0) {
-                    dataAchats.forEach(achat => {
-                        if(achat.amount !== 1000) { 
-                            totalGains += parseInt(achat.amount || 0);
-                        }
-                    });
-                }
-            }
-            
-            const resRetraits = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&select=amount,status`, {
-                headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-            });
-            const dataRetraits = await resRetraits.json();
-            let totalRetire = 0;
-            if(dataRetraits && dataRetraits.length > 0) {
-                dataRetraits.forEach(r => { 
-                    if (r.status && r.status.indexOf("retrait_") === 0) {
-                        totalRetire += parseInt(r.amount || 0); 
-                    }
-                });
-            }
-            
-            soldeVendeurActuel = totalGains - totalRetire;
-            if(soldeVendeurActuel < 0) soldeVendeurActuel = 0;
-            
-        } catch(errGains) {
-            console.error("Erreur calcul automatique des gains:", errGains);
-            soldeVendeurActuel = 0;
-        }
-
-        document.getElementById("soldeCompteur").innerText = soldeVendeurActuel;
-        document.getElementById("vendeurCounterBox").style.display = "block";
-
-        if(estExpire) {
-            document.getElementById("topcode").style.display="block";
-            document.getElementById("topcode").innerHTML = "🟥 Espace Expiré (30 jours)";
-            document.getElementById("uploadZone").style.display = "block";
-            document.getElementById("btnValiderEspace").innerText = "⚠ Réactiver mon Espace (1000 Fr)";
-            document.getElementById("btnValiderEspace").onclick = reabonnerVendeur;
-            const notifFinMois = {
-                type: "Fin de mois",
-                date: new Date().toLocaleString(),
-                message: "Votre abonnement est échu. Renouvelez pour continuer à vendre et retirer vos fonds."
-            };
-            sauvegarderEtAfficherNotif(notifFinMois);
+    function changerCouleur(couleur) {
+        const texte = document.getElementById('texteStatut');
+        texte.style.background = couleur;
+        const couleursSombres = ['#002366', '#8A2BE2', '#1A1A1A', 'linear-gradient(#009E60, #EF2B2D)'];
+        if (couleursSombres.includes(couleur)) {
+            texte.style.color = 'white';
         } else {
-            document.getElementById("topcode").style.display = "block";
-            document.getElementById("btnFactureFixe").style.display = "block";
-            document.getElementById("topcode").innerHTML = `
-                <div style="text-align: center;">
-                    <div>🔒 Mon Espace Loué (Actif)</div>
-                    <div onclick="ouvrirNotifications()" style="cursor:pointer; font-size: 24px; margin-top: 5px;">
-                        🔔 <span id="badgeNotif" style="color: red; font-size: 16px; font-weight: bold; display: none;">!</span>
-                    </div>
-                </div>
-            `;
-            document.getElementById("code").value = "";
-            document.getElementById("uploadZone").style.display = "block";
-            if(p.description) { document.getElementById("descFichier").value = p.description; }
-            if(p.num_depot) { document.getElementById("numDepot").value = p.num_depot; }
-            if(p.prix_vente) { document.getElementById("prixEspace").value = p.prix_vente; }
-        }
-    } else {
-        if (!articleSelectionne || articleSelectionne.startsWith("Location Espace")) return;
-
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?phone=eq.${phone}&name_file=eq.${encodeURIComponent(articleSelectionne)}&status=eq.confirmé&select=*`, {
-            headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-        });
-        const data = await res.json();
-        
-        if(!data || data.length === 0) {
-            document.getElementById("topcode").style.display = "none";
-            document.getElementById("btnFactureFixe").style.display = "none";
-            document.getElementById("code").value = "";
-            document.getElementById("formationAccessZone").style.display = "none";
-            return;
-        }
-        
-        const p = data[data.length - 1];
-        currentPaymentId = p.id;
-        const maintenant = new Date();
-        const dateExp = p.expires_at ? new Date(p.expires_at) : null;
-        const estExpire = dateExp ? dateExp < maintenant : false;
-
-        if(!estExpire) {
-            document.getElementById("topcode").style.display="block";
-            document.getElementById("btnFactureFixe").style.display = "block";
-            document.getElementById("topcode").innerHTML = "🔑 Code actif : " + p.code;
-            document.getElementById("code").value = p.code;
-            expirationDateGlobale = p.expires_at;
-            urlFichierAchete = p.name_file ? p.name_file : "formation2026.pdf";
-            
-            const urlMinuscule = urlFichierAchete.toLowerCase();
-            if (urlMinuscule.includes('.mp4') || urlMinuscule.includes('.mov') || urlMinuscule.includes('.avi') || urlMinuscule.includes('.mkv')) {
-                document.getElementById("btnVoirFichier").innerText = "👁️ Voir la Vidéo";
-                document.getElementById("btnTelechargerFichier").innerText = "⬇️ Télécharger la Vidéo";
-            } else {
-                document.getElementById("btnVoirFichier").innerText = "👁️ Voir le PDF";
-                document.getElementById("btnTelechargerFichier").innerText = "⬇️ Télécharger le PDF";
-            }
-            document.getElementById("formationAccessZone").style.display = "block";
-            if(!timerStarted){ startTimer(p.expires_at); timerStarted = true; }
+            texte.style.color = 'black';
         }
     }
-}
-async function validerDemandeRetrait() {
-    const phoneRetrait = document.getElementById("retraitOrangePhone").value.trim();
-    const montantRetrait = document.getElementById("retraitMontant").value.trim();
-    const phoneVendeur = localStorage.getItem("phone");
-
-    // 1. VÉRIFICATION DE L'ABONNEMENT (NOUVEAU)
-    // On compare la date d'aujourd'hui avec la date d'expiration
-    const maintenant = new Date();
-    const dateExp = expirationDateGlobale ? new Date(expirationDateGlobale) : new Date(0);
-    
-    if (maintenant > dateExp) {
-        alert("⚠️ Votre période de location d'espace est arrivée à échéance. Veuillez procéder au renouvellement de votre abonnement pour être en mesure d'effectuer un retrait de vos gains.");
-        return;
-    }
-
-    // 2. VÉRIFICATIONS DE BASE (TON CODE ACTUEL)
-    if(!phoneRetrait || !montantRetrait) {
-        alert("Veuillez remplir tous les champs ! ❌");
-        return;
-    }
-
-    if (!phoneRetrait.startsWith("+")) {
-        alert("Veuillez entrer le numéro au format international (commençant par +) ! ❌");
-        return;
-    }
-
-    // 3. VÉRIFICATION DU SOLDE (TON CODE ACTUEL)
-    const montant = parseInt(montantRetrait);
-    if(montant > soldeVendeurActuel) {
-        alert(`Solde insuffisant ! Votre solde actuel est de ${soldeVendeurActuel} F CFA. ❌`);
-        return;
-    }
-
-// 4. ENVOI DE LA DEMANDE
-    try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments`, {
-            method: "POST",
-            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-                phone: phoneVendeur,
-                status: "retrait_en_attente",
-                amount: montant,
-                role: "vendeur",
-                description: `Demande retrait vers le numéro : ${phoneRetrait}`
-            })
-        });
-
-        if(res.ok) {
-            soldeVendeurActuel -= montant;
-            document.getElementById("soldeCompteur").innerText = soldeVendeurActuel;
-            alert("Votre demande de retrait a été transmise avec succès ! Elle sera validée après traitement. 🚀");
-            fermerInterfaceRetrait();
-            await restaurerCode();
-        } else {
-            alert("Une erreur est survenue lors de la soumission de votre retrait. ❌");
-        }
-    } catch(e) {
-        alert("Erreur de connexion réseau ❌");
-    }
-}
-// --- FONCTION PAYER (Paiement Client) ---
-async function payer() {
-    const phoneInput = document.getElementById("inputPhonePaiement").value.trim();
-    
-    if (!phoneInput || phoneInput.length < 8) {
-        alert("Veuillez entrer un numéro de téléphone valide.");
-        return;
-    }
-
-    const btn = document.getElementById("payBtn");
-    btn.innerText = "Traitement en cours...";
-    btn.disabled = true;
-
-    const response = await fetch("https://gkqlmpkmzfvurkzgrjlm.supabase.co/functions/v1/hyper-task", {
-        method: "POST",
-        headers: { 
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + SUPABASE_KEY 
-        },
-        body: JSON.stringify({
-            action: "initier_paiement_direct",
-            phone: phoneInput,
-            amount: montantSelectionne,
-            description: articleSelectionne,
-            role: currentRole,
-            espace_num: numEspaceEnCoursGestion
-        })
-    });
-
-    const data = await response.json();
-    console.log("RÉPONSE COMPLÈTE DE SUPABASE :", JSON.stringify(data));
-
-    if (data.success) {
-        if (data.url) {
-            window.location.href = data.url;
-        } else {
-            alert("Demande de paiement envoyée sur le numéro " + phoneInput + ". Veuillez valider avec votre code PIN.");
-        }
-    } else {
-        let messageErreur = data.data ? JSON.stringify(data.data) : (data.error || "Erreur inconnue");
-        alert("Erreur de paiement : " + messageErreur);
-        btn.innerText = "Payer maintenant";
-        btn.disabled = false;
-    }
-}
-
-function afficherBoutonRetrait() {
-    const btn = document.getElementById("btnDeclencherRetrait");
-    if (btn.style.display === "none") {
-        btn.style.display = "inline-block";
-    } else {
-        btn.style.display = "none";
-    }
-}
-
-function ouvrirInterfaceRetrait(event) {
-    event.stopPropagation();
-    changerDePage("retraitInterfaceBox");
-}
-
-function fermerInterfaceRetrait() {
-    changerDePage("vendeurCounterBox");
-}
-
-async function validerConfigurationEspace() {
-    const desc = document.getElementById("descFichier").value;
-    const num = document.getElementById("numDepot").value;
-    const prix = parseInt(document.getElementById("prixEspace").value);
-    
-    const fichiers = [
-        document.getElementById("fileInput1").files[0],
-        document.getElementById("fileInput2").files[0],
-        document.getElementById("fileInput3").files[0]
-    ].filter(f => f !== undefined);
-
-    if (!desc || !num || !prix) {
-        alert("⚠️ Veuillez remplir tous les champs !");
-        return;
-    }
-
-    let limiteMo = 10;
-    if (prix >= 5000) limiteMo = 100;
-    else if (prix >= 4000) limiteMo = 50;
-    else if (prix >= 2000) limiteMo = 20;
-    else limiteMo = 10;
-
-    const tailleTotaleOctets = fichiers.reduce((acc, f) => acc + f.size, 0);
-    const tailleTotaleMo = tailleTotaleOctets / (1024 * 1024);
-
-    if (tailleTotaleMo > limiteMo) {
-        alert(`⚠️ Cet espace est limité à ${limiteMo} Mo.\nVos fichiers pèsent au total ${tailleTotaleMo.toFixed(2)} Mo.\nVeuillez réduire la taille de vos fichiers.`);
-        return;
-    }
-
-    const btn = document.getElementById("btnValiderEspace");
-    btn.innerText = "Envoi en cours...";
-    btn.disabled = true;
-
-    try {
-        for (let i = 0; i < fichiers.length; i++) {
-            const file = fichiers[i];
-            const fileName = `${numEspaceEnCoursGestion}_file_${i + 1}_${file.name}`;
-            
-            await fetch(`${SUPABASE_URL}/storage/v1/object/fichiers-locataires/${fileName}`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
-                body: file
-            });
-        }
-
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/payments?id=eq.${currentPaymentId}`, {
-            method: 'PATCH',
-            headers: { 
-                'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 
-                'Content-Type': 'application/json', 'Prefer': 'return=representation' 
-            },
-            body: JSON.stringify({
-                description: desc,
-                num_depot: num,
-                prix_vente: prix,
-                name_file: fichiers.map(f => f.name).join('; ')
-            })
-        });
-
-        if (res.ok) {
-            alert("✅ Espace mis à jour avec succès !");
-            location.reload();
-        } else {
-            alert("❌ Erreur lors de l'enregistrement des données.");
-        }
-    } catch (e) {
-        console.error(e);
-        alert("Une erreur est survenue lors de l'envoi.");
-    } finally {
-        btn.innerText = "🚀 Valider et publier mon espace";
-        btn.disabled = false;
-    }
-}
-
-function filtrerEspaces() {
-    const filter = document.getElementById("searchInput").value.toLowerCase();
-    const rows = document.getElementsByClassName("espace-ligne");
-    for (let row of rows) {
-        const num = row.querySelector(".esp-num").innerText;
-        row.style.display = num.includes(filter) ? "" : "none";
-    }
-}
-
-function ouvrirAbout() {
-    changerDePage("aboutBox");
-}
-
-function retourVersBienvenu() {
-    changerDePage("welcomeBox");
-}
-
-function chargerNotifications(liste) {
-    const container = document.getElementById("listeNotifications");
-    container.innerHTML = "";
-    
-    liste.forEach(item => {
-        const div = document.createElement("div");
-        div.style.borderBottom = "1px solid #eee";
-        div.style.padding = "10px 0";
-        
-        div.innerHTML = `
-            <div style="font-weight:bold; color:#d32f2f;">${item.type}</div>
-            <div style="font-size:11px; color:#888;">${item.date}</div>
-            <div style="margin-top:5px; font-size:14px;">${item.message}</div>
-        `;
-        container.appendChild(div);
-    });
-    
-    const badge = document.getElementById("badgeNotif");
-    if (badge) badge.style.display = "inline";
-}
-
-async function sauvegarderEtAfficherNotif(notif) {
-    await fetch(`${SUPABASE_URL}/rest/v1/notifications`, {
-        method: 'POST',
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            phone: phoneUtilisateur,
-            type: notif.type, 
-            message: notif.message, 
-            date: notif.date 
-        })
-    });
-
-    const badge = document.getElementById("badgeNotif");
-    if (badge) badge.style.display = "inline";
-    
-    recupererToutesLesNotifications(); 
-}
-
-function ouvrirNotifications() {
-    const zone = document.getElementById("zoneNotifications");
-    if (zone) {
-        zone.style.display = "block";
-        recupererToutesLesNotifications();
-    }
-}
-
-function fermerNotifications() {
-    const zone = document.getElementById("zoneNotifications");
-    if (zone) {
-        zone.style.display = "none";
-    }
-}
-
-function allerVersPaiement() {
-    changerDePage("siteBox");
-    const zonePaiement = document.getElementById("zonePaiementStandard");
-    if (zonePaiement) zonePaiement.style.display = "block";
-}
-
-function fermerPaiement() {
-    const paiementInterface = document.getElementById("paiementInterface");
-    if (paiementInterface) paiementInterface.style.display = "none";
-    changerDePage("catalogBox");
-}
-
-function declencherNotifRetrait(montant, nouveauSolde) {
-    console.log("Notif : Retrait de " + montant + " demandé.");
-}
-
-function changerDePage(idAffiche) {
-    const pages = ["loginBox", "welcomeBox", "catalogBox", "siteBox", "vendeurCounterBox", "zonePaiementStandard", "zoneVerificationCode", "uploadZone", "formationAccessZone", "retraitInterfaceBox", "aboutBox", "zoneNotifications"];
-    
-    pages.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = "none";
-    });
-
-    const target = document.getElementById(idAffiche);
-    if (target) target.style.display = "block";
-}
 </script>
+
 </body>
 </html>
