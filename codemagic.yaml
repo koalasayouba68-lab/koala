@@ -5,6 +5,7 @@ workflows:
     instance_type: mac_mini_m1
     environment:
       flutter: stable
+      java: 17
     scripts:
       - name: Get Flutter packages
         script: flutter pub get
