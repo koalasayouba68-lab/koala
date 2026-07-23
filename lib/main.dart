@@ -1,0 +1,45 @@
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://gkqlmpkmzfvurkzgrjlm.supabase.co',
+    anonKey: 'sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr',
+  );
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: StatutPage(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class StatutPage extends StatefulWidget {
+  @override
+  State<StatutPage> createState() => _StatutPageState();
+}
+
+class _StatutPageState extends State<StatutPage> {
+  late final WebViewController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadFlutterAsset('assets/index.html');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(body: WebViewWidget(controller: controller));
+  }
+}
