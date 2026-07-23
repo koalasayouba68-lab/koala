@@ -7,8 +7,6 @@ workflows:
       flutter: stable
       java: 17
     scripts:
-      - name: Clean old gradle
-        script: rm -rf android/.gradle android/build
       - name: Get Flutter packages
         script: flutter pub get
       - name: Build APK
