@@ -6,13 +6,9 @@ workflows:
     environment:
       flutter: stable
       java: 17
-      xcode: latest
     scripts:
-      - name: Force Kotlin 1.9.22
-        script: |
-          cd android
-          echo "kotlinVersion=1.9.22" >> gradle.properties
-          echo "kotlin.jvm.target=1.8" >> gradle.properties
+      - name: Clean old gradle
+        script: rm -rf android/.gradle android/build
       - name: Get Flutter packages
         script: flutter pub get
       - name: Build APK
