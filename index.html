@@ -154,6 +154,50 @@
             texte.style.color = 'black';
         }
     }
+    // 1. Récupérer les éléments
+const filePicker = document.getElementById('filePicker');
+const btnPublier = document.getElementById('btnPublier');
+const texteStatut = document.getElementById('texteStatut');
+
+// 2. Écouter quand l'utilisateur choisit un fichier pour afficher un aperçu
+filePicker.addEventListener('change', function(event) {
+    const fichier = event.target.files[0];
+    if (fichier) {
+        // On affiche un petit message pour confirmer que le fichier est bien pris en compte
+        alert("Fichier sélectionné : " + fichier.name);
+        
+        // Si c'est une image, on peut l'afficher en arrière-plan ou dans un aperçu
+        if (fichier.type.startsWith('image/')) {
+            const lecteur = new FileReader();
+            lecteur.onload = function(e) {
+                texteStatut.style.backgroundImage = `url(${e.target.result})`;
+                texteStatut.style.backgroundSize = 'cover';
+            }
+            lecteur.readAsDataURL(fichier);
+        }
+    }
+});
+
+// 3. Faire fonctionner le bouton PUBLIER
+btnPublier.addEventListener('click', function() {
+    const texte = texteStatut.value.trim();
+    
+    if (texte === "" && filePicker.files.length === 0) {
+        alert("Écris un message ou ajoute un fichier avant de publier ! ❌");
+        return;
+    }
+
+    // Simulation de la publication réussie
+    alert("✅ Statut publié avec succès ! (Simulation)");
+    
+    // On ferme le popup après publication
+    fermerPopup();
+    
+    // On nettoie les champs
+    texteStatut.value = "";
+    texteStatut.style.backgroundImage = "none";
+    filePicker.value = "";
+});
 </script>
 
 </body>
