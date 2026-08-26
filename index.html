@@ -142,6 +142,53 @@
         ouvrirPopup();
     }
 
+    async function chargerStatuts() {
+    try {
+        const { data: statuts, error } = await _supabase
+            .from('statuts')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const filContainer = document.querySelector('.fil-actualite'); 
+        if (!filContainer) return;
+
+        filContainer.innerHTML = "";
+
+        statuts.forEach(statut => {
+            const carte = document.createElement('div');
+            carte.className = "carte-statut";
+
+            let contenuMedia = "";
+            if (statut.media_url) {
+                if (statut.media_url.match(/\.(mp4|webm|ogg)$/i)) {
+                    contenuMedia = `<video src="${statut.media_url}" controls style="width: 100%; border-radius: 8px; margin-top: 10px;"></video>`;
+                } else {
+                    contenuMedia = `<img src="${statut.media_url}" alt="Média" style="width: 100%; border-radius: 8px; margin-top: 10px;">`;
+                }
+            }
+
+            carte.innerHTML = `
+                <div style="background: white; padding: 15px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <p style="margin: 0; font-size: 16px; color: #333;">${statut.texte || ""}</p>
+                    ${contenuMedia}
+                    <span style="font-size: 12px; color: #888; display: block; margin-top: 8px;">${new Date(statut.created_at).toLocaleString()}</span>
+                </div>
+            `;
+
+            filContainer.appendChild(carte);
+        });
+
+    } catch (error) {
+        console.error("Erreur :", error.message);
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    chargerStatuts();
+});
+
     function ouvrirPopup() {
         document.getElementById('popupPublier').style.display = 'block';
     }
@@ -187,7 +234,6 @@ filePicker.addEventListener('change', function(event) {
     }
 });
 
-// 3. Bouton PUBLIER avec gestion des Texte, Photos et Vidéos
 btnPublier.addEventListener('click', async function() {
     const texte = texteStatut.value.trim();
     const fichier = filePicker.files[0];
@@ -203,7 +249,6 @@ btnPublier.addEventListener('click', async function() {
     try {
         let mediaUrl = null;
 
-        // Si l'utilisateur a choisi une photo ou une vidéo, on l'envoie d'abord dans Supabase Storage
         if (fichier) {
             const fileName = Date.now() + '_' + fichier.name;
             const { data: uploadData, error: uploadError } = await _supabase.storage
@@ -214,7 +259,6 @@ btnPublier.addEventListener('click', async function() {
                 throw new Error("Erreur lors de l'envoi du fichier : " + uploadError.message);
             }
 
-            // Récupérer le lien public du fichier
             const { data: publicURLData } = _supabase.storage
                 .from('medias')
                 .getPublicUrl(fileName);
@@ -222,7 +266,6 @@ btnPublier.addEventListener('click', async function() {
             mediaUrl = publicURLData.publicUrl;
         }
 
-        // Ensuite, on enregistre le tout (texte + lien du média) dans la table 'statuts'
         const { error: insertError } = await _supabase
             .from('statuts')
             .insert([
@@ -236,12 +279,71 @@ btnPublier.addEventListener('click', async function() {
             throw insertError;
         }
 
-        alert("✅ Statut avec texte et média publié avec succès !");
-        
         fermerPopup();
         texteStatut.value = "";
         texteStatut.style.backgroundImage = "none";
         filePicker.value = "";
+
+        await chargerStatuts();
+
+    } catch (error) {
+        console.error("Erreur :", error.message);
+        alert("Erreur : " + error.message);
+    } finally {
+        btnPublier.innerText = "PUBLIER";
+        btnPublier.disabled = false;
+    }
+});btnPublier.addEventListener('click', async function() {
+    const texte = texteStatut.value.trim();
+    const fichier = filePicker.files[0];
+    
+    if (texte === "" && !fichier) {
+        alert("Écris un message ou ajoute un fichier avant de publier ! ❌");
+        return;
+    }
+
+    btnPublier.innerText = "Publication en cours...";
+    btnPublier.disabled = true;
+
+    try {
+        let mediaUrl = null;
+
+        if (fichier) {
+            const fileName = Date.now() + '_' + fichier.name;
+            const { data: uploadData, error: uploadError } = await _supabase.storage
+                .from('medias')
+                .upload(fileName, fichier);
+
+            if (uploadError) {
+                throw new Error("Erreur lors de l'envoi du fichier : " + uploadError.message);
+            }
+
+            const { data: publicURLData } = _supabase.storage
+                .from('medias')
+                .getPublicUrl(fileName);
+                
+            mediaUrl = publicURLData.publicUrl;
+        }
+
+        const { error: insertError } = await _supabase
+            .from('statuts')
+            .insert([
+                { 
+                    texte: texte,
+                    media_url: mediaUrl 
+                }
+            ]);
+
+        if (insertError) {
+            throw insertError;
+        }
+
+        fermerPopup();
+        texteStatut.value = "";
+        texteStatut.style.backgroundImage = "none";
+        filePicker.value = "";
+
+        await chargerStatuts();
 
     } catch (error) {
         console.error("Erreur :", error.message);
