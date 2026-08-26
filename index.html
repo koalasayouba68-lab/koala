@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
@@ -102,7 +103,12 @@
 </div>
 
 <script>
-    // Fonctions Profil
+    // 1. Configuration Supabase avec la nouvelle clé Publishable
+    const SUPABASE_URL = 'https://ton-projet.supabase.co'; // Remplace par l'URL de ton projet Supabase
+    const SUPABASE_ANON_KEY = 'sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr'; // Ta nouvelle clé publique
+
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // 2. Fonctions Profil
     function toggleMenu() {
         const menu = document.getElementById('menuProfil');
         menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
@@ -166,14 +172,17 @@ filePicker.addEventListener('change', function(event) {
         // On affiche un petit message pour confirmer que le fichier est bien pris en compte
         alert("Fichier sélectionné : " + fichier.name);
         
-        // Si c'est une image, on peut l'afficher en arrière-plan ou dans un aperçu
+       // Si c'est une image, on peut l'afficher en arrière-plan ou dans un aperçu
         if (fichier.type.startsWith('image/')) {
             const lecteur = new FileReader();
             lecteur.onload = function(e) {
                 texteStatut.style.backgroundImage = `url(${e.target.result})`;
-                texteStatut.style.backgroundSize = 'cover';
-            }
-            lecteur.readAsDataURL(fichier);
+                texteStatut.style.backgroundSize = 'contain';
+                texteStatut.style.backgroundRepeat = 'no-repeat';
+                texteStatut.style.backgroundPosition = 'center';
+            } // L'accolade ferme bien la fonction onload ici
+            
+            lecteur.readAsDataURL(fichier); // Et on lance la lecture juste après
         }
     }
 });
