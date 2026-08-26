@@ -187,25 +187,48 @@ filePicker.addEventListener('change', function(event) {
     }
 });
 
-// 3. Faire fonctionner le bouton PUBLIER
-btnPublier.addEventListener('click', function() {
+// 3. Faire fonctionner le bouton PUBLIER avec Supabase
+btnPublier.addEventListener('click', async function() {
     const texte = texteStatut.value.trim();
+    const fichier = filePicker.files[0];
     
-    if (texte === "" && filePicker.files.length === 0) {
+    if (texte === "" && !fichier) {
         alert("Écris un message ou ajoute un fichier avant de publier ! ❌");
         return;
     }
 
-    // Simulation de la publication réussie
-    alert("✅ Statut publié avec succès ! (Simulation)");
-    
-    // On ferme le popup après publication
-    fermerPopup();
-    
-    // On nettoie les champs
-    texteStatut.value = "";
-    texteStatut.style.backgroundImage = "none";
-    filePicker.value = "";
+    // Désactiver le bouton pendant l'envoi pour patienter
+    btnPublier.innerText = "Publication en cours...";
+    btnPublier.disabled = true;
+
+    try {
+        let mediaUrl = null;
+
+        // Si l'utilisateur a choisi une photo ou vidéo, on peut la stocker (si ton Storage est configuré)
+        // Pour l'instant, on enregistre au moins le texte dans la table 'statuts'
+        const { data, error } = await _supabase
+            .from('statuts')
+            .insert([{ texte: texte }]);
+
+        if (error) {
+            throw error;
+        }
+
+        alert("✅ Statut publié et enregistré dans Supabase avec succès !");
+        
+        // Fermer le popup et nettoyer
+        fermerPopup();
+        texteStatut.value = "";
+        texteStatut.style.backgroundImage = "none";
+        filePicker.value = "";
+
+    } catch (error) {
+        console.error("Erreur lors de l'enregistrement :", error.message);
+        alert("Erreur lors de la publication : " + error.message);
+    } finally {
+        btnPublier.innerText = "PUBLIER";
+        btnPublier.disabled = false;
+    }
 });
 </script>
 
