@@ -8,28 +8,23 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background: #f0f2f5; color: #1c1e21; }
         
-        /* Header Fixe style Facebook */
         #header { position: fixed; top: 0; width: 100%; height: 56px; background: #fff; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 500; box-sizing: border-box; }
         .logo-app { font-weight: bold; font-size: 20px; color: #2E7D32; }
         .profil-zone { display: flex; align-items: center; cursor: pointer; }
         .profil-rond { width: 36px; height: 36px; border-radius: 50%; background: #e4e6eb; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #2E7D32; font-size: 16px; }
         .profil-rond img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Menu Paramètres */
         #menuProfil { display: none; position: fixed; top: 60px; right: 10px; background: white; border: 1px solid #ccd0d5; padding: 15px; border-radius: 8px; width: 250px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 600; }
         
-        /* Conteneur principal */
         .container { max-width: 500px; margin: 70px auto 20px auto; padding: 10px; box-sizing: border-box; }
         
         .box { border: 1px solid #ccd0d5; padding: 20px; border-radius: 8px; background: white; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         input, textarea { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 14px; }
         button { width: 100%; padding: 10px; margin-top: 8px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; }
 
-        /* Bouton "Exutoire / Créer un statut" fixé en haut du fil ou accessible facilement */
         .creer-post-bar { background: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ccd0d5; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer; }
-        .creer-post-bar input { background: #f0f2f5; border: none; border-radius: 20px; padding: 10px 15px; cursor: pointer; margin: 0; color: #65676b; }
+        .creer-post-bar input { background: #f0f2f5; border: none; border-radius: 20px; padding: 10px 15px; cursor: pointer; margin: 0; color: #65676b; pointer-events: none; }
 
-        /* Cartes du fil d'actualité style Facebook */
         .carte-statut { background: white; border: 1px solid #ccd0d5; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); overflow: hidden; }
         .carte-header { padding: 12px 15px; display: flex; align-items: center; gap: 10px; }
         .carte-avatar { width: 40px; height: 40px; border-radius: 50%; background: #e4e6eb; display: flex; align-items: center; justify-content: center; overflow: hidden; font-weight: bold; color: #2E7D32; }
@@ -38,24 +33,20 @@
         .carte-nom { font-weight: bold; font-size: 14px; color: #050505; }
         
         .carte-corps { padding: 15px; font-size: 15px; word-break: break-word; line-height: 1.5; }
-        .carte-corps-colore { padding: 40px 20px; text-align: center; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; min-height: 150px; box-sizing: border-box; word-break: break-word; }
+        .carte-corps-colore { padding: 40px 20px; text-align: center; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; min-height: 150px; box-sizing: border-box; word-break: break-word; border-radius: 6px; margin: 10px; }
     </style>
 </head>
 <body>
 
-<!-- Header Facebook-like -->
 <div id="header">
     <div class="logo-app">FasoApp</div>
     <div class="profil-zone" onclick="toggleMenu()">
-        <div class="profil-rond" id="headerAvatar">
-            📷
-        </div>
+        <div class="profil-rond" id="headerAvatar">📷</div>
         <span style="margin-left: 8px; font-weight: bold; font-size: 14px;">Profil</span>
         <span style="margin-left: 4px; font-size: 12px;">▼</span>
     </div>
 </div>
 
-<!-- Menu Paramètres (Déroulant) -->
 <div id="menuProfil">
     <h3 style="margin-top:0; font-size:16px; color:#2E7D32;">Paramètres du compte</h3>
     <input type="text" id="nomInput" placeholder="Nom">
@@ -69,7 +60,6 @@
 </div>
 
 <div class="container">
-    <!-- Interface Login -->
     <div id="loginInterface" class="box">
         <h2 style="color:#2E7D32; margin-top:0;">Connexion</h2>
         <input type="tel" id="loginPhone" placeholder="Numéro de téléphone">
@@ -78,7 +68,6 @@
         <button onclick="afficherCreation()" style="background:#e4e6eb; color:black;">Créer un compte</button>
     </div>
 
-    <!-- Interface Création -->
     <div id="creationInterface" class="box" style="display:none;">
         <h2 style="color:#2E7D32; margin-top:0;">Créer un compte</h2>
         <input type="tel" id="createPhone" placeholder="Numéro de téléphone">
@@ -86,27 +75,22 @@
         <button onclick="validerCreation()" style="background:#2E7D32; color:white;">Valider</button>
     </div>
 
-    <!-- Interface Principale du Fil d'Actualité (Cachée par défaut avant connexion) -->
     <div id="mainInterface" style="display:none;">
-        <!-- Barre pour ouvrir le popup de publication style Facebook -->
         <div class="creer-post-bar" onclick="ouvrirPopup()">
             <div class="profil-rond" id="feedAvatar" style="width:32px; height:32px; font-size:12px;">📷</div>
             <input type="text" placeholder="Exprimez-vous..." readonly>
         </div>
 
-        <!-- Le fil d'actualité où l'on scrolle -->
         <div class="fil-actualite"></div>
     </div>
 </div>
 
-<!-- Interface Nouveau Statut (Popup) -->
 <div id="popupPublier" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; padding:15px; box-sizing:border-box; overflow-y:auto;">
     <div style="background:white; padding:20px; border-radius:12px; max-width:400px; margin:40px auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
         <h2 style="text-align:center; color:#2E7D32; margin-top:0;">Créer un Statut</h2>
         
         <textarea id="texteStatut" style="width:100%; height:120px; padding:12px; border:1px solid #ccd0d5; border-radius:8px; box-sizing:border-box; font-size:16px;" placeholder="Que voulez-vous dire ?"></textarea>
         
-        <!-- Sélection des couleurs de fond (Style Facebook) -->
         <div style="margin: 12px 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
             <button onclick="changerCouleur('transparent', 'black')" style="height: 35px; background: white; border: 1px solid #ccc; border-radius: 50%;" title="Aucune"></button>
             <button onclick="changerCouleur('#009E60', 'white')" style="height: 35px; background: #009E60; border: none; border-radius: 50%;" title="Vert Faso"></button>
@@ -141,9 +125,12 @@
     let couleurTexteActuelle = 'black';
     let avatarUrlGlobal = localStorage.getItem('faso_avatar') || '';
 
-    // Charger l'avatar au démarrage si disponible
     window.addEventListener('DOMContentLoaded', () => {
         mettreAJourAvatarVisuel(avatarUrlGlobal);
+        const savedNom = localStorage.getItem('faso_nom');
+        const savedPrenom = localStorage.getItem('faso_prenom');
+        if(savedNom) document.getElementById('nomInput').value = savedNom;
+        if(savedPrenom) document.getElementById('prenomInput').value = savedPrenom;
     });
 
     function mettreAJourAvatarVisuel(url) {
@@ -172,7 +159,7 @@
 
         try {
             if (fichierPhoto) {
-                const fileName = ' profil_' + Date.now() + '_' + fichierPhoto.name;
+                const fileName = 'profil_' + Date.now() + '_' + fichierPhoto.name;
                 const { error: uploadError } = await _supabase.storage
                     .from('medias')
                     .upload(fileName, fichierPhoto);
@@ -231,7 +218,7 @@
             filContainer.innerHTML = "";
 
             const nomUtilisateur = localStorage.getItem('faso_nom') || 'Utilisateur';
-            const prenomUtilisateur = localStorage.getItem('faso_prenom'] || 'Faso';
+            const prenomUtilisateur = localStorage.getItem('faso_prenom') || 'Faso';
             const nomComplet = `${prenomUtilisateur} ${nomUtilisateur}`;
 
             statuts.forEach(statut => {
