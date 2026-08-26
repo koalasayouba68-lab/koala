@@ -187,7 +187,7 @@ filePicker.addEventListener('change', function(event) {
     }
 });
 
-// 3. Faire fonctionner le bouton PUBLIER avec Supabase
+// 3. Bouton PUBLIER avec gestion des Texte, Photos et Vidéos
 btnPublier.addEventListener('click', async function() {
     const texte = texteStatut.value.trim();
     const fichier = filePicker.files[0];
@@ -197,34 +197,55 @@ btnPublier.addEventListener('click', async function() {
         return;
     }
 
-    // Désactiver le bouton pendant l'envoi pour patienter
     btnPublier.innerText = "Publication en cours...";
     btnPublier.disabled = true;
 
     try {
         let mediaUrl = null;
 
-        // Si l'utilisateur a choisi une photo ou vidéo, on peut la stocker (si ton Storage est configuré)
-        // Pour l'instant, on enregistre au moins le texte dans la table 'statuts'
-        const { data, error } = await _supabase
-            .from('statuts')
-            .insert([{ texte: texte }]);
+        // Si l'utilisateur a choisi une photo ou une vidéo, on l'envoie d'abord dans Supabase Storage
+        if (fichier) {
+            const fileName = Date.now() + '_' + fichier.name;
+            const { data: uploadData, error: uploadError } = await _supabase.storage
+                .from('medias')
+                .upload(fileName, fichier);
 
-        if (error) {
-            throw error;
+            if (uploadError) {
+                throw new Error("Erreur lors de l'envoi du fichier : " + uploadError.message);
+            }
+
+            // Récupérer le lien public du fichier
+            const { data: publicURLData } = _supabase.storage
+                .from('medias')
+                .getPublicUrl(fileName);
+                
+            mediaUrl = publicURLData.publicUrl;
         }
 
-        alert("✅ Statut publié et enregistré dans Supabase avec succès !");
+        // Ensuite, on enregistre le tout (texte + lien du média) dans la table 'statuts'
+        const { error: insertError } = await _supabase
+            .from('statuts')
+            .insert([
+                { 
+                    texte: texte,
+                    media_url: mediaUrl 
+                }
+            ]);
+
+        if (insertError) {
+            throw insertError;
+        }
+
+        alert("✅ Statut avec texte et média publié avec succès !");
         
-        // Fermer le popup et nettoyer
         fermerPopup();
         texteStatut.value = "";
         texteStatut.style.backgroundImage = "none";
         filePicker.value = "";
 
     } catch (error) {
-        console.error("Erreur lors de l'enregistrement :", error.message);
-        alert("Erreur lors de la publication : " + error.message);
+        console.error("Erreur :", error.message);
+        alert("Erreur : " + error.message);
     } finally {
         btnPublier.innerText = "PUBLIER";
         btnPublier.disabled = false;
