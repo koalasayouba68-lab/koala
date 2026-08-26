@@ -188,7 +188,6 @@
 window.addEventListener('DOMContentLoaded', () => {
     chargerStatuts();
 });
-
     function ouvrirPopup() {
         document.getElementById('popupPublier').style.display = 'block';
     }
@@ -293,7 +292,7 @@ btnPublier.addEventListener('click', async function() {
         btnPublier.innerText = "PUBLIER";
         btnPublier.disabled = false;
     }
-});btnPublier.addEventListener('click', async function() {
+btnPublier.addEventListener('click', async function() {
     const texte = texteStatut.value.trim();
     const fichier = filePicker.files[0];
     
