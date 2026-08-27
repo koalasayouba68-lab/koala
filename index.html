@@ -213,77 +213,76 @@
     }
 
 async function chargerStatuts() {
-        try {
-            // 1. Calculer la limite de 72 heures
-            const limiteDate = new Date(Date.now() - (72 * 60 * 60 * 1000)).toISOString();
+    try {
+        // 1. Calculer la limite de 72 heures
+        const limiteDate = new Date(Date.now() - (72 * 60 * 60 * 1000)).toISOString();
 
-            // 2. Charger uniquement les statuts récents (moins de 72h)
-            const { data: statuts, error } = await _supabase
-                .from('statuts')
-                .select('*')
-                .gte('created_at', limiteDate)
-                .order('created_at', { ascending: false });
+        // 2. Charger uniquement les statuts récents (moins de 72h)
+        const { data: statuts, error } = await _supabase
+            .from('statuts')
+            .select('*')
+            .gte('created_at', limiteDate)
+            .order('created_at', { ascending: false });
 
-            if (error) throw error;
+        if (error) throw error;
 
-            // 3. Supprimer définitivement du serveur les posts qui dépassent 72 heures
-            await _supabase
-                .from('statuts')
-                .delete()
-                .lt('created_at', limiteDate);
+        // 3. Supprimer définitivement du serveur les posts qui dépassent 72 heures
+        await _supabase
+            .from('statuts')
+            .delete()
+            .lt('created_at', limiteDate);
 
-            const filContainer = document.querySelector('.fil-actualite'); 
-            if (!filContainer) return;
+        const filContainer = document.querySelector('.fil-actualite'); 
+        if (!filContainer) return;
 
-            filContainer.innerHTML = "";
+        filContainer.innerHTML = "";
 
-            const nomUtilisateur = localStorage.getItem('faso_nom') || 'Utilisateur';
-            const prenomUtilisateur = localStorage.getItem('faso_prenom') || 'Faso';
-            const nomComplet = `${prenomUtilisateur} ${nomUtilisateur}`;
+        const nomUtilisateur = localStorage.getItem('faso_nom') || 'Utilisateur';
+        const prenomUtilisateur = localStorage.getItem('faso_prenom') || 'Faso';
+        const nomComplet = `${prenomUtilisateur} ${nomUtilisateur}`;
 
-            statuts.forEach(statut => {
-                const carte = document.createElement('div');
-                carte.className = "carte-statut";
+        statuts.forEach(statut => {
+            const carte = document.createElement('div');
+            carte.className = "carte-statut";
 
-                let contenuCorps = "";
-                const bgStyle = statut.bg_color && statut.bg_color !== 'transparent' ? `background: ${statut.bg_color}; color: ${statut.text_color || 'black'};` : '';
-                
-                if (bgStyle) {
-                    contenuCorps += `<div class="carte-corps-colore" style="${bgStyle}">${statut.texte || ""}</div>`;
-                } else if (statut.texte) {
-                    contenuCorps += `<div class="carte-corps">${statut.texte}</div>`;
+            let contenuCorps = "";
+            const bgStyle = statut.bg_color && statut.bg_color !== 'transparent' ? `background: ${statut.bg_color}; color: ${statut.text_color || 'black'};` : '';
+            
+            if (bgStyle) {
+                contenuCorps += `<div class="carte-corps-colore" style="${bgStyle}">${statut.texte || ""}</div>`;
+            } else if (statut.texte) {
+                contenuCorps += `<div class="carte-corps">${statut.texte}</div>`;
+            }
+
+            if (statut.media_url) {
+                if (statut.media_url.match(/\.(mp4|webm|ogg)$/i)) {
+                    contenuCorps += `<video src="${statut.media_url}" controls style="width: 100%; display: block; max-height: 400px; object-fit: contain; background: black;"></video>`;
+                } else {
+                    contenuCorps += `<img src="${statut.media_url}" alt="Média" style="width: 100%; display: block; max-height: 400px; object-fit: cover;">`;
                 }
+            }
 
-                if (statut.media_url) {
-                    if (statut.media_url.match(/\.(mp4|webm|ogg)$/i)) {
-                        contenuCorps += `<video src="${statut.media_url}" controls style="width: 100%; display: block; max-height: 400px; object-fit: contain; background: black;"></video>`;
-                    } else {
-                        contenuCorps += `<img src="${statut.media_url}" alt="Média" style="width: 100%; display: block; max-height: 400px; object-fit: cover;">`;
-                    }
-                }
+            const avatarHtml = avatarUrlGlobal ? `<img src="${avatarUrlGlobal}" alt="Avatar">` : `👤`;
+            const dateFormatee = new Date(statut.created_at).toLocaleString();
 
-                const avatarHtml = avatarUrlGlobal ? `<img src="${avatarUrlGlobal}" alt="Avatar">` : `👤`;
-                const dateFormatee = new Date(statut.created_at).toLocaleString();
-
-                carte.innerHTML = `
-                    <div class="carte-header">
-                        <div class="carte-avatar">${avatarHtml}</div>
-                        <div>
-                            <div class="carte-nom">${nomComplet}</div>
-                            <div class="carte-meta">${dateFormatee}</div>
-                        </div>
+            carte.innerHTML = `
+                <div class="carte-header">
+                    <div class="carte-avatar">${avatarHtml}</div>
+                    <div>
+                        <div class="carte-nom">${nomComplet}</div>
+                        <div class="carte-meta">${dateFormatee}</div>
                     </div>
-                    ${contenuCorps}
-                `;
+                </div>
+                ${contenuCorps}
+            `;
 
-                filContainer.appendChild(carte);
-            });
+            filContainer.appendChild(carte);
+        });
 
-        } catch (error) {
-            console.error("Erreur chargement :", error.message);
-        }
+    } catch (error) {
+        console.error("Erreur chargement :", error.message);
     }
-
+}
     function ouvrirPopup() {
         document.getElementById('popupPublier').style.display = 'block';
     }
