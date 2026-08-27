@@ -133,13 +133,18 @@
     let couleurTexteActuelle = 'black';
     let avatarUrlGlobal = localStorage.getItem('faso_avatar') || '';
 
-    // NOUVEAU : Vérifier si connecté au chargement
+    // 1. AU DEMARRAGE : on vérifie si connecté
     window.addEventListener('DOMContentLoaded', () => {
         const estConnecte = localStorage.getItem('faso_connecte') === 'true';
         if(estConnecte){
-            afficherFil();
+            document.getElementById('loginInterface').style.display = 'none';
+            document.getElementById('creationInterface').style.display = 'none';
+            document.getElementById('mainInterface').style.display = 'block';
+            chargerStatuts();
         } else {
-            afficherConnexion();
+            document.getElementById('loginInterface').style.display = 'block';
+            document.getElementById('creationInterface').style.display = 'none';
+            document.getElementById('mainInterface').style.display = 'none';
         }
 
         mettreAJourAvatarVisuel(avatarUrlGlobal);
@@ -148,19 +153,6 @@
         if(savedNom) document.getElementById('nomInput').value = savedNom;
         if(savedPrenom) document.getElementById('prenomInput').value = savedPrenom;
     });
-
-    function afficherConnexion(){
-        document.getElementById('loginInterface').style.display = 'block';
-        document.getElementById('creationInterface').style.display = 'none';
-        document.getElementById('mainInterface').style.display = 'none';
-    }
-
-    function afficherFil(){
-        document.getElementById('loginInterface').style.display = 'none';
-        document.getElementById('creationInterface').style.display = 'none';
-        document.getElementById('mainInterface').style.display = 'block';
-        chargerStatuts();
-    }
 
     function mettreAJourAvatarVisuel(url) {
         const headerAvatar = document.getElementById('headerAvatar');
@@ -226,7 +218,7 @@
         document.getElementById('loginInterface').style.display = 'block';
     }
 
-    // CORRIGÉ : on sauvegarde la connexion
+    // 2. CORRIGÉ : Le bouton Se connecter marche maintenant
     function seConnecter() {
         const phone = document.getElementById('loginPhone').value;
         const code = document.getElementById('loginCode').value;
@@ -236,16 +228,14 @@
             return;
         }
 
-        // Ici tu dois vérifier le code avec Supabase plus tard
+        // Pour l’instant on valide direct. Après on mettra la vraie vérif Supabase
         localStorage.setItem('faso_connecte', 'true');
         localStorage.setItem('faso_phone', phone);
-        afficherFil();
-    }
 
-    // NOUVEAU : bouton déconnexion
-    function seDeconnecter(){
-        localStorage.removeItem('faso_connecte');
-        afficherConnexion();
+        document.getElementById('loginInterface').style.display = 'none';
+        document.getElementById('creationInterface').style.display = 'none';
+        document.getElementById('mainInterface').style.display = 'block';
+        chargerStatuts();
     }
 
 async function chargerStatuts() {
@@ -317,12 +307,11 @@ async function chargerStatuts() {
         }
     }
 
+    // 3. CORRIGÉ : Bloquer la publication si pas connecté
     function ouvrirPopup() {
-        // BLOCAGE : si pas connecté on ne peut pas publier
         const estConnecte = localStorage.getItem('faso_connecte') === 'true';
         if(!estConnecte){
             alert("Connectez-vous d'abord!");
-            afficherConnexion();
             return;
         }
         document.getElementById('popupPublier').style.display = 'block';
@@ -406,7 +395,7 @@ async function chargerStatuts() {
                         media_url: mediaUrl,
                         bg_color: couleurActuelle,
                         text_color: couleurTexteActuelle,
-                        phone: localStorage.getItem('faso_phone') // pour savoir qui a posté
+                        phone: localStorage.getItem('faso_phone')
                     }
                 ]);
 
