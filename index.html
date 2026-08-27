@@ -60,6 +60,7 @@
 </div>
 
 <div class="container">
+    <!-- Écran de Connexion -->
     <div id="loginInterface" class="box">
         <h2 style="color:#2E7D32; margin-top:0;">Connexion</h2>
         <input type="tel" id="loginPhone" placeholder="Numéro de téléphone">
@@ -68,6 +69,7 @@
         <button onclick="afficherCreation()" style="background:#e4e6eb; color:black;">Créer un compte</button>
     </div>
 
+    <!-- Écran de Création de compte -->
     <div id="creationInterface" class="box" style="display:none;">
         <h2 style="color:#2E7D32; margin-top:0;">Créer un compte</h2>
         <input type="tel" id="createPhone" placeholder="Numéro de téléphone">
@@ -75,6 +77,7 @@
         <button onclick="validerCreation()" style="background:#2E7D32; color:white;">Valider</button>
     </div>
 
+    <!-- Écran Principal (Fil d'actualité) - Caché par défaut -->
     <div id="mainInterface" style="display:none;">
         <div class="creer-post-bar" onclick="ouvrirPopup()">
             <div class="profil-rond" id="feedAvatar" style="width:32px; height:32px; font-size:12px;">📷</div>
@@ -209,10 +212,12 @@
         chargerStatuts();
     }
 
-    async function chargerStatuts() {
+async function chargerStatuts() {
         try {
+            // 1. Calculer la limite de 72 heures
             const limiteDate = new Date(Date.now() - (72 * 60 * 60 * 1000)).toISOString();
 
+            // 2. Charger uniquement les statuts récents (moins de 72h)
             const { data: statuts, error } = await _supabase
                 .from('statuts')
                 .select('*')
@@ -221,6 +226,7 @@
 
             if (error) throw error;
 
+            // 3. Supprimer définitivement du serveur les posts qui dépassent 72 heures
             await _supabase
                 .from('statuts')
                 .delete()
