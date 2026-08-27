@@ -126,27 +126,14 @@
 <script>
     const SUPABASE_URL = 'https://gkqlmpkmzfvurkzgrjlm.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr';
-
+    
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let couleurActuelle = 'transparent';
     let couleurTexteActuelle = 'black';
     let avatarUrlGlobal = localStorage.getItem('faso_avatar') || '';
 
-    // 1. AU DEMARRAGE : on vérifie si connecté
     window.addEventListener('DOMContentLoaded', () => {
-        const estConnecte = localStorage.getItem('faso_connecte') === 'true';
-        if(estConnecte){
-            document.getElementById('loginInterface').style.display = 'none';
-            document.getElementById('creationInterface').style.display = 'none';
-            document.getElementById('mainInterface').style.display = 'block';
-            chargerStatuts();
-        } else {
-            document.getElementById('loginInterface').style.display = 'block';
-            document.getElementById('creationInterface').style.display = 'none';
-            document.getElementById('mainInterface').style.display = 'none';
-        }
-
         mettreAJourAvatarVisuel(avatarUrlGlobal);
         const savedNom = localStorage.getItem('faso_nom');
         const savedPrenom = localStorage.getItem('faso_prenom');
@@ -158,17 +145,17 @@
         const headerAvatar = document.getElementById('headerAvatar');
         const feedAvatar = document.getElementById('feedAvatar');
         if (url) {
-            headerAvatar.innerHTML = <img src="${url}" alt="Profil">;
-            feedAvatar.innerHTML = <img src="${url}" alt="Profil">;
+            headerAvatar.innerHTML = `<img src="${url}" alt="Profil">`;
+            feedAvatar.innerHTML = `<img src="${url}" alt="Profil">`;
         } else {
-            headerAvatar.innerHTML = 📷;
-            feedAvatar.innerHTML = 📷;
+            headerAvatar.innerHTML = `📷`;
+            feedAvatar.innerHTML = `📷`;
         }
     }
 
     function toggleMenu() {
         const menu = document.getElementById('menuProfil');
-        menu.style.display = (menu.style.display === 'block')? 'none' : 'block';
+        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
     }
 
     async function enregistrerProfil() {
@@ -182,15 +169,15 @@
             if (fichierPhoto) {
                 const fileName = 'profil_' + Date.now() + '_' + fichierPhoto.name;
                 const { error: uploadError } = await _supabase.storage
-                   .from('medias')
-                   .upload(fileName, fichierPhoto);
+                    .from('medias')
+                    .upload(fileName, fichierPhoto);
 
                 if (uploadError) throw uploadError;
 
                 const { data: publicURLData } = _supabase.storage
-                   .from('medias')
-                   .getPublicUrl(fileName);
-
+                    .from('medias')
+                    .getPublicUrl(fileName);
+                
                 nouvelAvatar = publicURLData.publicUrl;
             }
 
@@ -200,7 +187,7 @@
             avatarUrlGlobal = nouvelAvatar;
 
             mettreAJourAvatarVisuel(avatarUrlGlobal);
-            alert("Profil enregistré avec succès!");
+            alert("Profil enregistré avec succès !");
             toggleMenu();
         } catch (error) {
             alert("Erreur lors de l'enregistrement du profil : " + error.message);
@@ -213,25 +200,12 @@
     }
 
     function validerCreation() {
-        alert("Compte créé avec succès!");
+        alert("Compte créé avec succès !");
         document.getElementById('creationInterface').style.display = 'none';
         document.getElementById('loginInterface').style.display = 'block';
     }
 
-    // 2. CORRIGÉ : Le bouton Se connecter marche maintenant
     function seConnecter() {
-        const phone = document.getElementById('loginPhone').value;
-        const code = document.getElementById('loginCode').value;
-
-        if(phone === "" || code === ""){
-            alert("Remplis le numéro et le code");
-            return;
-        }
-
-        // Pour l’instant on valide direct. Après on mettra la vraie vérif Supabase
-        localStorage.setItem('faso_connecte', 'true');
-        localStorage.setItem('faso_phone', phone);
-
         document.getElementById('loginInterface').style.display = 'none';
         document.getElementById('creationInterface').style.display = 'none';
         document.getElementById('mainInterface').style.display = 'block';
@@ -240,52 +214,55 @@
 
 async function chargerStatuts() {
         try {
+            // 1. Calculer la limite de 72 heures
             const limiteDate = new Date(Date.now() - (72 * 60 * 60 * 1000)).toISOString();
 
+            // 2. Charger uniquement les statuts récents (moins de 72h)
             const { data: statuts, error } = await _supabase
-               .from('statuts')
-               .select('*')
-               .gte('created_at', limiteDate)
-               .order('created_at', { ascending: false });
+                .from('statuts')
+                .select('*')
+                .gte('created_at', limiteDate)
+                .order('created_at', { ascending: false });
 
             if (error) throw error;
 
+            // 3. Supprimer définitivement du serveur les posts qui dépassent 72 heures
             await _supabase
-               .from('statuts')
-               .delete()
-               .lt('created_at', limiteDate);
+                .from('statuts')
+                .delete()
+                .lt('created_at', limiteDate);
 
-            const filContainer = document.querySelector('.fil-actualite');
+            const filContainer = document.querySelector('.fil-actualite'); 
             if (!filContainer) return;
 
             filContainer.innerHTML = "";
 
             const nomUtilisateur = localStorage.getItem('faso_nom') || 'Utilisateur';
             const prenomUtilisateur = localStorage.getItem('faso_prenom') || 'Faso';
-            const nomComplet = ${prenomUtilisateur} ${nomUtilisateur};
+            const nomComplet = `${prenomUtilisateur} ${nomUtilisateur}`;
 
             statuts.forEach(statut => {
                 const carte = document.createElement('div');
                 carte.className = "carte-statut";
 
                 let contenuCorps = "";
-                const bgStyle = statut.bg_color && statut.bg_color!== 'transparent'? background: ${statut.bg_color}; color: ${statut.text_color || 'black'}; : '';
-
+                const bgStyle = statut.bg_color && statut.bg_color !== 'transparent' ? `background: ${statut.bg_color}; color: ${statut.text_color || 'black'};` : '';
+                
                 if (bgStyle) {
-                    contenuCorps += <div class="carte-corps-colore" style="${bgStyle}">${statut.texte || ""}</div>;
+                    contenuCorps += `<div class="carte-corps-colore" style="${bgStyle}">${statut.texte || ""}</div>`;
                 } else if (statut.texte) {
-                    contenuCorps += <div class="carte-corps">${statut.texte}</div>;
+                    contenuCorps += `<div class="carte-corps">${statut.texte}</div>`;
                 }
 
                 if (statut.media_url) {
                     if (statut.media_url.match(/\.(mp4|webm|ogg)$/i)) {
-                        contenuCorps += <video src="${statut.media_url}" controls style="width: 100%; display: block; max-height: 400px; object-fit: contain; background: black;"></video>;
+                        contenuCorps += `<video src="${statut.media_url}" controls style="width: 100%; display: block; max-height: 400px; object-fit: contain; background: black;"></video>`;
                     } else {
-                        contenuCorps += <img src="${statut.media_url}" alt="Média" style="width: 100%; display: block; max-height: 400px; object-fit: cover;">;
+                        contenuCorps += `<img src="${statut.media_url}" alt="Média" style="width: 100%; display: block; max-height: 400px; object-fit: cover;">`;
                     }
                 }
 
-                const avatarHtml = avatarUrlGlobal? <img src="${avatarUrlGlobal}" alt="Avatar"> : 👤;
+                const avatarHtml = avatarUrlGlobal ? `<img src="${avatarUrlGlobal}" alt="Avatar">` : `👤`;
                 const dateFormatee = new Date(statut.created_at).toLocaleString();
 
                 carte.innerHTML = `
@@ -307,13 +284,7 @@ async function chargerStatuts() {
         }
     }
 
-    // 3. CORRIGÉ : Bloquer la publication si pas connecté
     function ouvrirPopup() {
-        const estConnecte = localStorage.getItem('faso_connecte') === 'true';
-        if(!estConnecte){
-            alert("Connectez-vous d'abord!");
-            return;
-        }
         document.getElementById('popupPublier').style.display = 'block';
     }
 
@@ -349,7 +320,7 @@ async function chargerStatuts() {
         if (fichier && fichier.type.startsWith('image/')) {
             const lecteur = new FileReader();
             lecteur.onload = function(e) {
-                texteStatut.style.backgroundImage = url(${e.target.result});
+                texteStatut.style.backgroundImage = `url(${e.target.result})`;
                 texteStatut.style.backgroundSize = 'cover';
                 texteStatut.style.backgroundPosition = 'center';
             }
@@ -360,9 +331,9 @@ async function chargerStatuts() {
     btnPublier.addEventListener('click', async function() {
         const texte = texteStatut.value.trim();
         const fichier = filePicker.files[0];
-
-        if (texte === "" &&!fichier) {
-            alert("Écris un message ou ajoute un fichier avant de publier! ❌");
+        
+        if (texte === "" && !fichier) {
+            alert("Écris un message ou ajoute un fichier avant de publier ! ❌");
             return;
         }
 
@@ -375,27 +346,26 @@ async function chargerStatuts() {
             if (fichier) {
                 const fileName = Date.now() + '_' + fichier.name;
                 const { data: uploadData, error: uploadError } = await _supabase.storage
-                   .from('medias')
-                   .upload(fileName, fichier);
+                    .from('medias')
+                    .upload(fileName, fichier);
 
                 if (uploadError) throw uploadError;
 
                 const { data: publicURLData } = _supabase.storage
-                   .from('medias')
-                   .getPublicUrl(fileName);
-
+                    .from('medias')
+                    .getPublicUrl(fileName);
+                    
                 mediaUrl = publicURLData.publicUrl;
             }
 
             const { error: insertError } = await _supabase
-               .from('statuts')
-               .insert([
-                    {
+                .from('statuts')
+                .insert([
+                    { 
                         texte: texte,
                         media_url: mediaUrl,
                         bg_color: couleurActuelle,
-                        text_color: couleurTexteActuelle,
-                        phone: localStorage.getItem('faso_phone')
+                        text_color: couleurTexteActuelle
                     }
                 ]);
 
@@ -412,5 +382,6 @@ async function chargerStatuts() {
         }
     });
 </script>
+
 </body>
 </html>
