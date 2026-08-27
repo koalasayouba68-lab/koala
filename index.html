@@ -208,8 +208,9 @@
         document.getElementById('mainInterface').style.display = 'block';
         chargerStatuts();
     }
+    }
 
-    async function chargerStatuts() {
+async function chargerStatuts() {
         try {
             // 1. Calculer la limite de 72 heures
             const limiteDate = new Date(Date.now() - (72 * 60 * 60 * 1000)).toISOString();
@@ -303,12 +304,9 @@
         texteStatut.value = "";
         texteStatut.style.background = "white";
         texteStatut.style.color = "black";
-        texteStatut.style.backgroundImage = "none";
         couleurActuelle = 'transparent';
         couleurTexteActuelle = 'black';
         document.getElementById('filePicker').value = "";
-        const apercuContainer = document.getElementById('apercuMediaContainer');
-        if (apercuContainer) apercuContainer.style.display = 'none';
     }
 
     const filePicker = document.getElementById('filePicker');
