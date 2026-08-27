@@ -209,12 +209,10 @@
         chargerStatuts();
     }
 
-async function chargerStatuts() {
+    async function chargerStatuts() {
         try {
-            // 1. Calculer la limite de 72 heures
             const limiteDate = new Date(Date.now() - (72 * 60 * 60 * 1000)).toISOString();
 
-            // 2. Charger uniquement les statuts récents (moins de 72h)
             const { data: statuts, error } = await _supabase
                 .from('statuts')
                 .select('*')
@@ -223,7 +221,6 @@ async function chargerStatuts() {
 
             if (error) throw error;
 
-            // 3. Supprimer définitivement du serveur les posts qui dépassent 72 heures
             await _supabase
                 .from('statuts')
                 .delete()
