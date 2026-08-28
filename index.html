@@ -7,7 +7,7 @@
     <link rel="manifest" href="manifest.json">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background: #f0f2f5; color: #1c1e21; }
-
+        
         #header { position: fixed; top: 0; width: 100%; height: 56px; background: #fff; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 500; box-sizing: border-box; }
         .logo-app { font-weight: bold; font-size: 20px; color: #2E7D32; }
         .profil-zone { display: flex; align-items: center; cursor: pointer; }
@@ -209,12 +209,16 @@
 
             filContainer.innerHTML = "";
 
+            const nomUtilisateur = localStorage.getItem('faso_nom') || 'Utilisateur';
+            const prenomUtilisateur = localStorage.getItem('faso_prenom') || 'Faso';
+            const nomComplet = `${prenomUtilisateur} ${nomUtilisateur}`;
+
             statuts.forEach(statut => {
                 const carte = document.createElement('div');
                 carte.className = "carte-statut";
 
                 let contenuCorps = "";
-                const bgStyle = statut.couleur && statut.couleur !== 'transparent' ? `background: ${statut.couleur}; color: black;` : '';
+                const bgStyle = statut.bg_color && statut.bg_color !== 'transparent' ? `background: ${statut.bg_color}; color: ${statut.text_color || 'black'};` : '';
                 
                 if (bgStyle) {
                     contenuCorps += `<div class="carte-corps-colore" style="${bgStyle}">${statut.texte || ""}</div>`;
@@ -222,23 +226,22 @@
                     contenuCorps += `<div class="carte-corps">${statut.texte}</div>`;
                 }
 
-                if (statut.media) {
-                    if (statut.media.match(/\.(mp4|webm|ogg)$/i)) {
-                        contenuCorps += `<video src="${statut.media}" controls style="width: 100%; display: block; max-height: 400px; object-fit: contain; background: black;"></video>`;
+                if (statut.media_url) {
+                    if (statut.media_url.match(/\.(mp4|webm|ogg)$/i)) {
+                        contenuCorps += `<video src="${statut.media_url}" controls style="width: 100%; display: block; max-height: 400px; object-fit: contain; background: black;"></video>`;
                     } else {
-                        contenuCorps += `<img src="${statut.media}" alt="Média" style="width: 100%; display: block; max-height: 400px; object-fit: cover;">`;
+                        contenuCorps += `<img src="${statut.media_url}" alt="Média" style="width: 100%; display: block; max-height: 400px; object-fit: cover;">`;
                     }
                 }
 
                 const avatarHtml = avatarUrlGlobal ? `<img src="${avatarUrlGlobal}" alt="Avatar">` : `👤`;
                 const dateFormatee = new Date(statut.created_at).toLocaleString();
-                const nomAffiche = statut.nom || 'Utilisateur Faso';
 
                 carte.innerHTML = `
                     <div class="carte-header">
                         <div class="carte-avatar">${avatarHtml}</div>
                         <div>
-                            <div class="carte-nom">${nomAffiche}</div>
+                            <div class="carte-nom">${nomComplet}</div>
                             <div class="carte-meta">${dateFormatee}</div>
                         </div>
                     </div>
