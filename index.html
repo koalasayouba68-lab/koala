@@ -18,6 +18,7 @@
         
         .container { max-width: 500px; margin: 70px auto 20px auto; padding: 10px; box-sizing: border-box; }
         
+        .box { border: 1px solid #ccd0d5; padding: 20px; border-radius: 8px; background: white; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         input, textarea { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 14px; }
         button { width: 100%; padding: 10px; margin-top: 8px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; }
 
@@ -59,8 +60,22 @@
 </div>
 
 <div class="container">
-    <!-- Écran Principal (Fil d'actualité direct) -->
-    <div id="mainInterface">
+    <div id="loginInterface" class="box">
+        <h2 style="color:#2E7D32; margin-top:0;">Connexion</h2>
+        <input type="tel" id="loginPhone" placeholder="Numéro de téléphone">
+        <input type="number" id="loginCode" placeholder="Code à 6 chiffres">
+        <button onclick="seConnecter()" style="background:#2E7D32; color:white;">Se connecter</button>
+        <button onclick="afficherCreation()" style="background:#e4e6eb; color:black;">Créer un compte</button>
+    </div>
+
+    <div id="creationInterface" class="box" style="display:none;">
+        <h2 style="color:#2E7D32; margin-top:0;">Créer un compte</h2>
+        <input type="tel" id="createPhone" placeholder="Numéro de téléphone">
+        <input type="number" id="createCode" placeholder="Code à 6 chiffres">
+        <button onclick="validerCreation()" style="background:#2E7D32; color:white;">Valider</button>
+    </div>
+
+    <div id="mainInterface" style="display:none;">
         <div class="creer-post-bar" onclick="ouvrirPopup()">
             <div class="profil-rond" id="feedAvatar" style="width:32px; height:32px; font-size:12px;">📷</div>
             <input type="text" placeholder="Exprimez-vous..." readonly>
@@ -94,11 +109,6 @@
         <button onclick="document.getElementById('filePicker').click()" style="background:#e4e6eb; color:#050505; width:100%; padding:10px; border-radius:6px; border:none; margin-top:8px; font-weight:bold;">
             📁 Ajouter Photo ou Vidéo
         </button>
-
-        <!-- Zone pour afficher l'aperçu de la vidéo sélectionnée -->
-        <div id="apercuMediaContainer" style="margin-top: 10px; display: none; text-align: center;">
-            <video id="apercuVideo" controls style="width: 100%; max-height: 200px; border-radius: 8px; background: black;"></video>
-        </div>
         
         <button id="btnPublier" style="background:#2E7D32; color:white; width:100%; padding:12px; border-radius:6px; border:none; font-weight:bold; font-size:16px; margin-top:12px;">PUBLIER</button>
         <button onclick="fermerPopup()" style="background:#e4e6eb; color:#050505; width:100%; padding:10px; border-radius:6px; border:none; margin-top:8px;">Annuler</button>
@@ -119,13 +129,8 @@
         mettreAJourAvatarVisuel(avatarUrlGlobal);
         const savedNom = localStorage.getItem('faso_nom');
         const savedPrenom = localStorage.getItem('faso_prenom');
-        const savedTel = localStorage.getItem('faso_tel');
         if(savedNom) document.getElementById('nomInput').value = savedNom;
         if(savedPrenom) document.getElementById('prenomInput').value = savedPrenom;
-        if(savedTel) document.getElementById('telInput').value = savedTel;
-
-        // Charger directement les statuts à l'ouverture de la page
-        chargerStatuts();
     });
 
     function mettreAJourAvatarVisuel(url) {
@@ -148,7 +153,6 @@
     async function enregistrerProfil() {
         const nom = document.getElementById('nomInput').value;
         const prenom = document.getElementById('prenomInput').value;
-        const tel = document.getElementById('telInput').value;
         const fichierPhoto = document.getElementById('inputPhotoProfil').files[0];
 
         let nouvelAvatar = avatarUrlGlobal;
@@ -171,38 +175,42 @@
 
             localStorage.setItem('faso_nom', nom);
             localStorage.setItem('faso_prenom', prenom);
-            localStorage.setItem('faso_tel', tel);
             localStorage.setItem('faso_avatar', nouvelAvatar);
             avatarUrlGlobal = nouvelAvatar;
 
             mettreAJourAvatarVisuel(avatarUrlGlobal);
             alert("Profil enregistré avec succès !");
             toggleMenu();
-            chargerStatuts(); // Recharge pour actualiser le nom/avatar sur les posts
         } catch (error) {
             alert("Erreur lors de l'enregistrement du profil : " + error.message);
         }
     }
 
+    function afficherCreation() {
+        document.getElementById('loginInterface').style.display = 'none';
+        document.getElementById('creationInterface').style.display = 'block';
+    }
+
+    function validerCreation() {
+        alert("Compte créé avec succès !");
+        document.getElementById('creationInterface').style.display = 'none';
+        document.getElementById('loginInterface').style.display = 'block';
+    }
+
+    function seConnecter() {
+        document.getElementById('loginInterface').style.display = 'none';
+        document.getElementById('mainInterface').style.display = 'block';
+        chargerStatuts();
+    }
+
     async function chargerStatuts() {
         try {
-            // 1. Calculer la limite de 72 heures
-            const limiteDate = new Date(Date.now() - (72 * 60 * 60 * 1000)).toISOString();
-
-            // 2. Charger uniquement les statuts récents (moins de 72h)
             const { data: statuts, error } = await _supabase
                 .from('statuts')
                 .select('*')
-                .gte('created_at', limiteDate)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-
-            // 3. Supprimer définitivement du serveur les posts qui dépassent 72 heures
-            await _supabase
-                .from('statuts')
-                .delete()
-                .lt('created_at', limiteDate);
 
             const filContainer = document.querySelector('.fil-actualite'); 
             if (!filContainer) return;
@@ -271,7 +279,6 @@
         const texteBox = document.getElementById('texteStatut');
         texteBox.style.background = couleurFond;
         texteBox.style.color = couleurTexte;
-        texteBox.style.backgroundImage = "none";
     }
 
     function resetPopupForm() {
@@ -279,25 +286,18 @@
         texteStatut.value = "";
         texteStatut.style.background = "white";
         texteStatut.style.color = "black";
-        texteStatut.style.backgroundImage = "none";
         couleurActuelle = 'transparent';
         couleurTexteActuelle = 'black';
         document.getElementById('filePicker').value = "";
-        document.getElementById('apercuMediaContainer').style.display = 'none';
-        document.getElementById('apercuVideo').src = "";
     }
 
     const filePicker = document.getElementById('filePicker');
     const btnPublier = document.getElementById('btnPublier');
     const texteStatut = document.getElementById('texteStatut');
-    const apercuContainer = document.getElementById('apercuMediaContainer');
-    const apercuVideo = document.getElementById('apercuVideo');
 
     filePicker.addEventListener('change', function(event) {
         const fichier = event.target.files[0];
-        if (!fichier) return;
-
-        if (fichier.type.startsWith('image/')) {
+        if (fichier && fichier.type.startsWith('image/')) {
             const lecteur = new FileReader();
             lecteur.onload = function(e) {
                 texteStatut.style.backgroundImage = `url(${e.target.result})`;
@@ -305,13 +305,6 @@
                 texteStatut.style.backgroundPosition = 'center';
             }
             lecteur.readAsDataURL(fichier);
-            apercuContainer.style.display = 'none';
-            apercuVideo.src = "";
-        } else if (fichier.type.startsWith('video/')) {
-            const videoUrl = URL.createObjectURL(fichier);
-            apercuVideo.src = videoUrl;
-            apercuContainer.style.display = 'block';
-            texteStatut.style.backgroundImage = 'none';
         }
     });
 
@@ -332,7 +325,7 @@
 
             if (fichier) {
                 const fileName = Date.now() + '_' + fichier.name;
-                const { error: uploadError } = await _supabase.storage
+                const { data: uploadData, error: uploadError } = await _supabase.storage
                     .from('medias')
                     .upload(fileName, fichier);
 
@@ -345,18 +338,14 @@
                 mediaUrl = publicURLData.publicUrl;
             }
 
-            const prenom = localStorage.getItem('faso_prenom') || 'Faso';
-            const nom = localStorage.getItem('faso_nom') || 'Utilisateur';
-            const nomComplet = `${prenom} ${nom}`;
-
             const { error: insertError } = await _supabase
                 .from('statuts')
                 .insert([
                     { 
                         texte: texte,
-                        media: mediaUrl,
-                        couleur: couleurActuelle,
-                        nom: nomComplet
+                        media_url: mediaUrl,
+                        bg_color: couleurActuelle,
+                        text_color: couleurTexteActuelle
                     }
                 ]);
 
