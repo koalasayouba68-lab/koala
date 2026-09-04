@@ -221,6 +221,8 @@
 <script>
     const SUPABASE_URL = 'https://gkqlmpkmzfvurkzgrjlm.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_TpKfbr8y19-DzT9dQvlr5Q_2MR-ciXr';
+    
+    // CORRECTION APPLIQUÉE ICI : Utilisation explicite des constantes d'URL Supabase
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let couleurActuelleFond = 'transparent';
@@ -289,7 +291,7 @@ function deconnecter() {
         console.error("Erreur : l'élément 'ecranConnexion' est introuvable dans ton HTML !");
     }
 }
-  async function validerConnexion() {
+async function validerConnexion() {
     const nomInput = document.getElementById('inputLoginNom').value.trim();
     const numInput = document.getElementById('inputLoginNumero').value.trim();
 
@@ -299,7 +301,9 @@ function deconnecter() {
     }
 
     try {
-        // 1. On interroge notre table dédiée "comptes_fasomur" sur le serveur
+        // Sécurité : on s'assure que le numéro n'est pas vide avant d'interroger
+        if (!numInput) return;
+
         const { data, error } = await supabaseClient
             .from('comptes_fasomur')
             .select('*')
@@ -309,23 +313,19 @@ function deconnecter() {
         if (error) throw error;
 
         if (data) {
-            // Le numéro existe déjà ! VÉRIFICATION STRICTE DU NOM
             if (data.nom.toLowerCase() !== nomInput.toLowerCase()) {
-                alert(`Accès refusé ❌\n\nCe numéro de téléphone (${numInput}) appartient déjà au profil de "${data.nom}". Impossible de vous connecter sous un autre nom.`);
-                return; // On bloque l'accès
+                alert(`Accès refusé ❌\n\nCe numéro de téléphone (${numInput}) appartient déjà au profil de "${data.nom}".`);
+                return;
             }
-
             utilisateurNom = data.nom;
             utilisateurAvatar = data.avatar || 'https://via.placeholder.com/150';
         } else {
-            // 2. Nouveau numéro : on l'enregistre sur le serveur
             const nouvelAvatar = 'https://via.placeholder.com/150';
             const { error: insertError } = await supabaseClient
                 .from('comptes_fasomur')
                 .insert([{ numero: numInput, nom: nomInput, avatar: nouvelAvatar }]);
 
             if (insertError) {
-                // Si l'erreur est un doublon (au cas où un autre processus l'a créé entre temps), on bascule proprement
                 if (insertError.code === '23505') {
                     utilisateurNom = nomInput;
                     utilisateurAvatar = nouvelAvatar;
@@ -340,16 +340,13 @@ function deconnecter() {
 
         utilisateurNumero = numInput;
         
-        // 🔔 2. ON LANCE LES NOTIFICATIONS ICI (Une fois connecté)
         chargerNotifications();
         ecouterNotificationsTempsReel();
 
-        // Enregistrement local de la session
         localStorage.setItem('faso_nom', utilisateurNom);
         localStorage.setItem('faso_numero', utilisateurNumero);
         localStorage.setItem('faso_avatar', utilisateurAvatar);
 
-        // Connexion réussie, on entre dans l'application
         document.getElementById('ecranConnexion').style.display = 'none';
         mettreAJourAffichageProfil();
         chargerPosts();
@@ -357,20 +354,6 @@ function deconnecter() {
     } catch (error) {
         console.error("Erreur de connexion :", error.message);
         alert("Erreur avec le serveur : " + error.message);
-    }
-}
-    function mettreAJourAffichageProfil() {
-        document.getElementById('nomActuelAffichage').innerText = utilisateurNom || 'Utilisateur';
-        document.getElementById('avatarActuel').src = utilisateurAvatar;
-    }
-
-function gererClicAvatar() {
-    document.getElementById('modalMonProfil').style.display = 'flex';
-}
-
-function fermerModalMonProfil(e) {
-    if (e.target.id === 'modalMonProfil') {
-        document.getElementById('modalMonProfil').style.display = 'none';
     }
 }
 
@@ -726,20 +709,23 @@ function fermerModalMonProfil(e) {
         return;
     }
 
+    // Récupérer le solde actuel de l'utilisateur connecté depuis l'élément HTML ou une variable globale
     let soldeActuel = parseInt(document.getElementById('soldePoints').innerText) || 0;
 
+    // Vérifier si l'utilisateur a assez de points
     if (soldeActuel < points) {
         alert("❌ Action impossible : Votre solde est insuffisant ! Vous avez " + soldeActuel + " points, mais vous essayez d'en donner " + points + ".");
         return;
     }
 
-    let utilisateurNom = localStorage.getItem('faso_nom') || 'Anonyme';
-
     try {
+        // 1. Retirer les points du solde de l'utilisateur connecté (ou mettre à jour sa table)
         let nouveauSolde = soldeActuel - points;
         document.getElementById('soldePoints').innerText = nouveauSolde;
+        // Optionnel : Enregistrer le nouveau solde dans le localStorage si tu le gères ainsi
         localStorage.setItem('faso_solde', nouveauSolde);
 
+        // 2. Ajouter les points au post du destinataire
         const { data, error: fetchError } = await supabaseClient
             .from('statuts')
             .select('points_recus')
@@ -757,17 +743,10 @@ function fermerModalMonProfil(e) {
 
         if (updateError) throw updateError;
 
-        // 💎 C'EST CETTE PARTIE QU'IL FAUTAIT AJOUTER :
-        const { error: transError } = await supabaseClient
-            .from('points_transactions')
-            .insert([{ post_id: postId, nom: utilisateurNom, points: points }]);
-
-        if (transError) console.error("Erreur transaction :", transError.message);
-
-        alert("Points envoyés avec succès ! 🎁");
+        alert("Points donnés avec succès ! 💎");
         chargerPosts();
     } catch (error) {
-        alert("Erreur : " + error.message);
+        alert("Erreur lors du don de points : " + error.message);
     }
 }
 
@@ -898,32 +877,6 @@ let numeroAuteur = post.numero || ''; // <--- AJOUTE CETTE LIGNE
     } catch (error) {
         console.error("Erreur de chargement :", error.message);
         document.getElementById('filActualite').innerHTML = '<p style="color: red; text-align: center;">Erreur de chargement des publications.</p>';
-    }
-}
-async function voirDonateurs(postId) {
-    try {
-        const { data, error } = await supabaseClient
-            .from('points_transactions')
-            .select('nom, points, created_at')
-            .eq('post_id', postId);
-
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-            alert("Aucun don de points pour le moment sur cette publication.");
-            return;
-        }
-
-        let listeTexte = "💎 Liste des donateurs pour ce post :\n\n";
-        data.forEach(don => {
-            listeTexte += `- ${don.nom || 'Anonyme'} : ${don.points} points\n`;
-        });
-
-        alert(listeTexte);
-
-    } catch (err) {
-        console.error("Erreur lors de la récupération des donateurs :", err.message);
-        alert("Impossible de charger les donateurs pour l'instant.");
     }
 }
 
@@ -2399,7 +2352,7 @@ async function lancerLive() {
         const apiKey = "APIHhA3mBwt32j8";
         const apiSecret = "1XDRnefeLrWmRg9S6wNPMAPsLbxxOmzv7iN5QVHzNZqB";
         const roomName = "salon-fasomur-principal";
-     const userNumero = String(localStorage.getItem('faso_nom') || "Invité").trim();
+        const userNumero = String(window.utilisateurNumero || "invite").trim();
 
         const { data: existingParticipants } = await supabaseClient
             .from('room_participants')
@@ -2414,20 +2367,15 @@ async function lancerLive() {
             return;
         }
 
-       // 1. Récupérer le vrai nom depuis le stockage local (l'écran de connexion)
-const vraiNomUtilisateur = localStorage.getItem('faso_nom') || userNumero;
+        const token = await genererTokenJwt(apiKey, apiSecret, userNumero, roomName);
 
-// 2. Utiliser le vrai nom pour générer le token JWT LiveKit
-const token = await genererTokenJwt(apiKey, apiSecret, vraiNomUtilisateur, roomName);
+        const room = new LivekitClient.Room();
+        await room.connect(wsUrl, token);
+        await room.localParticipant.enableCameraAndMicrophone();
 
-const room = new LivekitClient.Room();
-await room.connect(wsUrl, token);
-await room.localParticipant.enableCameraAndMicrophone();
-
-// 3. Stocker dans Supabase avec le vrai nom (ou l'identifier proprement)
-await supabaseClient.from('room_participants').upsert([
-    { room_name: roomName, numero: userNumero, nom: vraiNomUtilisateur } // Ajoute 'nom' si ta table le gère, ou remplace par ton identifiant
-], { onConflict: 'room_name,numero' });
+        await supabaseClient.from('room_participants').upsert([
+            { room_name: roomName, numero: userNumero }
+        ], { onConflict: 'room_name,numero' });
 
         let videoContainer = document.getElementById('videoLiveContainer');
         if (!videoContainer) {
@@ -2699,58 +2647,27 @@ function chargerMessages(roomName) {
     const chatBox = document.getElementById('chatBox');
     if (!chatBox) return;
 
-    // 🧹 SUPPRESSION FORCÉE : On supprime tous les messages de ce salon en contournant les restrictions
+    supabaseClient
+        .channel('room_messages_channel')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_messages', filter: `room_name=eq.${roomName}` }, payload => {
+            ajouterMessageUI(payload.new.numero, payload.new.message);
+        })
+        .subscribe();
+
     supabaseClient
         .from('room_messages')
-        .delete()
+        .select('*')
         .eq('room_name', roomName)
-        .neq('id', 0) // Force la suppression de toutes les lignes du salon
-        .then(({ error }) => {
-            if (error) {
-                console.error("Erreur lors du nettoyage du chat :", error.message);
-            }
-
-            // 1. Charger les messages (qui sera vide maintenant)
-            const chargerActuels = async () => {
-                const { data } = await supabaseClient
-                    .from('room_messages')
-                    .select('*')
-                    .eq('room_name', roomName)
-                    .order('created_at', { ascending: true });
-
+        .order('created_at', { ascending: true })
+        .limit(50)
+        .then(({ data }) => {
+            if (data) {
                 chatBox.innerHTML = '';
-                if (data) {
-                    data.forEach(msg => {
-                        const div = document.createElement('div');
-                        div.style.cssText = 'background: rgba(0, 0, 0, 0.6); padding: 4px 8px; border-radius: 8px; max-width: 85%; word-break: break-word;';
-                        div.innerHTML = `<b style="color: #fe2c55;">${msg.numero}:</b> ${msg.message}`;
-                        chatBox.appendChild(div);
-                    });
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }
-            };
-
-            chargerActuels();
-
-            // 2. Écouter les nouveaux messages en direct
-            supabaseClient
-                .channel('room_messages_channel_' + Math.random()) // Canal unique pour éviter les doublons d'écoute
-                .on('postgres_changes', {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'room_messages',
-                    filter: `room_name=eq.${roomName}`
-                }, (payload) => {
-                    const msg = payload.new;
-                    const div = document.createElement('div');
-                    div.style.cssText = 'background: rgba(0, 0, 0, 0.6); padding: 4px 8px; border-radius: 8px; max-width: 85%; word-break: break-word;';
-                    div.innerHTML = `<b style="color: #fe2c55;">${msg.numero}:</b> ${msg.message}`;
-                    chatBox.appendChild(div);
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                })
-                .subscribe();
+                data.forEach(m => ajouterMessageUI(m.numero, m.message));
+            }
         });
 }
+
 function ajouterMessageUI(numero, message) {
     const chatBox = document.getElementById('chatBox');
     if (!chatBox) return;
@@ -3342,22 +3259,6 @@ async function appliquerFiltreXmagie(typeFiltre, participantId) {
     } catch (error) {
         console.error("Erreur lors de l'application du filtre Xmagie :", error);
         alert("Impossible d'appliquer le filtre pour le moment.");
-    }
-}
-async function viderAnciensCommentaires(salonId) {
-    try {
-        const { error } = await supabaseClient
-            .from('room_messages')
-            .delete()
-            .neq('id', 0); // Supprime TOUTES les lignes de la table sans chercher de filtre
-
-        if (error) {
-            console.error("Erreur de suppression :", error.message);
-        } else {
-            console.log("BOUM ! Tous les anciens messages ont été effacés !");
-        }
-    } catch (err) {
-        console.error("Erreur technique :", err);
     }
 }
 // Appelle cette fonction au chargement de ton application pour afficher le bouton en haut
